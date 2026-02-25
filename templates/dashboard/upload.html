@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Data — PASS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Upload Submission Data</h4>
+        <p class="text-muted small mb-0">Import CSV files to ingest student submission records</p>
+    </div>
+    <a href="{{ url_for('dashboard.instructor_dashboard') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+    </a>
+</div>
+
+<div class="row g-4">
+    <!-- Upload Form -->
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h6 class="fw-bold mb-3"><i class="bi bi-cloud-upload me-2 text-primary"></i>Upload CSV File</h6>
+
+                <form method="POST" action="{{ url_for('dashboard.upload_csv') }}" enctype="multipart/form-data" id="uploadForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <!-- Drag and Drop Area -->
+                    <div class="upload-zone p-5 text-center rounded-3 mb-3" id="dropZone"
+                         style="border: 2px dashed #dee2e6; background: #fafbfc; cursor: pointer; transition: all 0.2s;">
+                        <i class="bi bi-file-earmark-arrow-up fs-1 text-muted d-block mb-2"></i>
+                        <p class="fw-semibold mb-1">Drag & drop your CSV file here</p>
+                        <p class="text-muted small mb-2">or click to browse</p>
+                        <input type="file" name="file" id="fileInput" accept=".csv"
+                               class="d-none" required>
+                        <button type="button" class="btn btn-outline-primary btn-sm"
+                                onclick="document.getElementById('fileInput').click()">
+                            <i class="bi bi-folder2-open me-1"></i>Browse Files
+                        </button>
+                        <div id="fileInfo" class="mt-3 d-none">
+                            <div class="d-flex align-items-center justify-content-center gap-2">
+                                <i class="bi bi-file-earmark-check text-success fs-5"></i>
+                                <span class="fw-semibold small" id="fileName"></span>
+                                <span class="text-muted small" id="fileSize"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold" id="submitBtn" disabled>
+                        <i class="bi bi-upload me-2"></i>Upload & Process
+                    </button>
+                </form>
+
+                <!-- CSV Format Guide -->
+                <div class="mt-4 p-3 bg-light rounded-3">
+                    <h6 class="fw-semibold small mb-2"><i class="bi bi-info-circle me-1"></i>Required CSV Format</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-borderless mb-0 small">
+                            <thead>
+                                <tr class="text-muted">
+                                    <th>Column</th>
+                                    <th>Type</th>
+                                    <th>Example</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><code>student_id</code></td><td>String</td><td>1RV22CS001</td></tr>
+                                <tr><td><code>student_name</code></td><td>String</td><td>Arjun Mehta</td></tr>
+                                <tr><td><code>assignment_id</code></td><td>String</td><td>A01</td></tr>
+                                <tr><td><code>submitted_at</code></td><td>DateTime</td><td>2025-01-15 14:30:00</td></tr>
+                                <tr><td><code>deadline</code></td><td>DateTime</td><td>2025-01-15 23:59:00</td></tr>
+                                <tr><td><code>course_id</code></td><td>String</td><td>CS501</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ingestion Logs -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 py-3">
+                <h6 class="fw-bold mb-0"><i class="bi bi-clock-history me-2"></i>Ingestion History</h6>
+            </div>
+            <div class="card-body p-0" style="max-height:500px;overflow-y:auto;">
+                {% for log in logs %}
+                <div class="p-3 border-bottom">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="fw-semibold small">{{ log.filename }}</div>
+                            <div class="text-muted small">{{ log.created_at.strftime('%b %d, %Y %H:%M') }}</div>
+                        </div>
+                        <span class="badge {{ 'bg-success' if log.status == 'completed' else ('bg-danger' if log.status == 'failed' else 'bg-warning text-dark') }}">
+                            {{ log.status }}
+                        </span>
+                    </div>
+                    <div class="mt-2 d-flex gap-3 small text-muted">
+                        <span><i class="bi bi-check-circle text-success me-1"></i>{{ log.records_created }} created</span>
+                        <span><i class="bi bi-arrow-repeat text-info me-1"></i>{{ log.records_updated }} updated</span>
+                        {% if log.errors_count > 0 %}
+                        <span><i class="bi bi-x-circle text-danger me-1"></i>{{ log.errors_count }} errors</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                    <p class="small">No files uploaded yet</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Drag events
+    ['dragenter', 'dragover'].forEach(e => {
+        dropZone.addEventListener(e, function(evt) {
+            evt.preventDefault();
+            dropZone.style.borderColor = '#118ab2';
+            dropZone.style.background = 'rgba(17,138,178,0.05)';
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(e => {
+        dropZone.addEventListener(e, function(evt) {
+            evt.preventDefault();
+            dropZone.style.borderColor = '#dee2e6';
+            dropZone.style.background = '#fafbfc';
+        });
+    });
+
+    dropZone.addEventListener('drop', function(evt) {
+        const files = evt.dataTransfer.files;
+        if (files.length && files[0].name.endsWith('.csv')) {
+            fileInput.files = files;
+            showFile(files[0]);
+        }
+    });
+
+    dropZone.addEventListener('click', function(e) {
+        if (e.target === dropZone || e.target.closest('.upload-zone')) {
+            fileInput.click();
+        }
+    });
+
+    fileInput.addEventListener('change', function() {
+        if (this.files.length) showFile(this.files[0]);
+    });
+
+    function showFile(file) {
+        fileName.textContent = file.name;
+        fileSize.textContent = '(' + (file.size / 1024).toFixed(1) + ' KB)';
+        fileInfo.classList.remove('d-none');
+        submitBtn.disabled = false;
+    }
+});
+</script>
+{% endblock %}

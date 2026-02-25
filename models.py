@@ -1,0 +1,320 @@
+"""
+PASS Database Models
+======================
+SQLAlchemy ORM models for the Proactive Academic Support System.
+Implements the schema defined in PRD Section 8.2.
+"""
+
+from datetime import datetime, timezone
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin
+
+from app import db, login_manager
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Authentication Models
+# ─────────────────────────────────────────────────────────────────────────────
+
+class User(UserMixin, db.Model):
+    """
+    Application user (instructor, admin, or student).
+    Handles authentication and role-based access control.
+    """
+
+    __tablename__ = "users"
+
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), unique=True, nullable=False, index=True)
+    username = db.Column(db.String(80), unique=True, nullable=False, index=True)
+    password_hash = db.Column(db.String(256), nullable=False)
+    role = db.Column(
+        db.String(20), nullable=False, default="student"
+    )  # 'instructor', 'student', 'admin'
+    full_name = db.Column(db.String(100), nullable=False, default="")
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(
+        db.DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+    last_login = db.Column(db.DateTime, nullable=True)
+
+    # Relationships
+    student_profile = db.relationship(
+        "Student", backref="user", uselist=False, lazy=True
+    )
+
+    def set_password(self, password):
+        """Hash and store password securely."""
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        """Verify password against stored hash."""
+        return check_password_hash(self.password_hash, password)
+
+    def __repr__(self):
+        return f"<User {self.username} ({self.role})>"
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    """Flask-Login user loader callback."""
+    return db.session.get(User, int(user_id))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Academic Models
+# ─────────────────────────────────────────────────────────────────────────────
+
+class Course(db.Model):
+    """Academic course entity."""
+
+    __tablename__ = "courses"
+
+    id = db.Column(db.Integer, primary_key=True)
+    course_id = db.Column(db.String(20), unique=True, nullable=False, index=True)
+    course_name = db.Column(db.String(150), nullable=False)
+    semester = db.Column(db.String(20), nullable=False)
+    instructor_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    created_at = db.Column(
+        db.DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+    # Relationships
+    instructor = db.relationship("User", backref="courses_taught", lazy=True)
+    students = db.relationship("Student", backref="course", lazy=True)
+    submissions = db.relationship("Submission", backref="course", lazy=True)
+
+    def __repr__(self):
+        return f"<Course {self.course_id}: {self.course_name}>"
+
+
+class Student(db.Model):
+    """
+    Student academic profile.
+    Master student registry as defined in PRD Section 8.2.
+    """
+
+    __tablename__ = "students"
+
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.String(20), unique=True, nullable=False, index=True)
+    name = db.Column(db.String(100), nullable=False)
+    course_id = db.Column(
+        db.Integer, db.ForeignKey("courses.id"), nullable=True
+    )
+    user_id = db.Column(
+        db.Integer, db.ForeignKey("users.id"), nullable=True, unique=True
+    )
+    credibility_score = db.Column(db.Float, default=50.0)
+    enrollment_date = db.Column(
+        db.DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+    status = db.Column(
+        db.String(20), default="active"
+    )  # 'active', 'inactive', 'graduated'
+
+    # Relationships
+    submissions = db.relationship(
+        "Submission", backref="student", lazy=True, order_by="Submission.submitted_at"
+    )
+    alerts = db.relationship(
+        "Alert", backref="student", lazy=True, order_by="Alert.created_at.desc()"
+    )
+    policy_events = db.relationship(
+        "PolicyEvent", backref="student", lazy=True
+    )
+
+    @property
+    def active_alerts_count(self):
+        """Count of unresolved alerts."""
+        return len([a for a in self.alerts if not a.resolved])
+
+    @property
+    def total_submissions(self):
+        """Total number of submissions."""
+        return len(self.submissions)
+
+    @property
+    def on_time_rate(self):
+        """Percentage of on-time submissions."""
+        if not self.submissions:
+            return 0.0
+        on_time = sum(1 for s in self.submissions if s.delta_t >= 0)
+        return round((on_time / len(self.submissions)) * 100, 1)
+
+    def to_dict(self):
+        """Serialize student data for API responses."""
+        return {
+            "id": self.id,
+            "student_id": self.student_id,
+            "name": self.name,
+            "credibility_score": round(self.credibility_score, 2),
+            "total_submissions": self.total_submissions,
+            "on_time_rate": self.on_time_rate,
+            "active_alerts": self.active_alerts_count,
+            "status": self.status,
+        }
+
+    def __repr__(self):
+        return f"<Student {self.student_id}: {self.name}>"
+
+
+class Submission(db.Model):
+    """
+    Raw submission records with computed Δt.
+    Stores the temporal relationship between submission and deadline.
+    """
+
+    __tablename__ = "submissions"
+
+    id = db.Column(db.Integer, primary_key=True)
+    submission_id = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    student_id = db.Column(
+        db.Integer, db.ForeignKey("students.id"), nullable=False, index=True
+    )
+    assignment_id = db.Column(db.String(50), nullable=False, index=True)
+    course_id_ref = db.Column(
+        db.Integer, db.ForeignKey("courses.id"), nullable=True
+    )
+    submitted_at = db.Column(db.DateTime, nullable=False)
+    deadline = db.Column(db.DateTime, nullable=False)
+    delta_t = db.Column(db.Float, nullable=False)  # seconds: positive=early, negative=late
+    delta_t_hours = db.Column(db.Float, nullable=False)  # Δt in hours for readability
+    submission_status = db.Column(
+        db.String(20), default="on-time"
+    )  # 'on-time', 'late', 'missing'
+    created_at = db.Column(
+        db.DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+    def to_dict(self):
+        """Serialize submission data for API responses."""
+        return {
+            "id": self.id,
+            "submission_id": self.submission_id,
+            "assignment_id": self.assignment_id,
+            "submitted_at": self.submitted_at.isoformat(),
+            "deadline": self.deadline.isoformat(),
+            "delta_t": round(self.delta_t, 2),
+            "delta_t_hours": round(self.delta_t_hours, 2),
+            "status": self.submission_status,
+        }
+
+    def __repr__(self):
+        return f"<Submission {self.submission_id} Δt={self.delta_t_hours:.1f}h>"
+
+
+class Alert(db.Model):
+    """
+    Hysteresis-confirmed alerts log.
+    Only contains statistically validated behavioral drift warnings.
+    """
+
+    __tablename__ = "alerts"
+
+    id = db.Column(db.Integer, primary_key=True)
+    alert_id = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    student_id = db.Column(
+        db.Integer, db.ForeignKey("students.id"), nullable=False, index=True
+    )
+    metric = db.Column(db.String(30), nullable=False)  # 'delta_t', 'variance'
+    pct_change = db.Column(db.Float, nullable=False)
+    window_size = db.Column(db.Integer, nullable=False)
+    severity = db.Column(
+        db.String(20), default="warning"
+    )  # 'info', 'warning', 'critical'
+    description = db.Column(db.Text, nullable=False)
+    resolved = db.Column(db.Boolean, default=False)
+    resolved_at = db.Column(db.DateTime, nullable=True)
+    consecutive_improvements = db.Column(db.Integer, default=0)
+    created_at = db.Column(
+        db.DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+    def to_dict(self):
+        """Serialize alert data for API responses."""
+        return {
+            "id": self.id,
+            "alert_id": self.alert_id,
+            "student_id": self.student_id,
+            "student_name": self.student.name if self.student else "Unknown",
+            "metric": self.metric,
+            "pct_change": round(self.pct_change, 1),
+            "window_size": self.window_size,
+            "severity": self.severity,
+            "description": self.description,
+            "resolved": self.resolved,
+            "created_at": self.created_at.isoformat(),
+        }
+
+    def __repr__(self):
+        return f"<Alert {self.alert_id} [{self.severity}] resolved={self.resolved}>"
+
+
+class PolicyEvent(db.Model):
+    """
+    Automated perks and waivers triggered by credibility scores.
+    Implements FR-13: Automated policy triggering.
+    """
+
+    __tablename__ = "policy_events"
+
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    student_id = db.Column(
+        db.Integer, db.ForeignKey("students.id"), nullable=False, index=True
+    )
+    policy_type = db.Column(
+        db.String(50), nullable=False
+    )  # 'attendance_waiver', 'deadline_extension', 'recognition'
+    description = db.Column(db.Text, nullable=True)
+    triggered_at = db.Column(
+        db.DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+    expires_at = db.Column(db.DateTime, nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
+    triggered_by = db.Column(
+        db.String(20), default="system"
+    )  # 'system' or 'manual'
+
+    def to_dict(self):
+        """Serialize policy event for API responses."""
+        return {
+            "id": self.id,
+            "event_id": self.event_id,
+            "student_name": self.student.name if self.student else "Unknown",
+            "policy_type": self.policy_type,
+            "description": self.description,
+            "triggered_at": self.triggered_at.isoformat(),
+            "expires_at": self.expires_at.isoformat() if self.expires_at else None,
+            "is_active": self.is_active,
+            "triggered_by": self.triggered_by,
+        }
+
+    def __repr__(self):
+        return f"<PolicyEvent {self.event_id} type={self.policy_type}>"
+
+
+class IngestionLog(db.Model):
+    """
+    Data ingestion audit log.
+    Tracks CSV uploads and API polls for transparency (FR-04).
+    """
+
+    __tablename__ = "ingestion_logs"
+
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(255), nullable=True)
+    source = db.Column(db.String(20), nullable=False)  # 'csv', 'api'
+    total_records = db.Column(db.Integer, default=0)
+    valid_records = db.Column(db.Integer, default=0)
+    invalid_records = db.Column(db.Integer, default=0)
+    errors = db.Column(db.Text, nullable=True)
+    status = db.Column(db.String(20), default="completed")  # 'completed', 'failed', 'partial'
+    ingested_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    created_at = db.Column(
+        db.DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+    def __repr__(self):
+        return f"<IngestionLog {self.filename} [{self.status}]>"

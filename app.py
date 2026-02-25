@@ -1,0 +1,115 @@
+"""
+PASS Application Factory
+==========================
+Creates and configures the Flask application instance with all extensions,
+blueprints, and middleware.
+"""
+
+import os
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
+from flask_wtf.csrf import CSRFProtect
+from flask_cors import CORS
+
+from config import config_by_name
+
+# Initialize extensions (created here, bound to app in create_app)
+db = SQLAlchemy()
+login_manager = LoginManager()
+csrf = CSRFProtect()
+
+
+def create_app(config_name=None):
+    """
+    Application factory pattern.
+
+    Args:
+        config_name: Configuration profile ('development', 'testing', 'production')
+
+    Returns:
+        Configured Flask application instance.
+    """
+    if config_name is None:
+        config_name = os.environ.get("FLASK_CONFIG", "development")
+
+    app = Flask(
+        __name__,
+        template_folder="templates",
+        static_folder="static",
+    )
+    app.config.from_object(config_by_name[config_name])
+
+    # Ensure required directories exist
+    os.makedirs(app.config.get("UPLOAD_FOLDER", "uploads"), exist_ok=True)
+    os.makedirs(os.path.join(app.root_path, "instance"), exist_ok=True)
+
+    # Initialize extensions
+    db.init_app(app)
+    login_manager.init_app(app)
+    csrf.init_app(app)
+    CORS(app, resources={r"/api/*": {"origins": "*"}})
+
+    # Configure login manager
+    login_manager.login_view = "auth.login"
+    login_manager.login_message = "Please log in to access this page."
+    login_manager.login_message_category = "warning"
+
+    # Register blueprints
+    from routes.auth import auth_bp
+    from routes.dashboard import dashboard_bp
+    from routes.api import api_bp
+    from routes.student import student_bp
+
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(dashboard_bp)
+    app.register_blueprint(api_bp, url_prefix="/api")
+    app.register_blueprint(student_bp, url_prefix="/student")
+
+    # Exempt API routes from CSRF for REST clients
+    csrf.exempt(api_bp)
+
+    # Create database tables
+    with app.app_context():
+        from models import User, Student, Submission, Alert, PolicyEvent, Course
+        db.create_all()
+
+    # Register error handlers
+    register_error_handlers(app)
+
+    # Register template context processors
+    register_context_processors(app)
+
+    return app
+
+
+def register_error_handlers(app):
+    """Register custom error pages."""
+
+    @app.errorhandler(404)
+    def not_found(error):
+        from flask import render_template
+        return render_template("errors/404.html"), 404
+
+    @app.errorhandler(500)
+    def internal_error(error):
+        db.session.rollback()
+        from flask import render_template
+        return render_template("errors/500.html"), 500
+
+    @app.errorhandler(403)
+    def forbidden(error):
+        from flask import render_template
+        return render_template("errors/403.html"), 403
+
+
+def register_context_processors(app):
+    """Register Jinja2 context processors for templates."""
+
+    @app.context_processor
+    def inject_app_info():
+        return {
+            "app_name": "PASS",
+            "app_version": "1.0",
+            "app_full_name": "Proactive Academic Support System",
+        }

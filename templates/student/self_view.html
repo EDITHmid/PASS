@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile — PASS{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">My Academic Profile</h4>
+        <p class="text-muted small mb-0">
+            <i class="bi bi-hash me-1"></i>{{ student.student_id }}
+            {% if student.course %}
+            &nbsp;·&nbsp; <i class="bi bi-book me-1"></i>{{ student.course.name }}
+            {% endif %}
+        </p>
+    </div>
+</div>
+
+<!-- Credibility Gauge + Quick Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm text-center p-4">
+            <h6 class="fw-bold mb-3">Credibility Score</h6>
+            <div class="position-relative d-inline-block mx-auto" style="width:180px;height:180px;">
+                <div style="position:relative; width:180px; height:180px;"><canvas id="credGauge"></canvas></div>
+                <div class="position-absolute top-50 start-50 translate-middle">
+                    {% set score = student.credibility_score or 0 %}
+                    <div class="fs-2 fw-bold {{ 'text-danger' if score < 30 else ('text-warning' if score < 50 else ('text-primary' if score < 85 else 'text-success')) }}">
+                        {{ "%.0f"|format(score) }}
+                    </div>
+                    <div class="small text-muted">/ 100</div>
+                </div>
+            </div>
+            <div class="mt-3">
+                {% if score >= 85 %}
+                <span class="badge bg-success px-3 py-2">High Tier</span>
+                {% elif score >= 50 %}
+                <span class="badge bg-primary px-3 py-2">Medium Tier</span>
+                {% elif score >= 30 %}
+                <span class="badge bg-warning text-dark px-3 py-2">Low Tier</span>
+                {% else %}
+                <span class="badge bg-danger px-3 py-2">Critical Tier</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="stat-card">
+                    <div class="stat-label">Total Submissions</div>
+                    <div class="stat-value">{{ student.total_submissions }}</div>
+                    <div class="small text-muted mt-1">Assignments submitted</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="stat-card">
+                    <div class="stat-label">On-Time Rate</div>
+                    <div class="stat-value {{ 'text-success' if student.on_time_rate >= 80 else ('text-warning' if student.on_time_rate >= 60 else 'text-danger') }}">
+                        {{ "%.0f"|format(student.on_time_rate) }}%
+                    </div>
+                    <div class="small text-muted mt-1">Submissions before deadline</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="stat-card">
+                    <div class="stat-label">Active Alerts</div>
+                    <div class="stat-value {{ 'text-danger' if student.active_alerts_count > 0 else 'text-success' }}">
+                        {{ student.active_alerts_count }}
+                    </div>
+                    <div class="small text-muted mt-1">
+                        {{ 'Needs attention' if student.active_alerts_count > 0 else 'All clear!' }}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="stat-card">
+                    <div class="stat-label">Credibility Trend</div>
+                    <div class="stat-value">
+                        {% if metrics.trend == 'improving' %}
+                        <i class="bi bi-arrow-up-circle-fill text-success"></i>
+                        <span class="text-success">Improving</span>
+                        {% elif metrics.trend == 'declining' %}
+                        <i class="bi bi-arrow-down-circle-fill text-danger"></i>
+                        <span class="text-danger">Declining</span>
+                        {% else %}
+                        <i class="bi bi-dash-circle-fill text-muted"></i>
+                        <span class="text-muted">Stable</span>
+                        {% endif %}
+                    </div>
+                    <div class="small text-muted mt-1">Based on recent submissions</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Credibility Breakdown -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm p-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-sliders me-2"></i>Score Breakdown</h6>
+            <div class="mb-3">
+                <div class="d-flex justify-content-between small mb-1">
+                    <span>Submission Timeliness (Δt) — 50%</span>
+                    <span class="fw-bold">{{ "%.1f"|format(breakdown.delta_t_score) }}</span>
+                </div>
+                <div class="progress" style="height:8px;">
+                    <div class="progress-bar bg-primary" style="width:{{ breakdown.delta_t_score }}%;border-radius:4px;"></div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <div class="d-flex justify-content-between small mb-1">
+                    <span>Variance Stability (σ) — 30%</span>
+                    <span class="fw-bold">{{ "%.1f"|format(breakdown.variance_score) }}</span>
+                </div>
+                <div class="progress" style="height:8px;">
+                    <div class="progress-bar bg-info" style="width:{{ breakdown.variance_score }}%;border-radius:4px;"></div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <div class="d-flex justify-content-between small mb-1">
+                    <span>Completion Rate — 20%</span>
+                    <span class="fw-bold">{{ "%.1f"|format(breakdown.completion_score) }}</span>
+                </div>
+                <div class="progress" style="height:8px;">
+                    <div class="progress-bar bg-success" style="width:{{ breakdown.completion_score }}%;border-radius:4px;"></div>
+                </div>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between">
+                <span class="fw-bold">Weighted Total</span>
+                <span class="fw-bold fs-5">{{ "%.1f"|format(score) }}</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="chart-container h-100">
+            <h6 class="fw-bold mb-3"><i class="bi bi-graph-up me-2"></i>My Δt Trend</h6>
+            <div style="position:relative; height:220px;"><canvas id="myDeltaTChart"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<!-- Active Perks -->
+{% if active_perks %}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white border-0 py-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-award me-2 text-success"></i>Active Perks & Policies</h6>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            {% for perk in active_perks %}
+            <div class="col-md-4">
+                <div class="p-3 rounded-3 {{ 'bg-success bg-opacity-10 border border-success border-opacity-25' if perk.policy_type == 'recognition' else ('bg-info bg-opacity-10 border border-info border-opacity-25' if perk.policy_type == 'attendance_waiver' else 'bg-warning bg-opacity-10 border border-warning border-opacity-25') }}">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi {{ 'bi-trophy' if perk.policy_type == 'recognition' else ('bi-calendar-check' if perk.policy_type == 'attendance_waiver' else 'bi-exclamation-triangle') }} fs-5"></i>
+                        <span class="fw-bold small">{{ perk.policy_type|replace('_', ' ')|title }}</span>
+                    </div>
+                    <p class="small text-muted mb-1">{{ perk.description }}</p>
+                    {% if perk.expires_at %}
+                    <p class="small text-muted mb-0">
+                        <i class="bi bi-clock me-1"></i>Expires: {{ perk.expires_at.strftime('%b %d, %Y') }}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Alert History -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white border-0 py-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-bell me-2"></i>My Alerts</h6>
+    </div>
+    <div class="card-body p-0">
+        {% for alert in alerts %}
+        <div class="alert-card mx-3 mb-2 {{ 'severity-high' if alert.severity == 'high' else ('severity-medium' if alert.severity == 'medium' else 'severity-low') }}">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="fw-semibold small">{{ alert.metric }}</div>
+                    <div class="text-muted small">{{ alert.description }}</div>
+                </div>
+                <div class="text-end">
+                    {% if alert.resolved %}
+                    <span class="badge bg-success">Resolved</span>
+                    {% else %}
+                    <span class="badge {{ 'bg-danger' if alert.severity == 'high' else ('bg-warning text-dark' if alert.severity == 'medium' else 'bg-info') }}">
+                        {{ alert.severity }}
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="text-muted small mt-1">
+                <i class="bi bi-clock me-1"></i>{{ alert.created_at.strftime('%b %d, %Y %H:%M') }}
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-4">
+            <i class="bi bi-check-circle fs-3 text-success"></i>
+            <p class="small mt-2">No alerts — keep up the good work!</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // ── Credibility Gauge (Doughnut) ───────────────────────────
+    const gaugeCtx = document.getElementById('credGauge');
+    if (gaugeCtx) {
+        const score = {{ student.credibility_score or 0 }};
+        const color = score < 30 ? '#ef476f' : score < 50 ? '#ffd166' : score < 85 ? '#118ab2' : '#06d6a0';
+
+        new Chart(gaugeCtx, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [score, 100 - score],
+                    backgroundColor: [color, '#f0f0f0'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: false,
+                cutout: '78%',
+                rotation: -90,
+                circumference: 180,
+                plugins: { legend: { display: false }, tooltip: { enabled: false } }
+            }
+        });
+    }
+
+    // ── Δt Trend Chart ─────────────────────────────────────────
+    const dtCtx = document.getElementById('myDeltaTChart');
+    if (dtCtx) {
+        const submissions = {{ submissions_json|safe }};
+        new Chart(dtCtx, {
+            type: 'line',
+            data: {
+                labels: submissions.map(s => s.assignment_id),
+                datasets: [{
+                    label: 'My Δt (hours)',
+                    data: submissions.map(s => s.delta_t_hours),
+                    borderColor: '#118ab2',
+                    backgroundColor: 'rgba(17,138,178,0.08)',
+                    fill: true,
+                    tension: 0.3,
+                    pointBackgroundColor: submissions.map(s =>
+                        s.delta_t_hours >= 0 ? '#06d6a0' : '#ef476f'
+                    ),
+                    pointRadius: 5
+                }, {
+                    label: 'Deadline',
+                    data: submissions.map(() => 0),
+                    borderColor: '#ef476f',
+                    borderDash: [5, 5],
+                    pointRadius: 0,
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { usePointStyle: true } }
+                },
+                scales: {
+                    y: {
+                        title: { display: true, text: 'Hours' },
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

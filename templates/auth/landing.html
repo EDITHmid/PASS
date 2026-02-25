@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="min-vh-100 d-flex flex-column">
+    <!-- Hero Section -->
+    <nav class="navbar navbar-expand-lg" style="background: linear-gradient(135deg, #073b4c 0%, #118ab2 100%);">
+        <div class="container">
+            <a class="navbar-brand text-white fw-bold" href="/">
+                <i class="bi bi-mortarboard-fill me-2"></i>PASS
+            </a>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-sm">Log In</a>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-sm">Get Started</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow-1">
+        <!-- Hero -->
+        <section class="py-5" style="background: linear-gradient(135deg, #073b4c 0%, #118ab2 100%);">
+            <div class="container py-5">
+                <div class="row align-items-center">
+                    <div class="col-lg-7">
+                        <span class="badge bg-light text-dark mb-3 px-3 py-2">
+                            <i class="bi bi-lightning-fill text-warning me-1"></i> Final Year B.E./B.Tech Thesis Project
+                        </span>
+                        <h1 class="display-4 fw-bold text-white mb-3">
+                            Proactive Academic<br>Support System
+                        </h1>
+                        <p class="lead text-white-50 mb-4" style="font-size: 1.1rem; line-height: 1.8;">
+                            Detect behavioral drift <strong class="text-white">4–6 weeks before failure</strong>
+                            using Submission Velocity analysis, Hysteresis-based trend filtering,
+                            and dynamic Credibility Scoring. No black-box ML — every alert is
+                            explainable and actionable.
+                        </p>
+                        <div class="d-flex gap-3 flex-wrap">
+                            <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg px-4">
+                                <i class="bi bi-rocket-takeoff me-2"></i>Start Demo
+                            </a>
+                            <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-lg px-4">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>Log In
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-lg-5 d-none d-lg-block text-center">
+                        <div class="p-4">
+                            <div class="bg-white bg-opacity-10 rounded-4 p-4" style="backdrop-filter: blur(10px);">
+                                <div class="mb-3">
+                                    <i class="bi bi-graph-up-arrow text-white" style="font-size: 4rem;"></i>
+                                </div>
+                                <div class="row g-3 text-center">
+                                    <div class="col-6">
+                                        <div class="text-white fw-bold fs-3">4–6</div>
+                                        <div class="text-white-50" style="font-size: 0.75rem;">Weeks Early Detection</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="text-white fw-bold fs-3">60%</div>
+                                        <div class="text-white-50" style="font-size: 0.75rem;">Fewer False Alerts</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="text-white fw-bold fs-3">r≥0.75</div>
+                                        <div class="text-white-50" style="font-size: 0.75rem;">Score Correlation</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="text-white fw-bold fs-3">&lt;2s</div>
+                                        <div class="text-white-50" style="font-size: 0.75rem;">Dashboard Load</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Key Innovations -->
+        <section class="py-5">
+            <div class="container">
+                <div class="text-center mb-5">
+                    <h2 class="fw-bold">Three Foundational Innovations</h2>
+                    <p class="text-muted">Statistically grounded. Transparent. Actionable.</p>
+                </div>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body p-4">
+                                <div class="bg-primary bg-opacity-10 rounded-3 d-inline-flex p-3 mb-3">
+                                    <i class="bi bi-speedometer text-primary fs-3"></i>
+                                </div>
+                                <h5 class="fw-bold">Submission Velocity (Δt)</h5>
+                                <p class="text-muted">
+                                    Measures the temporal distance between each submission and its deadline.
+                                    Tracks how student engagement patterns shift over time — catching
+                                    gradual disengagement before grades reflect it.
+                                </p>
+                                <code class="small">Δt = deadline − submission</code>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body p-4">
+                                <div class="bg-warning bg-opacity-10 rounded-3 d-inline-flex p-3 mb-3">
+                                    <i class="bi bi-activity text-warning fs-3"></i>
+                                </div>
+                                <h5 class="fw-bold">Variance Stability</h5>
+                                <p class="text-muted">
+                                    Rolling standard deviation of Δt values that flags erratic submission
+                                    patterns as burnout precursors. Even high-performing students who maintain
+                                    grades but become inconsistent are detected.
+                                </p>
+                                <code class="small">σ(Δt) over last N submissions</code>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body p-4">
+                                <div class="bg-success bg-opacity-10 rounded-3 d-inline-flex p-3 mb-3">
+                                    <i class="bi bi-funnel text-success fs-3"></i>
+                                </div>
+                                <h5 class="fw-bold">Hysteresis Filter</h5>
+                                <p class="text-muted">
+                                    Suppresses noisy one-off alerts by requiring sustained negative trends
+                                    across a configurable confidence window. Reduces false positives by 60%+
+                                    compared to threshold-only systems.
+                                </p>
+                                <code class="small">3 consecutive declines → alert</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Architecture Overview -->
+        <section class="py-5 bg-white">
+            <div class="container">
+                <div class="text-center mb-5">
+                    <h2 class="fw-bold">System Architecture</h2>
+                    <p class="text-muted">Three-tier serverless design — runs anywhere with Python 3.10+</p>
+                </div>
+                <div class="row g-4 justify-content-center">
+                    <div class="col-md-4">
+                        <div class="text-center p-4">
+                            <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex p-3 mb-3" style="width: 72px; height: 72px; align-items: center; justify-content: center;">
+                                <i class="bi bi-database text-info fs-3"></i>
+                            </div>
+                            <h6 class="fw-bold">Tier 1: Data Ingestion</h6>
+                            <p class="text-muted small">Python + Pandas — CSV parsing, timestamp normalization, validation</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-4">
+                            <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex p-3 mb-3" style="width: 72px; height: 72px; align-items: center; justify-content: center;">
+                                <i class="bi bi-cpu text-primary fs-3"></i>
+                            </div>
+                            <h6 class="fw-bold">Tier 2: Analytical Engine</h6>
+                            <p class="text-muted small">Flask + NumPy — Δt computation, variance analysis, hysteresis logic, scoring</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-4">
+                            <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex p-3 mb-3" style="width: 72px; height: 72px; align-items: center; justify-content: center;">
+                                <i class="bi bi-window-stack text-success fs-3"></i>
+                            </div>
+                            <h6 class="fw-bold">Tier 3: Application Layer</h6>
+                            <p class="text-muted small">Bootstrap 5 + Chart.js — Responsive dashboards, interactive charts</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-4 bg-dark text-center">
+        <div class="container">
+            <p class="text-white-50 small mb-1">
+                PASS v1.0 — Proactive Academic Support System
+            </p>
+            <p class="text-white-50 small mb-0">
+                Final Year B.E./B.Tech CSE Thesis Project &copy; {{ "2026" }}
+            </p>
+        </div>
+    </footer>
+</div>
+{% endblock %}

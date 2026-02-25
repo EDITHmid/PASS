@@ -1,0 +1,394 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — PASS{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Instructor Dashboard</h4>
+        <p class="text-muted small mb-0">Monitor class-wide academic health at a glance</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('dashboard.upload_csv') }}" class="btn btn-primary btn-sm">
+            <i class="bi bi-cloud-upload me-1"></i>Upload Data
+        </a>
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="bi bi-download me-1"></i>Export
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{{ url_for('dashboard.export_csv', type='students') }}"><i class="bi bi-people me-2"></i>Students</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('dashboard.export_csv', type='alerts') }}"><i class="bi bi-bell me-2"></i>Alerts</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('dashboard.export_csv', type='submissions') }}"><i class="bi bi-file-earmark me-2"></i>Submissions</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- KPI Stat Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="stat-label">Total Students</div>
+                    <div class="stat-value">{{ stats.total_students }}</div>
+                </div>
+                <div class="rounded-circle d-flex align-items-center justify-content-center"
+                     style="width:48px;height:48px;background:rgba(17,138,178,0.1);">
+                    <i class="bi bi-people-fill text-primary fs-5"></i>
+                </div>
+            </div>
+            <div class="mt-2 small text-muted">Across all courses</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="stat-label">Active Alerts</div>
+                    <div class="stat-value text-danger">{{ stats.active_alerts }}</div>
+                </div>
+                <div class="rounded-circle d-flex align-items-center justify-content-center"
+                     style="width:48px;height:48px;background:rgba(239,71,111,0.1);">
+                    <i class="bi bi-exclamation-triangle-fill text-danger fs-5"></i>
+                </div>
+            </div>
+            <div class="mt-2 small text-muted">Requiring attention</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="stat-label">At-Risk Students</div>
+                    <div class="stat-value text-warning">{{ stats.at_risk_count }}</div>
+                </div>
+                <div class="rounded-circle d-flex align-items-center justify-content-center"
+                     style="width:48px;height:48px;background:rgba(255,209,102,0.1);">
+                    <i class="bi bi-person-exclamation text-warning fs-5"></i>
+                </div>
+            </div>
+            <div class="mt-2 small text-muted">Credibility &lt; 50</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="stat-label">Avg. Credibility</div>
+                    <div class="stat-value">{{ "%.1f"|format(stats.avg_credibility) }}</div>
+                </div>
+                <div class="rounded-circle d-flex align-items-center justify-content-center"
+                     style="width:48px;height:48px;background:rgba(6,214,160,0.1);">
+                    <i class="bi bi-speedometer2 text-success fs-5"></i>
+                </div>
+            </div>
+            <div class="progress mt-2" style="height:4px;">
+                <div class="progress-bar bg-success" style="width:{{ stats.avg_credibility }}%"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <div class="chart-container">
+            <h6 class="fw-bold mb-3"><i class="bi bi-graph-up me-2"></i>Class-Wide Δt Trend (FR-14)</h6>
+            <div style="position:relative; height:260px;">
+                <canvas id="deltaTChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="chart-container">
+            <h6 class="fw-bold mb-3"><i class="bi bi-pie-chart me-2"></i>Credibility Distribution</h6>
+            <div style="position:relative; height:260px;">
+                <canvas id="credDistChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Feed + At-Risk Table Row -->
+<div class="row g-3 mb-4">
+    <!-- Active Alerts Feed -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
+                <h6 class="fw-bold mb-0"><i class="bi bi-bell-fill me-2 text-danger"></i>Active Alerts</h6>
+                <span class="badge bg-danger">{{ alerts|length }}</span>
+            </div>
+            <div class="card-body p-0" style="max-height:420px;overflow-y:auto;">
+                {% if alerts %}
+                {% for alert in alerts[:15] %}
+                <div class="alert-card mx-3 mb-2 {{ 'severity-high' if alert.severity == 'high' else ('severity-medium' if alert.severity == 'medium' else 'severity-low') }}">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="fw-semibold small">
+                                <a href="{{ url_for('dashboard.student_detail', student_id=alert.student.student_id) }}"
+                                   class="text-decoration-none">
+                                    {{ alert.student.name }}
+                                </a>
+                            </div>
+                            <div class="text-muted small">{{ alert.description }}</div>
+                        </div>
+                        <span class="badge {{ 'bg-danger' if alert.severity == 'high' else ('bg-warning text-dark' if alert.severity == 'medium' else 'bg-info') }} rounded-pill">
+                            {{ alert.severity }}
+                        </span>
+                    </div>
+                    <div class="text-muted small mt-1">
+                        <i class="bi bi-clock me-1"></i>{{ alert.created_at.strftime('%b %d, %H:%M') }}
+                        &nbsp;·&nbsp; {{ alert.metric }}
+                        {% if alert.pct_change %} ({{ "%.1f"|format(alert.pct_change) }}%){% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-check-circle fs-1 d-block mb-2 text-success"></i>
+                    <p class="small">No active alerts. All students are on track!</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- At-Risk Students Table -->
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
+                <h6 class="fw-bold mb-0"><i class="bi bi-person-exclamation me-2 text-warning"></i>At-Risk Students</h6>
+                <span class="badge bg-warning text-dark">{{ at_risk|length }}</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="small fw-semibold ps-3">Student</th>
+                                <th class="small fw-semibold">USN</th>
+                                <th class="small fw-semibold text-center">Score</th>
+                                <th class="small fw-semibold text-center">Alerts</th>
+                                <th class="small fw-semibold text-center">On-Time</th>
+                                <th class="small fw-semibold text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if at_risk %}
+                            {% for student in at_risk %}
+                            <tr>
+                                <td class="ps-3">
+                                    <div class="fw-semibold small">{{ student.name }}</div>
+                                </td>
+                                <td class="small text-muted">{{ student.student_id }}</td>
+                                <td class="text-center">
+                                    {% set score = student.credibility_score or 0 %}
+                                    <span class="badge {{ 'bg-danger' if score < 30 else ('bg-warning text-dark' if score < 50 else 'bg-success') }} rounded-pill">
+                                        {{ "%.0f"|format(score) }}
+                                    </span>
+                                </td>
+                                <td class="text-center small">
+                                    <span class="text-danger fw-semibold">{{ student.active_alerts_count }}</span>
+                                </td>
+                                <td class="text-center small">
+                                    {{ "%.0f"|format(student.on_time_rate) }}%
+                                </td>
+                                <td class="text-center">
+                                    <a href="{{ url_for('dashboard.student_detail', student_id=student.student_id) }}"
+                                       class="btn btn-sm btn-outline-primary py-0 px-2">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    <i class="bi bi-emoji-smile fs-4 d-block mb-1"></i>
+                                    No at-risk students identified
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- All Students Table -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-list-ul me-2"></i>All Students</h6>
+        <input type="text" id="studentSearch" class="form-control form-control-sm" style="width:220px;"
+               placeholder="Search students...">
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="allStudentsTable">
+                <thead class="table-light">
+                    <tr>
+                        <th class="small fw-semibold ps-3">Name</th>
+                        <th class="small fw-semibold">USN</th>
+                        <th class="small fw-semibold text-center">Credibility</th>
+                        <th class="small fw-semibold text-center">Submissions</th>
+                        <th class="small fw-semibold text-center">On-Time Rate</th>
+                        <th class="small fw-semibold text-center">Active Alerts</th>
+                        <th class="small fw-semibold text-center">Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in all_students %}
+                    <tr>
+                        <td class="ps-3 fw-semibold small">{{ student.name }}</td>
+                        <td class="small text-muted">{{ student.student_id }}</td>
+                        <td class="text-center">
+                            {% set score = student.credibility_score or 0 %}
+                            <div class="d-flex align-items-center justify-content-center gap-2">
+                                <div class="progress" style="width:60px;height:6px;">
+                                    <div class="progress-bar {{ 'bg-danger' if score < 30 else ('bg-warning' if score < 50 else ('bg-info' if score < 85 else 'bg-success')) }}"
+                                         style="width:{{ score }}%"></div>
+                                </div>
+                                <span class="small fw-semibold">{{ "%.0f"|format(score) }}</span>
+                            </div>
+                        </td>
+                        <td class="text-center small">{{ student.total_submissions }}</td>
+                        <td class="text-center small">{{ "%.0f"|format(student.on_time_rate) }}%</td>
+                        <td class="text-center">
+                            {% if student.active_alerts_count > 0 %}
+                            <span class="badge bg-danger rounded-pill">{{ student.active_alerts_count }}</span>
+                            {% else %}
+                            <span class="badge bg-success rounded-pill">0</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <a href="{{ url_for('dashboard.student_detail', student_id=student.student_id) }}"
+                               class="btn btn-sm btn-outline-primary py-0 px-2">
+                                <i class="bi bi-arrow-right"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // ── Class-Wide Δt Trend Chart (FR-14) ──────────────────────
+    const dtCtx = document.getElementById('deltaTChart');
+    if (dtCtx) {
+        // Prepare data from server
+        const submissions = {{ submissions_json|safe }};
+        // Group by assignment and compute average Δt
+        const assignmentMap = {};
+        submissions.forEach(s => {
+            if (!assignmentMap[s.assignment_id]) {
+                assignmentMap[s.assignment_id] = [];
+            }
+            assignmentMap[s.assignment_id].push(s.delta_t_hours);
+        });
+
+        const labels = Object.keys(assignmentMap).sort();
+        const avgData = labels.map(k => {
+            const vals = assignmentMap[k];
+            return (vals.reduce((a,b) => a+b, 0) / vals.length).toFixed(1);
+        });
+
+        new Chart(dtCtx, {
+            type: 'line',
+            data: {
+                labels: labels.map(l => 'Assignment ' + l),
+                datasets: [{
+                    label: 'Avg Δt (hours)',
+                    data: avgData,
+                    borderColor: '#118ab2',
+                    backgroundColor: 'rgba(17,138,178,0.08)',
+                    fill: true,
+                    tension: 0.35,
+                    pointBackgroundColor: '#118ab2',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }, {
+                    label: 'On-Time Threshold',
+                    data: labels.map(() => 0),
+                    borderColor: '#ef476f',
+                    borderDash: [6, 4],
+                    pointRadius: 0,
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y + 'h'
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        title: { display: true, text: 'Avg Δt (hours)' },
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    // ── Credibility Distribution Doughnut ──────────────────────
+    const credCtx = document.getElementById('credDistChart');
+    if (credCtx) {
+        const dist = {{ cred_distribution|safe }};
+        new Chart(credCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['High (≥85)', 'Medium (50-84)', 'Low (30-49)', 'Critical (<30)'],
+                datasets: [{
+                    data: [dist.high || 0, dist.medium || 0, dist.low || 0, dist.critical || 0],
+                    backgroundColor: ['#06d6a0', '#118ab2', '#ffd166', '#ef476f'],
+                    borderWidth: 0,
+                    hoverOffset: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '68%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { usePointStyle: true, padding: 12, font: { size: 11 } }
+                    }
+                }
+            }
+        });
+    }
+
+    // ── Student Search Filter ──────────────────────────────────
+    const searchInput = document.getElementById('studentSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#allStudentsTable tbody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        });
+    }
+});
+</script>
+{% endblock %}
