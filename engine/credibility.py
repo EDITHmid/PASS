@@ -3,10 +3,12 @@ PASS Credibility Scoring Engine
 =================================
 Implements FR-11, FR-12, FR-13 from the PRD.
 
-Credibility Score (0–100) is computed from:
-  - Δt Consistency (50%): Measures how consistently early submissions are.
-  - Variance Stability (30%): Lower variance = more consistent = higher score.
-  - Assignment Completion Rate (20%): Percentage of assignments submitted.
+Credibility Score (0–100) is computed from five weighted components:
+  - Δt Consistency (25%): Measures how consistently early submissions are.
+  - Variance Stability (10%): Lower variance = more consistent = higher score.
+  - Assignment Completion Rate (10%): Percentage of assignments submitted.
+  - Attendance (25%): Class attendance percentage.
+  - Exam Performance (30%): Best 2 of 3 mid-term exam averages.
 
 Scores crossing configurable thresholds trigger automated policy events.
 """
@@ -22,13 +24,17 @@ class CredibilityScorer:
 
     The score functions as both a reliability index and a policy engine —
     rewarding consistent students with automated perks (attendance flexibility, etc.).
+    Five-factor model: Δt Consistency + Variance Stability + Completion Rate
+                     + Attendance + Exam Performance (best 2 of 3 mids).
     """
 
     def __init__(
         self,
-        weight_delta_t: float = 0.50,
-        weight_variance: float = 0.30,
-        weight_completion: float = 0.20,
+        weight_delta_t: float = 0.25,
+        weight_variance: float = 0.10,
+        weight_completion: float = 0.10,
+        weight_attendance: float = 0.25,
+        weight_exam: float = 0.30,
         threshold_high: float = 85.0,
         threshold_warning: float = 50.0,
         threshold_critical: float = 30.0,
@@ -37,19 +43,24 @@ class CredibilityScorer:
         Initialize the credibility scorer.
 
         Args:
-            weight_delta_t: Weight for Δt consistency component (FR-12: 50%).
-            weight_variance: Weight for variance stability component (FR-12: 30%).
-            weight_completion: Weight for completion rate component (FR-12: 20%).
-            threshold_high: Score threshold for automated perks (FR-13: ≥85).
+            weight_delta_t: Weight for Δt consistency component (25%).
+            weight_variance: Weight for variance stability component (10%).
+            weight_completion: Weight for completion rate component (10%).
+            weight_attendance: Weight for attendance component (25%).
+            weight_exam: Weight for exam performance component (30%).
+            threshold_high: Score threshold for automated perks (≥85).
             threshold_warning: Score threshold for warning state.
             threshold_critical: Score threshold for critical alerts.
         """
-        assert abs(weight_delta_t + weight_variance + weight_completion - 1.0) < 1e-6, \
-            "Weights must sum to 1.0"
+        total = weight_delta_t + weight_variance + weight_completion + weight_attendance + weight_exam
+        assert abs(total - 1.0) < 1e-6, \
+            f"Weights must sum to 1.0, got {total}"
 
         self.weight_delta_t = weight_delta_t
         self.weight_variance = weight_variance
         self.weight_completion = weight_completion
+        self.weight_attendance = weight_attendance
+        self.weight_exam = weight_exam
         self.threshold_high = threshold_high
         self.threshold_warning = threshold_warning
         self.threshold_critical = threshold_critical
@@ -173,22 +184,130 @@ class CredibilityScorer:
         else:
             return max(0.0, rate / 0.7 * 50.0)
 
+    def compute_attendance_score(self, attendance_pct: float) -> float:
+        """
+        Compute the attendance sub-score (0–100).
+
+        Attendance is a strong indicator of academic engagement.
+        Uses a non-linear mapping that penalises poor attendance heavily.
+
+        Anchors:
+            ≥ 95%  →  100
+            ≥ 85%  →   80
+            ≥ 75%  →   60  (minimum for examination eligibility)
+            ≥ 60%  →   30
+            < 60%  →   linear to 0
+
+        Args:
+            attendance_pct: Attendance percentage (0–100).
+
+        Returns:
+            Score from 0 to 100.
+        """
+        pct = max(0.0, min(100.0, attendance_pct))
+
+        if pct >= 95:
+            score = 100.0
+        elif pct >= 85:
+            # 85→80, 95→100
+            score = 80.0 + (pct - 85) * 2.0
+        elif pct >= 75:
+            # 75→60, 85→80
+            score = 60.0 + (pct - 75) * 2.0
+        elif pct >= 60:
+            # 60→30, 75→60
+            score = 30.0 + (pct - 60) * 2.0
+        else:
+            # 0→0, 60→30
+            score = pct / 60.0 * 30.0
+
+        return round(min(100.0, max(0.0, score)), 2)
+
+    def compute_exam_score(
+        self,
+        mid1: Optional[float] = None,
+        mid2: Optional[float] = None,
+        mid3: Optional[float] = None,
+    ) -> float:
+        """
+        Compute the exam performance sub-score (0–100).
+
+        Policy: best 2 of 3 mid-term exams are averaged.
+        Each mid score is expected on a 0–100 scale.
+
+        If fewer than 2 scores are available, the available ones are used
+        with a penalty. If none are available, returns neutral default.
+
+        Scoring anchors:
+            avg ≥ 80  →  100
+            avg ≥ 60  →  70 – 100  (linear)
+            avg ≥ 40  →  40 – 70   (linear)
+            avg < 40  →  0 – 40    (linear)
+
+        Args:
+            mid1: Mid-term 1 score (0–100) or None.
+            mid2: Mid-term 2 score (0–100) or None.
+            mid3: Mid-term 3 score (0–100) or None.
+
+        Returns:
+            Score from 0 to 100.
+        """
+        scores = [s for s in [mid1, mid2, mid3] if s is not None]
+
+        if not scores:
+            return 50.0  # Neutral default — no exam data
+
+        # Best 2 of 3 (or best available)
+        scores.sort(reverse=True)
+        if len(scores) >= 2:
+            avg = (scores[0] + scores[1]) / 2.0
+        else:
+            # Only 1 score available — use it with 10% penalty
+            avg = scores[0] * 0.90
+
+        # Map average to credibility sub-score
+        if avg >= 80:
+            score = 100.0
+        elif avg >= 60:
+            # 60→70, 80→100
+            score = 70.0 + (avg - 60) * 1.5
+        elif avg >= 40:
+            # 40→40, 60→70
+            score = 40.0 + (avg - 40) * 1.5
+        else:
+            # 0→0, 40→40
+            score = avg
+
+        return round(min(100.0, max(0.0, score)), 2)
+
     def compute_credibility_score(
         self,
         delta_t_values: List[float],
         variance_value: float,
         submitted_count: int,
         total_assignments: int,
+        attendance_pct: float = 0.0,
+        mid1: Optional[float] = None,
+        mid2: Optional[float] = None,
+        mid3: Optional[float] = None,
         historical_variances: Optional[List[float]] = None,
     ) -> Dict:
         """
         Compute the composite Credibility Score (FR-11, FR-12).
+
+        Five-factor model:
+          25% Δt Consistency + 10% Variance Stability + 10% Completion
+          + 25% Attendance + 30% Exam Performance (best 2 of 3 mids)
 
         Args:
             delta_t_values: All Δt values for the student.
             variance_value: Current variance stability value.
             submitted_count: Number of assignments submitted.
             total_assignments: Total number of assignments.
+            attendance_pct: Attendance percentage (0–100).
+            mid1: Mid-term 1 score (0–100) or None.
+            mid2: Mid-term 2 score (0–100) or None.
+            mid3: Mid-term 3 score (0–100) or None.
             historical_variances: Past variance values for contextual scoring.
 
         Returns:
@@ -197,12 +316,16 @@ class CredibilityScorer:
         dt_score = self.compute_delta_t_score(delta_t_values)
         var_score = self.compute_variance_score(variance_value, historical_variances)
         comp_score = self.compute_completion_score(submitted_count, total_assignments)
+        att_score = self.compute_attendance_score(attendance_pct)
+        exam_score = self.compute_exam_score(mid1, mid2, mid3)
 
         # Weighted composite
         overall = (
             dt_score * self.weight_delta_t
             + var_score * self.weight_variance
             + comp_score * self.weight_completion
+            + att_score * self.weight_attendance
+            + exam_score * self.weight_exam
         )
         overall = round(min(100.0, max(0.0, overall)), 2)
 
@@ -239,6 +362,16 @@ class CredibilityScorer:
                     "score": comp_score,
                     "weight": self.weight_completion,
                     "weighted": round(comp_score * self.weight_completion, 2),
+                },
+                "attendance": {
+                    "score": att_score,
+                    "weight": self.weight_attendance,
+                    "weighted": round(att_score * self.weight_attendance, 2),
+                },
+                "exam_performance": {
+                    "score": exam_score,
+                    "weight": self.weight_exam,
+                    "weighted": round(exam_score * self.weight_exam, 2),
                 },
             },
         }

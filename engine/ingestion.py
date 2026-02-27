@@ -36,6 +36,10 @@ class DataIngestor:
         "student_name",
         "course_id",
         "submission_status",
+        "attendance_pct",
+        "mid1_score",
+        "mid2_score",
+        "mid3_score",
     }
 
     def __init__(self):
@@ -166,9 +170,24 @@ class DataIngestor:
             "delta_t": delta_t,
             "delta_t_hours": delta_t_hours,
             "submission_status": status,
+            "attendance_pct": self._safe_float(row.get("attendance_pct")),
+            "mid1_score": self._safe_float(row.get("mid1_score")),
+            "mid2_score": self._safe_float(row.get("mid2_score")),
+            "mid3_score": self._safe_float(row.get("mid3_score")),
         }
 
         return record, True
+
+    @staticmethod
+    def _safe_float(value) -> Optional[float]:
+        """Safely convert a value to float, returning None on failure."""
+        if value is None or (isinstance(value, float) and np.isnan(value)):
+            return None
+        try:
+            v = float(value)
+            return v if not np.isnan(v) else None
+        except (ValueError, TypeError):
+            return None
 
     @staticmethod
     def _parse_timestamp(value) -> datetime:

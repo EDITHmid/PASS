@@ -42,9 +42,11 @@ class Config:
     CREDIBILITY_THRESHOLD_CRITICAL = 30  # Score for critical alerts
 
     # Credibility Score Weights (must sum to 1.0)
-    WEIGHT_DELTA_T_CONSISTENCY = 0.50
-    WEIGHT_VARIANCE_STABILITY = 0.30
-    WEIGHT_COMPLETION_RATE = 0.20
+    WEIGHT_DELTA_T_CONSISTENCY = 0.25
+    WEIGHT_VARIANCE_STABILITY = 0.10
+    WEIGHT_COMPLETION_RATE = 0.10
+    WEIGHT_ATTENDANCE = 0.25
+    WEIGHT_EXAM_PERFORMANCE = 0.30
 
 
 class DevelopmentConfig(Config):

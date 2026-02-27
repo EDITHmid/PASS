@@ -75,6 +75,10 @@ def student_user(db):
         name="Test Student",
         user_id=user.id,
         credibility_score=65.0,
+        attendance_pct=82.0,
+        mid1_score=70.0,
+        mid2_score=65.0,
+        mid3_score=75.0,
     )
     db.session.add(student)
     db.session.commit()
@@ -90,6 +94,10 @@ def sample_student(db):
         student_id="1RV22CS001",
         name="Sample Student",
         credibility_score=72.5,
+        attendance_pct=88.0,
+        mid1_score=72.0,
+        mid2_score=68.0,
+        mid3_score=80.0,
     )
     db.session.add(student)
     db.session.flush()

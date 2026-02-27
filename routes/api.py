@@ -166,6 +166,10 @@ def get_student(student_id):
         variance_value=summary["current_variance"],
         submitted_count=len(submissions),
         total_assignments=total_assignments,
+        attendance_pct=student.attendance_pct or 0.0,
+        mid1=student.mid1_score,
+        mid2=student.mid2_score,
+        mid3=student.mid3_score,
     )
 
     alerts = Alert.query.filter_by(student_id=student.id).order_by(

@@ -106,6 +106,10 @@ class Student(db.Model):
         db.Integer, db.ForeignKey("users.id"), nullable=True, unique=True
     )
     credibility_score = db.Column(db.Float, default=50.0)
+    attendance_pct = db.Column(db.Float, default=0.0)  # 0–100 attendance percentage
+    mid1_score = db.Column(db.Float, nullable=True)  # Mid-1 exam score (0–100)
+    mid2_score = db.Column(db.Float, nullable=True)  # Mid-2 exam score (0–100)
+    mid3_score = db.Column(db.Float, nullable=True)  # Mid-3 exam score (0–100)
     enrollment_date = db.Column(
         db.DateTime, default=lambda: datetime.now(timezone.utc)
     )
@@ -142,6 +146,15 @@ class Student(db.Model):
         on_time = sum(1 for s in self.submissions if s.delta_t >= 0)
         return round((on_time / len(self.submissions)) * 100, 1)
 
+    @property
+    def best_two_mid_avg(self):
+        """Average of the best 2 out of 3 mid-term scores."""
+        scores = [s for s in [self.mid1_score, self.mid2_score, self.mid3_score] if s is not None]
+        if len(scores) < 2:
+            return None
+        scores.sort(reverse=True)
+        return round((scores[0] + scores[1]) / 2.0, 2)
+
     def to_dict(self):
         """Serialize student data for API responses."""
         return {
@@ -149,6 +162,11 @@ class Student(db.Model):
             "student_id": self.student_id,
             "name": self.name,
             "credibility_score": round(self.credibility_score, 2),
+            "attendance_pct": round(self.attendance_pct, 1) if self.attendance_pct else 0.0,
+            "mid1_score": self.mid1_score,
+            "mid2_score": self.mid2_score,
+            "mid3_score": self.mid3_score,
+            "best_two_mid_avg": self.best_two_mid_avg,
             "total_submissions": self.total_submissions,
             "on_time_rate": self.on_time_rate,
             "active_alerts": self.active_alerts_count,

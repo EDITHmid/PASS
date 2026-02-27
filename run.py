@@ -116,16 +116,57 @@ def seed_demo_data():
             "Trisha Mukherjee", "Gaurav Choudhary", "Ishita Banerjee",
         ]
 
+        # Define submission behavior profiles (used for both student creation & submissions)
+        profiles = {
+            "excellent": {"mean_hours": 24, "std": 6, "miss_rate": 0.0,
+                          "attendance": (92, 100), "mid_range": (75, 95)},
+            "good": {"mean_hours": 8, "std": 10, "miss_rate": 0.05,
+                      "attendance": (82, 95), "mid_range": (60, 85)},
+            "average": {"mean_hours": 2, "std": 15, "miss_rate": 0.10,
+                         "attendance": (75, 88), "mid_range": (45, 70)},
+            "struggling": {"mean_hours": -5, "std": 18, "miss_rate": 0.15,
+                            "attendance": (60, 78), "mid_range": (30, 55)},
+            "at_risk": {"mean_hours": -12, "std": 22, "miss_rate": 0.25,
+                         "attendance": (40, 65), "mid_range": (15, 40)},
+            "declining": {"mean_hours": 20, "std": 8, "miss_rate": 0.02,
+                           "attendance": (70, 90), "mid_range": (50, 80)},
+        }
+
+        profile_assignments = (
+            ["excellent"] * 5
+            + ["good"] * 8
+            + ["average"] * 7
+            + ["struggling"] * 5
+            + ["at_risk"] * 3
+            + ["declining"] * 2
+        )
+
         students = []
         for i, name in enumerate(student_names):
             usn = f"1RV22CS{str(i + 1).zfill(3)}"
             course = courses[i % len(courses)]
+            profile_name = profile_assignments[i]
+            profile = profiles[profile_name]
+
+            # Generate attendance & mid-term exam scores based on profile
+            att_lo, att_hi = profile["attendance"]
+            mid_lo, mid_hi = profile["mid_range"]
+
+            attendance_pct = round(random.uniform(att_lo, att_hi), 1)
+            mid1 = round(random.uniform(mid_lo, mid_hi), 1)
+            mid2 = round(random.uniform(mid_lo, mid_hi), 1)
+            mid3 = round(random.uniform(mid_lo, mid_hi), 1)
+
             s = Student(
                 student_id=usn,
                 name=name,
                 course_id=course.id,
                 status="active",
                 credibility_score=50.0,  # Will be recomputed
+                attendance_pct=attendance_pct,
+                mid1_score=mid1,
+                mid2_score=mid2,
+                mid3_score=mid3,
             )
             # Link the first student to the student_user account
             if name == "Arjun Mehta":
@@ -140,25 +181,6 @@ def seed_demo_data():
         base_date = datetime(2025, 1, 13, 23, 59, 0, tzinfo=timezone.utc)
         assignments = [f"A{str(i+1).zfill(2)}" for i in range(10)]
         deadlines = [base_date + timedelta(weeks=i) for i in range(10)]
-
-        # Define submission behavior profiles
-        profiles = {
-            "excellent": {"mean_hours": 24, "std": 6, "miss_rate": 0.0},
-            "good": {"mean_hours": 8, "std": 10, "miss_rate": 0.05},
-            "average": {"mean_hours": 2, "std": 15, "miss_rate": 0.10},
-            "struggling": {"mean_hours": -5, "std": 18, "miss_rate": 0.15},
-            "at_risk": {"mean_hours": -12, "std": 22, "miss_rate": 0.25},
-            "declining": {"mean_hours": 20, "std": 8, "miss_rate": 0.02},  # starts well
-        }
-
-        profile_assignments = (
-            ["excellent"] * 5
-            + ["good"] * 8
-            + ["average"] * 7
-            + ["struggling"] * 5
-            + ["at_risk"] * 3
-            + ["declining"] * 2
-        )
 
         all_submissions = []
         for idx, student in enumerate(students):
@@ -228,6 +250,10 @@ def seed_demo_data():
                 variance_value=summary["current_variance"],
                 submitted_count=len(subs),
                 total_assignments=total_assignments,
+                attendance_pct=student.attendance_pct or 0.0,
+                mid1=student.mid1_score,
+                mid2=student.mid2_score,
+                mid3=student.mid3_score,
                 historical_variances=[v for v in variance_series if v is not None],
             )
             student.credibility_score = cred_result["overall_score"]

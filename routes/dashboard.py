@@ -166,6 +166,10 @@ def student_detail(student_id):
         variance_value=summary["current_variance"],
         submitted_count=len(submissions),
         total_assignments=total_assignments,
+        attendance_pct=student.attendance_pct or 0.0,
+        mid1=student.mid1_score,
+        mid2=student.mid2_score,
+        mid3=student.mid3_score,
     )
 
     # Prepare JSON for charts
@@ -181,6 +185,8 @@ def student_detail(student_id):
         "delta_t_score": cred_result["components"]["delta_t_consistency"]["score"],
         "variance_score": cred_result["components"]["variance_stability"]["score"],
         "completion_score": cred_result["components"]["completion_rate"]["score"],
+        "attendance_score": cred_result["components"]["attendance"]["score"],
+        "exam_score": cred_result["components"]["exam_performance"]["score"],
     }
 
     return render_template(
@@ -333,6 +339,16 @@ def _save_ingestion_records(records):
             db.session.add(student)
             db.session.flush()
 
+        # Update attendance & exam scores if provided in CSV
+        if rec.get("attendance_pct") is not None:
+            student.attendance_pct = rec["attendance_pct"]
+        if rec.get("mid1_score") is not None:
+            student.mid1_score = rec["mid1_score"]
+        if rec.get("mid2_score") is not None:
+            student.mid2_score = rec["mid2_score"]
+        if rec.get("mid3_score") is not None:
+            student.mid3_score = rec["mid3_score"]
+
         # Find or create course
         course = None
         if rec.get("course_id"):
@@ -404,6 +420,10 @@ def _recompute_all_metrics():
             variance_value=summary["current_variance"],
             submitted_count=len(submissions),
             total_assignments=total_assignments,
+            attendance_pct=student.attendance_pct or 0.0,
+            mid1=student.mid1_score,
+            mid2=student.mid2_score,
+            mid3=student.mid3_score,
             historical_variances=[v for v in variance_series if v is not None],
         )
         student.credibility_score = cred_result["overall_score"]

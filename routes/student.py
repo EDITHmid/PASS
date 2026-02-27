@@ -66,6 +66,10 @@ def self_view():
         variance_value=summary["current_variance"],
         submitted_count=len(submissions),
         total_assignments=total_assignments,
+        attendance_pct=student.attendance_pct or 0.0,
+        mid1=student.mid1_score,
+        mid2=student.mid2_score,
+        mid3=student.mid3_score,
     )
 
     # Active alerts for this student
@@ -91,6 +95,8 @@ def self_view():
         "delta_t_score": cred_result["components"]["delta_t_consistency"]["score"],
         "variance_score": cred_result["components"]["variance_stability"]["score"],
         "completion_score": cred_result["components"]["completion_rate"]["score"],
+        "attendance_score": cred_result["components"]["attendance"]["score"],
+        "exam_score": cred_result["components"]["exam_performance"]["score"],
     }
 
     # Determine trend
