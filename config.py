@@ -40,6 +40,7 @@ class Config:
     CREDIBILITY_THRESHOLD_HIGH = 85  # Score for automated perks
     CREDIBILITY_THRESHOLD_WARNING = 50  # Score for warning state
     CREDIBILITY_THRESHOLD_CRITICAL = 30  # Score for critical alerts
+    EXAM_ELIGIBILITY_THRESHOLD = 50  # Minimum credibility to sit for final exams
 
     # Credibility Score Weights (must sum to 1.0)
     WEIGHT_DELTA_T_CONSISTENCY = 0.25

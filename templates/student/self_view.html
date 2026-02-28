@@ -160,6 +160,109 @@
     </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════
+     FINAL EXAM ELIGIBILITY — Gap-to-Threshold Analysis
+     ═══════════════════════════════════════════════════════════ -->
+<div class="card border-0 shadow-sm mb-4 {{ 'border-start border-4 border-success' if eligibility.is_eligible else 'border-start border-4 border-danger' }}">
+    <div class="card-body p-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="fw-bold mb-0">
+                <i class="bi bi-mortarboard me-2 {{ 'text-success' if eligibility.is_eligible else 'text-danger' }}"></i>
+                Final Exam Eligibility
+            </h6>
+            {% if eligibility.is_eligible %}
+            <span class="badge bg-success px-3 py-2"><i class="bi bi-check-circle me-1"></i>Eligible</span>
+            {% else %}
+            <span class="badge bg-danger px-3 py-2"><i class="bi bi-x-circle me-1"></i>Not Yet Eligible</span>
+            {% endif %}
+        </div>
+
+        <!-- Score vs Threshold gauge bar -->
+        <div class="mb-4">
+            <div class="d-flex justify-content-between small mb-1">
+                <span>Your Score: <strong class="{{ 'text-success' if eligibility.is_eligible else 'text-danger' }}">{{ eligibility.current_score }}</strong></span>
+                <span>Threshold: <strong>{{ eligibility.threshold }}</strong></span>
+            </div>
+            <div class="position-relative" style="height:28px;">
+                <div class="progress" style="height:28px;border-radius:8px;">
+                    <div class="progress-bar {{ 'bg-success' if eligibility.is_eligible else 'bg-danger' }}"
+                         role="progressbar"
+                         style="width:{{ [eligibility.current_score, 100]|min }}%;border-radius:8px;font-size:0.75rem;"
+                         aria-valuenow="{{ eligibility.current_score }}" aria-valuemin="0" aria-valuemax="100">
+                        {{ eligibility.current_score }}
+                    </div>
+                </div>
+                <!-- Threshold marker line -->
+                <div class="position-absolute top-0" style="left:{{ eligibility.threshold }}%;height:100%;width:3px;background:#073b4c;z-index:2;border-radius:2px;"></div>
+                <div class="position-absolute small fw-bold" style="left:{{ eligibility.threshold }}%;top:-18px;transform:translateX(-50%);color:#073b4c;">
+                    {{ eligibility.threshold }}
+                </div>
+            </div>
+
+            {% if not eligibility.is_eligible %}
+            <div class="mt-2 p-2 bg-danger bg-opacity-10 rounded-2 text-center">
+                <span class="small fw-semibold text-danger">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    You need <strong>{{ eligibility.gap }}</strong> more points to qualify for final exams.
+                </span>
+            </div>
+            {% else %}
+            <div class="mt-2 p-2 bg-success bg-opacity-10 rounded-2 text-center">
+                <span class="small fw-semibold text-success">
+                    <i class="bi bi-check-circle me-1"></i>
+                    You are {{ eligibility.current_score - eligibility.threshold }} points above the threshold. Keep it up!
+                </span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Per-Factor Gap Breakdown -->
+        <h6 class="fw-semibold small text-muted mb-3">
+            <i class="bi bi-bar-chart-steps me-1"></i>Where to Improve — Factor-wise Gap Analysis
+        </h6>
+        <div class="row g-3">
+            {% for f in eligibility.factors %}
+            <div class="col-md-6">
+                <div class="p-3 rounded-3 bg-light h-100">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center bg-{{ f.color }} bg-opacity-10"
+                             style="width:36px;height:36px;">
+                            <i class="bi {{ f.icon }} text-{{ f.color }}"></i>
+                        </div>
+                        <div>
+                            <div class="fw-semibold small">{{ f.label }}</div>
+                            <div class="text-muted" style="font-size:0.7rem;">Weight: {{ f.weight_pct }}%</div>
+                        </div>
+                        <div class="ms-auto text-end">
+                            <div class="fw-bold small">{{ f.raw_score }}<span class="text-muted fw-normal">/100</span></div>
+                        </div>
+                    </div>
+                    <div class="progress mb-2" style="height:6px;">
+                        <div class="progress-bar bg-{{ f.color }}" style="width:{{ f.raw_score }}%;border-radius:3px;"></div>
+                    </div>
+                    <div class="d-flex justify-content-between" style="font-size:0.72rem;">
+                        <span class="text-muted">Contributing <strong>{{ f.current_contrib }}</strong> / {{ f.max_contrib }} pts</span>
+                        {% if f.lost_pts > 0 %}
+                        <span class="text-danger fw-semibold">−{{ f.lost_pts }} pts lost</span>
+                        {% else %}
+                        <span class="text-success fw-semibold"><i class="bi bi-check"></i> Maxed</span>
+                        {% endif %}
+                    </div>
+                    {% if f.lost_pts > 0 %}
+                    <div class="mt-2 p-2 rounded-2 bg-white">
+                        <span class="text-muted" style="font-size:0.7rem;">
+                            <i class="bi bi-lightbulb text-warning me-1"></i>{{ f.tip }}
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
 <!-- Active Perks -->
 {% if active_perks %}
 <div class="card border-0 shadow-sm mb-4">
