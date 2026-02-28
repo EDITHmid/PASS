@@ -77,7 +77,7 @@
         <section class="py-5">
             <div class="container">
                 <div class="text-center mb-5">
-                    <h2 class="fw-bold">Three Foundational Innovations</h2>
+                    <h2 class="fw-bold">Five-Factor Credibility Model</h2>
                     <p class="text-muted">Statistically grounded. Transparent. Actionable.</p>
                 </div>
                 <div class="row g-4">
@@ -87,7 +87,7 @@
                                 <div class="bg-primary bg-opacity-10 rounded-3 d-inline-flex p-3 mb-3">
                                     <i class="bi bi-speedometer text-primary fs-3"></i>
                                 </div>
-                                <h5 class="fw-bold">Submission Velocity (Δt)</h5>
+                                <h5 class="fw-bold">Submission Velocity (Δt) — 25%</h5>
                                 <p class="text-muted">
                                     Measures the temporal distance between each submission and its deadline.
                                     Tracks how student engagement patterns shift over time — catching
@@ -103,7 +103,7 @@
                                 <div class="bg-warning bg-opacity-10 rounded-3 d-inline-flex p-3 mb-3">
                                     <i class="bi bi-activity text-warning fs-3"></i>
                                 </div>
-                                <h5 class="fw-bold">Variance Stability</h5>
+                                <h5 class="fw-bold">Variance Stability (σ) — 10%</h5>
                                 <p class="text-muted">
                                     Rolling standard deviation of Δt values that flags erratic submission
                                     patterns as burnout precursors. Even high-performing students who maintain
@@ -119,13 +119,47 @@
                                 <div class="bg-success bg-opacity-10 rounded-3 d-inline-flex p-3 mb-3">
                                     <i class="bi bi-funnel text-success fs-3"></i>
                                 </div>
-                                <h5 class="fw-bold">Hysteresis Filter</h5>
+                                <h5 class="fw-bold">Completion & Hysteresis — 10%</h5>
                                 <p class="text-muted">
-                                    Suppresses noisy one-off alerts by requiring sustained negative trends
-                                    across a configurable confidence window. Reduces false positives by 60%+
-                                    compared to threshold-only systems.
+                                    Completion rate of assignments combined with hysteresis filtering that
+                                    suppresses noisy one-off alerts by requiring sustained negative trends.
+                                    Reduces false positives by 60%+ compared to threshold-only systems.
                                 </p>
                                 <code class="small">3 consecutive declines → alert</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-4 mt-1">
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body p-4">
+                                <div class="bg-info bg-opacity-10 rounded-3 d-inline-flex p-3 mb-3">
+                                    <i class="bi bi-calendar-check text-info fs-3"></i>
+                                </div>
+                                <h5 class="fw-bold">Attendance — 25%</h5>
+                                <p class="text-muted">
+                                    Class attendance percentage directly influences credibility.
+                                    Students with consistent attendance (75–100%) demonstrate engagement
+                                    that correlates strongly with academic success.
+                                </p>
+                                <code class="small">Score = (attendance% − 75) / 25 × 100</code>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body p-4">
+                                <div class="bg-danger bg-opacity-10 rounded-3 d-inline-flex p-3 mb-3">
+                                    <i class="bi bi-journal-check text-danger fs-3"></i>
+                                </div>
+                                <h5 class="fw-bold">Exam Performance — 30%</h5>
+                                <p class="text-muted">
+                                    Best 2 out of 3 mid-term exam scores are averaged and mapped to
+                                    a 0–100 scale. This captures academic mastery alongside behavioral
+                                    signals for a holistic credibility assessment.
+                                </p>
+                                <code class="small">Best 2 of {Mid-1, Mid-2, Mid-3} avg</code>
                             </div>
                         </div>
                     </div>

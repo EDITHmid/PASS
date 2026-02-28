@@ -65,12 +65,13 @@ def instructor_dashboard():
         Alert.created_at.desc()
     ).limit(20).all()
 
-    # Get at-risk students (top 10 by lowest credibility score)
+    # Get at-risk students (credibility < 50, sorted by lowest first)
     at_risk_students = Student.query.filter(
-        Student.status == "active"
+        Student.status == "active",
+        Student.credibility_score < 50
     ).order_by(
         Student.credibility_score.asc()
-    ).limit(10).all()
+    ).all()
 
     # Get all students for overview
     all_students = Student.query.filter_by(status="active").all()
@@ -277,7 +278,7 @@ def export_csv():
 
     if export_type == "students":
         writer.writerow([
-            "Student ID", "Name", "Credibility Score", "Total Submissions",
+            "Roll No", "Name", "Credibility Score", "Total Submissions",
             "On-Time Rate (%)", "Active Alerts", "Status",
         ])
         for s in Student.query.filter_by(status="active").all():

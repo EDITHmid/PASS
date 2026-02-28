@@ -49,12 +49,19 @@ Simple threshold-based alerting systems (e.g., "flag if submission is >24h late"
 
 ### 1.3 PASS Solution
 
-PASS addresses both problems by:
+PASS addresses both problems through a **five-factor analytical model** that combines temporal submission behaviour with traditional academic indicators:
 
 1. **Computing Submission Velocity (Δt)** — a signed temporal distance metric that captures not just *whether* a student is late, but *how their pattern is changing over time*.
 2. **Applying Hysteresis Filtering** — requiring a negative trend to persist for 2–3 consecutive assignments before generating an alert, suppressing transient noise.
-3. **Building a Credibility Score** — a dynamic 0–100 reliability index combining Δt consistency (50%), variance stability (30%), and completion rate (20%).
+3. **Building a Five-Factor Credibility Score** — a dynamic 0–100 reliability index combining:
+   - Δt Consistency (25%) — regularity of submission timing
+   - Variance Stability (10%) — consistency of submission pattern
+   - Assignment Completion Rate (10%) — percentage of assignments submitted
+   - Attendance (25%) — class attendance percentage
+   - Exam Performance (30%) — best 2 of 3 mid-term exam averages
 4. **Automating Low-Stakes Policies** — high-credibility students automatically receive perks (attendance waivers); declining students trigger proactive interventions.
+
+The system intentionally blends *behavioural signals* (Δt, variance, completion) with *academic performance signals* (attendance, exams) to produce a holistic credibility index that correlates strongly with overall student engagement.
 
 ### 1.4 Success Metrics (from PRD)
 
@@ -91,7 +98,7 @@ PASS addresses both problems by:
 │  ┌────────────┐ ┌──────────────┐ ┌──────────────┐              │
 │  │ MetricComp │ │ Hysteresis   │ │ Credibility  │              │
 │  │ (Δt, σ,   │ │ Filter       │ │ Scorer       │              │
-│  │  trend)   │ │ (alerts)     │ │ (0–100)      │              │
+│  │  trend)   │ │ (alerts)     │ │ (5-factor)   │              │
 │  └────────────┘ └──────────────┘ └──────────────┘              │
 │  ┌─────────────────────────────────────────────┐               │
 │  │ DataIngestor (CSV parsing, validation)      │               │
@@ -112,7 +119,8 @@ CSV Upload / API Ingest
         ▼
 ┌─────────────────┐
 │  DataIngestor    │ ← Validates columns, parses timestamps,
-│  (ingestion.py)  │   normalizes to UTC, computes initial Δt
+│  (ingestion.py)  │   normalizes to UTC, computes initial Δt,
+│                  │   extracts attendance & exam data (optional)
 └────────┬────────┘
          │
          ▼
@@ -129,7 +137,7 @@ CSV Upload / API Ingest
          │
          ▼
 ┌─────────────────┐
-│ CredibilityScorer│ ← Computes weighted composite score (50/30/20),
+│ CredibilityScorer│ ← 5-factor weighted composite (25/10/10/25/30),
 │ (credibility.py) │   classifies tier, triggers policy events
 └────────┬────────┘
          │
@@ -232,7 +240,7 @@ PASS/
 │   ├── __init__.py
 │   ├── metrics.py                  # Δt computation, variance, trend detection
 │   ├── hysteresis.py               # Hysteresis filter, alert generation
-│   ├── credibility.py              # Credibility scoring, policy triggers
+│   ├── credibility.py              # 5-factor credibility scoring, policy triggers
 │   └── ingestion.py                # CSV parsing, validation, timestamp normalization
 │
 ├── routes/                         # Flask Blueprints (4 modules)
@@ -288,283 +296,289 @@ PASS/
 │ password │                  │ semester │                 │ user_id FK │
 │ full_name│                  │ instr FK │                 │ course FK  │
 │ role     │                  └──────────┘                 │ cred_score │
-└──────────┘                                               └─────┬──────┘
-     │                                                           │
-     │ 1:1                                          1:N │  1:N │  1:N │
-     └──────────────▶ Student                           │      │      │
+└──────────┘                                               │ attend_pct │
+     │                                                     │ mid1_score │
+     │ 1:1                                                 │ mid2_score │
+     └──────────────▶ Student                              │ mid3_score │
+                                                           └─────┬──────┘
+                                                                 │
+                                                    1:N │  1:N │  1:N │
+                                                        │      │      │
                                                         ▼      ▼      ▼
                                                 ┌──────────┐ ┌─────┐ ┌───────────┐
                                                 │Submission│ │Alert│ │PolicyEvent│
                                                 │──────────│ │─────│ │───────────│
                                                 │ id (PK)  │ │ id  │ │ id (PK)   │
                                                 │ sub_id   │ │ met │ │ policy    │
-                                                │ stud FK  │ │ pct │ │ student FK│
-                                                │ assign   │ │ sev │ │ type      │
-                                                │ delta_t  │ │ desc│ │ desc      │
-                                                │ deadline │ │ res │ │ triggered │
-                                                │ status   │ └─────┘ │ active    │
-                                                └──────────┘         └───────────┘
-
-                    ┌───────────────┐
-                    │ IngestionLog  │ (standalone — tracks CSV upload history)
-                    │───────────────│
-                    │ id, filename  │
-                    │ records, errs │
-                    │ ingested_by FK│
-                    └───────────────┘
+                                                │ delta_t  │ │type │ │ type      │
+                                                │ status   │ │ sev │ │ descr     │
+                                                └──────────┘ └─────┘ └───────────┘
 ```
 
 ### 5.2 Model Specifications
 
-#### User
-| Column | Type | Description |
-|---|---|---|
-| id | Integer PK | Auto-increment primary key |
-| username | String(80) | Unique login identifier |
-| email | String(120) | Unique email address |
-| password_hash | String(256) | Werkzeug scrypt hash |
-| full_name | String(100) | Display name |
-| role | String(20) | "instructor", "student", or "admin" |
-| is_active | Boolean | Account status (default True) |
-| created_at | DateTime | Account creation timestamp (UTC) |
-| last_login | DateTime | Last login timestamp |
+#### User Model
 
-#### Student
-| Column | Type | Description |
-|---|---|---|
-| id | Integer PK | Internal primary key |
-| student_id | String(20) | University Serial Number e.g., "1RV22CS001" |
-| name | String(100) | Student full name |
-| course_id | Integer FK | Links to Course |
-| user_id | Integer FK | Links to User (optional 1:1) |
-| credibility_score | Float | Dynamic 0–100 score (default 50.0) |
-| attendance_pct | Float | Attendance percentage 0–100 (default 0.0) |
-| mid1_score | Float | Mid-term 1 exam score (0–100, nullable) |
-| mid2_score | Float | Mid-term 2 exam score (0–100, nullable) |
-| mid3_score | Float | Mid-term 3 exam score (0–100, nullable) |
-| enrollment_date | DateTime | Date of enrollment |
-| status | String(20) | "active" or "inactive" |
+| Column | Type | Constraints | Description |
+|---|---|---|---|
+| `id` | Integer | PK, auto-increment | Internal identifier |
+| `email` | String(120) | Unique, Not Null, Indexed | Login email |
+| `username` | String(80) | Unique, Not Null, Indexed | Display name |
+| `password_hash` | String(256) | Not Null | Scrypt hash |
+| `role` | String(20) | Not Null, Default='student' | 'instructor', 'student', 'admin' |
+| `full_name` | String(100) | Not Null, Default='' | Full display name |
+| `is_active` | Boolean | Default=True | Account status |
+| `created_at` | DateTime | Default=UTC now | Registration timestamp |
+| `last_login` | DateTime | Nullable | Last login timestamp |
 
-**Computed Properties** (not stored, calculated on access):
+#### Course Model
+
+| Column | Type | Constraints | Description |
+|---|---|---|---|
+| `id` | Integer | PK | Internal identifier |
+| `course_id` | String(20) | Unique, Not Null, Indexed | e.g., "CS501" |
+| `course_name` | String(150) | Not Null | Full course title |
+| `semester` | String(20) | Not Null | e.g., "Spring 2026" |
+| `instructor_id` | Integer | FK → users.id | Assigned instructor |
+
+#### Student Model
+
+| Column | Type | Constraints | Description |
+|---|---|---|---|
+| `id` | Integer | PK | Internal identifier |
+| `student_id` | String(20) | Unique, Not Null, Indexed | USN (e.g., "1RV22CS001") |
+| `name` | String(100) | Not Null | Student full name |
+| `course_id` | Integer | FK → courses.id | Enrolled course |
+| `user_id` | Integer | FK → users.id, Unique | Linked user account |
+| `credibility_score` | Float | Default=50.0 | Current composite credibility |
+| `attendance_pct` | Float | Default=0.0 | Attendance percentage (0–100) |
+| `mid1_score` | Float | Nullable | Mid-term 1 exam score (0–100) |
+| `mid2_score` | Float | Nullable | Mid-term 2 exam score (0–100) |
+| `mid3_score` | Float | Nullable | Mid-term 3 exam score (0–100) |
+| `enrollment_date` | DateTime | Default=UTC now | When student was registered |
+| `status` | String(20) | Default='active' | 'active', 'inactive', 'graduated' |
+
+**Computed Properties** (not stored, derived on access):
 - `active_alerts_count` — count of unresolved alerts
-- `total_submissions` — total submission records
-- `on_time_rate` — percentage of on-time submissions
+- `total_submissions` — count of linked submissions
+- `on_time_rate` — percentage of submissions with Δt ≥ 0
+- `best_two_mid_avg` — average of the best 2 out of 3 mid-term scores
 
-#### Submission
-| Column | Type | Description |
-|---|---|---|
-| id | Integer PK | Internal primary key |
-| submission_id | String(20) | Unique external ID (e.g., "SUB-A3F8C2D1E9") |
-| student_id | Integer FK | Links to Student.id |
-| assignment_id | String(20) | Assignment identifier (e.g., "A01") |
-| course_id_ref | Integer FK | Links to Course |
-| submitted_at | DateTime | Actual submission timestamp |
-| deadline | DateTime | Assignment deadline timestamp |
-| delta_t | Float | Δt in seconds (positive = early, negative = late) |
-| delta_t_hours | Float | Δt converted to hours |
-| submission_status | String(20) | "on-time", "late", or "missing" |
+The `best_two_mid_avg` property sorts all non-null mid scores descending and averages the top two. Returns `None` if fewer than 2 scores are available.
 
-#### Alert
-| Column | Type | Description |
-|---|---|---|
-| id | Integer PK | Internal primary key |
-| alert_id | String(20) | Unique external alert ID |
-| student_id | Integer FK | Links to Student.id |
-| metric | String(20) | "delta_t" or "variance" |
-| pct_change | Float | Percentage change that triggered alert |
-| window_size | Integer | Number of assignments in detection window |
-| severity | String(20) | "info", "warning", or "critical" |
-| description | Text | Human-readable alert description |
-| resolved | Boolean | Whether alert has been resolved |
-| resolved_at | DateTime | Timestamp of resolution |
-| consecutive_improvements | Integer | Count of consecutive improving submissions |
-| created_at | DateTime | Alert creation timestamp |
+```python
+@property
+def best_two_mid_avg(self):
+    scores = [s for s in [self.mid1_score, self.mid2_score, self.mid3_score]
+              if s is not None]
+    if len(scores) < 2:
+        return None
+    scores.sort(reverse=True)
+    return round((scores[0] + scores[1]) / 2.0, 2)
+```
 
-#### PolicyEvent
-| Column | Type | Description |
-|---|---|---|
-| id | Integer PK | Internal primary key |
-| event_id | String(20) | Unique external event ID |
-| student_id | Integer FK | Links to Student.id |
-| policy_type | String(50) | "attendance_waiver", "recognition", "intervention_required" |
-| description | Text | Policy event details |
-| triggered_at | DateTime | When the policy was triggered |
-| expires_at | DateTime | Expiration date (if applicable) |
-| is_active | Boolean | Whether the policy is currently active |
-| triggered_by | String(20) | What triggered it ("system" or "manual") |
+#### Submission Model
 
-#### IngestionLog
-| Column | Type | Description |
-|---|---|---|
-| id | Integer PK | Internal primary key |
-| filename | String(255) | Original CSV filename |
-| source | String(20) | "csv" or "api" |
-| total_records | Integer | Total rows in the file |
-| valid_records | Integer | Successfully processed rows |
-| invalid_records | Integer | Skipped rows |
-| errors | Text | Error log (newline-separated) |
-| status | String(20) | "completed", "failed", or "partial" |
-| ingested_by | Integer FK | User who performed the upload |
-| created_at | DateTime | Ingestion timestamp |
+| Column | Type | Constraints | Description |
+|---|---|---|---|
+| `id` | Integer | PK | Internal identifier |
+| `submission_id` | String(50) | Unique, Not Null | UUID generated on ingest |
+| `student_id` | Integer | FK → students.id | Submitting student |
+| `course_id` | Integer | FK → courses.id | Course context |
+| `assignment_id` | String(50) | Not Null | Assignment identifier |
+| `submitted_at` | DateTime | Not Null | Actual submission timestamp |
+| `deadline` | DateTime | Not Null | Assignment deadline |
+| `delta_t` | Float | Not Null | Δt = submitted - deadline (seconds) |
+| `delta_t_hours` | Float | Not Null | Δt in hours (for display) |
+| `status` | String(20) | Default='on-time' | 'on-time' or 'late' |
+| `created_at` | DateTime | Default=UTC now | Record creation time |
+
+#### Alert Model
+
+| Column | Type | Constraints | Description |
+|---|---|---|---|
+| `id` | Integer | PK | Internal identifier |
+| `student_id` | Integer | FK → students.id | Affected student |
+| `alert_type` | String(50) | Not Null | 'negative_trend' or 'variance_spike' |
+| `severity` | String(20) | Default='warning' | 'warning', 'critical', 'info' |
+| `message` | Text | Not Null | Human-readable alert description |
+| `metric_snapshot` | Text | Nullable | JSON snapshot of triggering metrics |
+| `resolved` | Boolean | Default=False | Resolution status |
+| `resolved_at` | DateTime | Nullable | Resolution timestamp |
+| `created_at` | DateTime | Default=UTC now | Alert creation time |
+
+#### PolicyEvent Model
+
+| Column | Type | Constraints | Description |
+|---|---|---|---|
+| `id` | Integer | PK | Internal identifier |
+| `student_id` | Integer | FK → students.id | Affected student |
+| `policy_type` | String(50) | Not Null | 'attendance_waiver', 'recognition', 'intervention_required' |
+| `description` | Text | Not Null | Full description of the policy action |
+| `triggered_at` | DateTime | Not Null | When the policy was triggered |
+| `expires_at` | DateTime | Nullable | Expiration (90 days for waivers) |
+
+#### IngestionLog Model
+
+| Column | Type | Constraints | Description |
+|---|---|---|---|
+| `id` | Integer | PK | Internal identifier |
+| `filename` | String(255) | Not Null | Original CSV filename |
+| `uploaded_by` | Integer | FK → users.id | Uploader |
+| `records_processed` | Integer | Default=0 | Total rows attempted |
+| `records_succeeded` | Integer | Default=0 | Successfully ingested rows |
+| `records_failed` | Integer | Default=0 | Rejected rows |
+| `error_log` | Text | Nullable | JSON array of per-row errors |
+| `created_at` | DateTime | Default=UTC now | Upload timestamp |
 
 ---
 
 ## 6. Core Algorithms
 
-### 6.1 Submission Velocity — Δt (Delta-t)
+### 6.1 Submission Velocity (Δt)
 
-**Definition**: The signed temporal distance between a submission timestamp and its assignment deadline.
+**Definition**: Δt is the signed temporal distance between submission and deadline.
 
 ```
-Δt = deadline_timestamp − submission_timestamp (in seconds)
+Δt = deadline_timestamp − submission_timestamp
 ```
 
 | Δt Value | Meaning |
 |---|---|
-| Δt > 0 | Submitted *before* the deadline (early) |
-| Δt = 0 | Submitted exactly at the deadline |
-| Δt < 0 | Submitted *after* the deadline (late) |
+| Δt > 0 | Submitted **early** (seconds before deadline) |
+| Δt = 0 | Submitted **exactly** on time |
+| Δt < 0 | Submitted **late** (seconds after deadline) |
 
-**Why seconds?** Using raw seconds avoids precision loss during intermediate calculations. The value is converted to hours (`delta_t_hours = delta_t / 3600`) only for display purposes.
+**Key Insight**: Δt is *signed* — positive values indicate early submission. This allows tracking whether a student is becoming progressively later (declining Δt trend) even while still technically submitting on time.
 
-**Implementation** (`engine/metrics.py`):
-```python
-def compute_delta_t(self, submission_timestamp, deadline_timestamp):
-    return deadline_timestamp - submission_timestamp
-```
+### 6.2 Variance Stability (σ)
 
-### 6.2 Variance Stability — Rolling σ
-
-**Definition**: The population standard deviation of the most recent N Δt values (default N=5), measuring submission pattern consistency.
+Rolling population standard deviation over the last N submissions:
 
 ```
-σ = sqrt( (1/N) * Σ(Δt_i − μ)² )   for i in last N submissions
+σ = √(Σ(Δtᵢ − μ)² / N)    for the last N Δt values
 ```
 
-- **Low σ** → Student submits at consistent intervals (good)
-- **High σ** → Erratic submission pattern (concerning)
+Default window: `N = 5` (configurable via `VARIANCE_ROLLING_WINDOW`).
 
-**Why population σ, not sample σ?** We're measuring the variance of the *actual* window, not estimating a population parameter. Population std dev (dividing by N) is appropriate here.
-
-**Rolling Series**: For each submission index i, compute σ over the window `[i-N+1, i]`. The first element is always `None` (insufficient data). This produces a time-series for charting.
+- **Low σ** → Consistent timing (good)
+- **High σ** → Erratic behavior (concerning)
+- **Sudden spike** → Possible crisis event
 
 ### 6.3 Hysteresis Filtering
 
-**Problem**: A student submits late once → simple threshold generates alert → student submits on-time next → alert resolved → student submits late again → new alert. This oscillation causes alert fatigue.
+**Problem**: Single-threshold alerts fire on every late submission, creating noise.
 
-**Solution**: Hysteresis requires a trend to **persist for W consecutive assignments** (default W=3) before generating an alert. This is adapted from signal processing electrical engineering, specifically the Schmitt trigger.
-
-```
-  Alert Generation:
-  ─────────────────
-  IF the last W Δt values show a consistent decline:
-    pct_change = ((latest - earliest) / |earliest|) * 100
-    IF pct_change ≤ threshold:
-      Generate alert with severity based on magnitude
-      
-  Alert Resolution:
-  ─────────────────
-  IF R consecutive improving submissions (default R=2):
-    Resolve the alert
-    Reset improvement counter
-```
-
-**Severity Classification**:
-| Threshold | Severity |
-|---|---|
-| pct_change ≥ 50% | Critical |
-| pct_change ≥ 25% | Warning |
-| pct_change < 25% | Info |
-
-**Variance Spike Detection**: Independently monitors variance values. If the recent window's average variance exceeds `threshold_multiplier × historical_mean` (default 2.0×), a variance-type alert is generated.
-
-### 6.4 Credibility Score
-
-**Definition**: A dynamic 0–100 composite reliability index per student, computed from five weighted factors.
+**Solution**: PASS requires that a negative trend persists for a configurable window (default: 3 consecutive assignments) before generating an alert. Similarly, alert resolution requires consecutive improvements (default: 2).
 
 ```
-Credibility = 0.25 × Δt_Consistency + 0.10 × Variance_Stability + 0.10 × Completion_Rate
-           + 0.25 × Attendance + 0.30 × Exam_Performance
+Trend Detection:
+  IF last 3 Δt values are monotonically declining
+  AND decline rate > 10% per step
+  THEN trigger "negative_trend" alert
+
+Variance Spike Detection:
+  IF current σ > mean(historical σ) × multiplier
+  THEN trigger "variance_spike" alert
+
+Alert Resolution:
+  IF consecutive improvements ≥ reversal_count
+  THEN resolve the existing alert
 ```
 
-**Component Calculations**:
+This approach mimics a **Schmitt trigger** from electronics — the thresholds for activating and deactivating an alert are different, preventing oscillation.
 
-**Δt Consistency Score (0–100) — 25%**:
-```
-For each Δt value, compute individual score:
-  score_i = clamp(0, 100, 60 + (Δt_hours_i / 24) × 40)
-  
-  Anchors:
-    Δt ≥ +24h → 100 (submitted a full day early)
-    Δt =   0h →  60 (exactly on time)  
-    Δt ≤ -24h →   0 (a full day late)
-    
-Final = average(all score_i)
-```
+### 6.4 Five-Factor Credibility Score
 
-**Variance Stability Score (0–100) — 10%**:
-```
-Convert variance to hours: var_hours = variance / 3600
-Diminishing penalty curve:
-  score = 100 × exp(-var_hours / 12)
-  
-If historical variances provided, also factor in relative comparison.
-```
+The Credibility Score is a composite 0–100 metric that combines five weighted dimensions of student engagement. The score serves dual purposes: (1) a reliability index for instructors, and (2) an automated policy trigger.
 
-**Completion Rate Score (0–100) — 10%**:
+#### Weight Distribution
+
+| Component | Weight | Signal Type | Rationale |
+|---|---|---|---|
+| **Δt Consistency** | 25% | Behavioural | Core temporal submission pattern |
+| **Variance Stability** | 10% | Behavioural | Consistency of submission rhythm |
+| **Completion Rate** | 10% | Behavioural | Assignment submission coverage |
+| **Attendance** | 25% | Academic | Strong proxy for classroom engagement |
+| **Exam Performance** | 30% | Academic | Best 2 of 3 mid-term exams — highest weight as direct measure of mastery |
+
 ```
-ratio = submitted_count / total_assignments
-Non-linear penalty (harsher for low completion):
-  score = 100 × ratio^1.5
+Credibility Score = 0.25 × Δt_score
+                  + 0.10 × Variance_score
+                  + 0.10 × Completion_score
+                  + 0.25 × Attendance_score
+                  + 0.30 × Exam_score
 ```
 
-**Attendance Score (0–100) — 25%**:
-```
-Non-linear mapping based on institutional attendance norms:
-  ≥ 95%  →  100  (exemplary)
-  ≥ 85%  →   80–100
-  ≥ 75%  →   60–80  (minimum exam eligibility threshold)
-  ≥ 60%  →   30–60
-  < 60%  →   0–30  (linear to zero)
+#### Component Scoring Details
 
-Rationale: 75% is the standard minimum attendance threshold
-for examination eligibility in Indian universities.
-```
+**Δt Consistency Score (0–100)**:
+- Mean Δt ≥ 24h early → 100
+- Mean Δt = 0h (on-time) → 60
+- Mean Δt ≤ -24h (late) → 0
+- Linear interpolation between anchors
+- 15% penalty if recent 3 submissions show >30% decline vs. overall mean
 
-**Exam Performance Score (0–100) — 30%**:
-```
-Best 2 of 3 mid-term exams (Mid-1, Mid-2, Mid-3) are selected
-and averaged:
-  sorted_scores = sort(mid1, mid2, mid3, descending)
-  avg = (sorted_scores[0] + sorted_scores[1]) / 2
+**Variance Stability Score (0–100)**:
+- σ = 0h → 100 (perfect consistency)
+- σ ≤ 1h → 100
+- σ ≤ 6h → 70–100
+- σ ≤ 12h → 40–70
+- σ ≤ 24h → 10–40
+- σ > 48h → 0
+- 10% bonus if current variance is <80% of recent historical average (improving)
 
-Mapping to credibility sub-score:
-  avg ≥ 80  →  100
-  avg ≥ 60  →   70–100 (linear)
-  avg ≥ 40  →   40–70  (linear)
-  avg < 40  →    0–40  (linear)
+**Completion Rate Score (0–100)**:
+- 100% submitted → 100
+- 90% → 85
+- 80% → 70
+- 70% → 50
+- < 60% → linear to 0
+- Non-linear curve penalises missing assignments more heavily
 
-If only 1 mid score available: avg = score × 0.90 (10% penalty)
-If no scores available: neutral default = 50
-```
+**Attendance Score (0–100)**:
+Uses a non-linear mapping that penalises poor attendance heavily, reflecting academic regulations where < 75% attendance disqualifies students from examinations:
 
-**Tier Classification**:
-| Score Range | Tier | Label |
+| Attendance % | Score | Rationale |
 |---|---|---|
-| ≥ 85 | Excellent | Highly reliable |
-| 50–84 | Good | Generally consistent |
-| 30–49 | Warning | Needs attention |
-| < 30 | Critical | Immediate intervention needed |
+| ≥ 95% | 100 | Exemplary attendance |
+| ≥ 85% | 80–100 | Good attendance |
+| ≥ 75% | 60–80 | Minimum for exam eligibility |
+| ≥ 60% | 30–60 | Below threshold — a concern |
+| < 60% | 0–30 | Severe absenteeism |
+
+**Exam Performance Score (0–100)**:
+The exam component uses a **best 2 of 3 mid-term exams** policy. This is deliberately forgiving — a student who has one bad exam but performs well on the other two is not unfairly penalised.
+
+| Scenario | Score Mapping |
+|---|---|
+| avg ≥ 80 (best 2 of 3) | 100 |
+| avg ≥ 60 | 70–100 (linear) |
+| avg ≥ 40 | 40–70 (linear) |
+| avg < 40 | 0–40 (linear) |
+| Only 1 mid score available | Use that score with 10% penalty |
+| No scores available | Neutral default (50) |
+
+#### Tier Classification
+
+| Tier | Score Range | Label | Policy Trigger |
+|---|---|---|---|
+| **Excellent** | ≥ 85 | High Credibility | Attendance waiver granted |
+| **Good** | 50–84 | Satisfactory | No action |
+| **Warning** | 30–49 | Needs Attention | Monitoring recommended |
+| **Critical** | < 30 | At Risk | Intervention required |
 
 ### 6.5 Automated Policy Triggers
 
-When a credibility score is computed, the system checks for policy-triggering conditions:
+The credibility engine monitors score transitions and fires policy events when specific thresholds are crossed:
 
-| Condition | Policy |
-|---|---|
-| Score crosses ≥ 85 (upward) | `attendance_waiver` — automated perk for reliable students |
-| Score improvement > 15 points | `recognition` — positive reinforcement |
-| Score drops below 30 | `intervention_required` — flag for instructor follow-up |
+| Trigger Condition | Policy Type | Description |
+|---|---|---|
+| Score crosses **above 85** | `attendance_waiver` | Auto-grants attendance flexibility for 90 days |
+| Score improves by **>15 points** | `recognition` | Records notable improvement in academic engagement |
+| Score drops **below 30** | `intervention_required` | Flags student for immediate instructor attention |
+
+These events are stored as `PolicyEvent` records and displayed on the instructor dashboard.
 
 ---
 
@@ -572,31 +586,26 @@ When a credibility score is computed, the system checks for policy-triggering co
 
 ### 7.1 `app.py` — Application Factory
 
-Uses the **Application Factory Pattern** (Flask best practice):
-
 ```python
 def create_app(config_name="development"):
     app = Flask(__name__)
     app.config.from_object(config_by_name[config_name])
-    
-    # Initialize extensions
+
     db.init_app(app)
     login_manager.init_app(app)
     csrf.init_app(app)
-    CORS(app)
-    
-    # Register 4 blueprints
+    cors.init_app(app)
+    sess.init_app(app)
+
+    # Register Blueprints
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
-    app.register_blueprint(api_bp, url_prefix="/api")
-    app.register_blueprint(student_bp, url_prefix="/student")
-    
-    # CSRF exempt for API (stateless JSON endpoints)
-    csrf.exempt(api_bp)
-    
-    # Error handlers (404, 500, 403)
-    # Context processor (injects app_name, version, full_name)
-    # Create tables on startup
+    app.register_blueprint(api_bp)
+    app.register_blueprint(student_bp)
+
+    # Error handlers (403, 404, 500)
+    # Context processor (inject current_year)
+    return app
 ```
 
 **Key Design Decisions**:
@@ -616,12 +625,22 @@ Three profiles:
 | Production | `instance/pass.db` | Off | On | Render deployment |
 
 All PASS-specific parameters are configurable:
-- `HYSTERESIS_WINDOW_SIZE = 3`
-- `HYSTERESIS_REVERSAL_COUNT = 2`
-- `VARIANCE_ROLLING_WINDOW = 5`
-- `CREDIBILITY_THRESHOLD_HIGH = 85`
-- `WEIGHT_DELTA_T_CONSISTENCY = 0.50`
-- etc.
+
+| Parameter | Default | Description |
+|---|---|---|
+| `HYSTERESIS_WINDOW_SIZE` | 3 | Consecutive assignments for trend confirmation |
+| `HYSTERESIS_REVERSAL_COUNT` | 2 | Consecutive improvements to resolve alert |
+| `VARIANCE_ROLLING_WINDOW` | 5 | Rolling window for variance stability |
+| `CREDIBILITY_THRESHOLD_HIGH` | 85 | Score for automated perks |
+| `CREDIBILITY_THRESHOLD_WARNING` | 50 | Score for warning state |
+| `CREDIBILITY_THRESHOLD_CRITICAL` | 30 | Score for critical alerts |
+| `WEIGHT_DELTA_T_CONSISTENCY` | 0.25 | Δt consistency weight |
+| `WEIGHT_VARIANCE_STABILITY` | 0.10 | Variance stability weight |
+| `WEIGHT_COMPLETION_RATE` | 0.10 | Completion rate weight |
+| `WEIGHT_ATTENDANCE` | 0.25 | Attendance weight |
+| `WEIGHT_EXAM_PERFORMANCE` | 0.30 | Exam performance weight |
+
+All five credibility weights are asserted to sum to 1.0 at runtime.
 
 ### 7.3 `engine/metrics.py` — MetricComputer
 
@@ -650,28 +669,67 @@ All PASS-specific parameters are configurable:
 
 ### 7.5 `engine/credibility.py` — CredibilityScorer
 
-**Class**: `CredibilityScorer(weight_delta_t=0.50, weight_variance=0.30, weight_completion=0.20, ...)`
+**Class**: `CredibilityScorer(weight_delta_t=0.25, weight_variance=0.10, weight_completion=0.10, weight_attendance=0.25, weight_exam=0.30, ...)`
 
 | Method | Input | Output | FR |
 |---|---|---|---|
 | `compute_delta_t_score(values)` | List of Δt values | 0–100 score | FR-15 |
 | `compute_variance_score(variance, historical)` | Variance value + optional history | 0–100 score | FR-15 |
 | `compute_completion_score(submitted, total)` | Counts | 0–100 score | FR-15 |
+| `compute_attendance_score(attendance_pct)` | Attendance % (0–100) | 0–100 score | FR-15 |
+| `compute_exam_score(mid1, mid2, mid3)` | Up to 3 mid-term scores (0–100 each) | 0–100 score | FR-15 |
 | `compute_credibility_score(...)` | All inputs combined | Dict: overall_score, tier, components{} | FR-15 |
 | `check_policy_triggers(current, previous)` | Two scores | List of triggered policies | FR-16 |
 
 **Return structure of `compute_credibility_score`**:
 ```python
 {
-    "overall_score": 78.5,
+    "overall_score": 72.35,
     "tier": "good",
-    "tier_label": "Generally consistent",
+    "tier_label": "Satisfactory",
     "components": {
-        "delta_t_consistency": {"score": 82.0, "weight": 0.50, "weighted": 41.0},
-        "variance_stability": {"score": 70.0, "weight": 0.30, "weighted": 21.0},
-        "completion_rate":    {"score": 82.5, "weight": 0.20, "weighted": 16.5}
+        "delta_t_consistency": {"score": 82.0, "weight": 0.25, "weighted": 20.50},
+        "variance_stability":  {"score": 70.0, "weight": 0.10, "weighted":  7.00},
+        "completion_rate":     {"score": 85.0, "weight": 0.10, "weighted":  8.50},
+        "attendance":          {"score": 76.0, "weight": 0.25, "weighted": 19.00},
+        "exam_performance":    {"score": 57.83,"weight": 0.30, "weighted": 17.35}
     }
 }
+```
+
+**Attendance Scoring Logic**:
+```python
+def compute_attendance_score(self, attendance_pct: float) -> float:
+    pct = max(0.0, min(100.0, attendance_pct))
+    if pct >= 95:
+        score = 100.0
+    elif pct >= 85:
+        score = 80.0 + (pct - 85) * 2.0      # 85→80, 95→100
+    elif pct >= 75:
+        score = 60.0 + (pct - 75) * 2.0      # 75→60, 85→80
+    elif pct >= 60:
+        score = 30.0 + (pct - 60) * 2.0      # 60→30, 75→60
+    else:
+        score = pct / 60.0 * 30.0             # 0→0, 60→30
+    return round(min(100.0, max(0.0, score)), 2)
+```
+
+**Exam Performance Scoring Logic** (best 2 of 3 mids):
+```python
+def compute_exam_score(self, mid1, mid2, mid3) -> float:
+    scores = [s for s in [mid1, mid2, mid3] if s is not None]
+    if not scores:
+        return 50.0                       # Neutral default
+    scores.sort(reverse=True)
+    if len(scores) >= 2:
+        avg = (scores[0] + scores[1]) / 2.0
+    else:
+        avg = scores[0] * 0.90           # 10% penalty for single score
+    # Map average → credibility sub-score
+    if avg >= 80:   return 100.0
+    elif avg >= 60: return 70.0 + (avg - 60) * 1.5
+    elif avg >= 40: return 40.0 + (avg - 40) * 1.5
+    else:           return avg
 ```
 
 ### 7.6 `engine/ingestion.py` — DataIngestor
@@ -680,14 +738,17 @@ All PASS-specific parameters are configurable:
 
 **Required CSV Columns**: `student_id`, `assignment_id`, `submission_timestamp`, `deadline_timestamp`
 
-**Optional CSV Columns**: `student_name`, `course_id`, `submission_status`
+**Optional CSV Columns**: `student_name`, `course_id`, `submission_status`, `attendance_pct`, `mid1_score`, `mid2_score`, `mid3_score`
+
+The ingestion module accepts attendance and exam data as optional columns in CSV uploads. A `_safe_float()` helper method handles graceful conversion of these fields, returning `None` for missing, empty, or NaN values.
 
 | Method | Function |
 |---|---|
 | `validate_csv_structure(content)` | Pre-validates column presence without full processing |
 | `ingest_csv(content, filename)` | Full pipeline: parse → validate → compute Δt → return records |
-| `_process_row(row, index)` | Validates single row, parses timestamps, computes Δt |
+| `_process_row(row, index)` | Validates single row, parses timestamps, computes Δt, extracts optional fields |
 | `_parse_timestamp(value)` | Multi-format parser: ISO 8601, US/EU dates, UNIX timestamps |
+| `_safe_float(value)` | Safely converts a value to float; returns None for empty/NaN |
 
 **Timestamp Formats Supported**:
 - `2025-01-15T14:30:00` (ISO 8601)
@@ -713,10 +774,10 @@ All PASS-specific parameters are configurable:
 | `/register` | GET/POST | auth | No | Registration with role selection |
 | `/logout` | GET | auth | Yes | End session |
 | `/dashboard` | GET | dashboard | Instructor | Main instructor dashboard |
-| `/dashboard/student/<id>` | GET | dashboard | Instructor | Student drill-down |
-| `/dashboard/upload` | GET/POST | dashboard | Instructor | CSV upload |
+| `/dashboard/student/<id>` | GET | dashboard | Instructor | Student drill-down with 5-factor breakdown |
+| `/dashboard/upload` | GET/POST | dashboard | Instructor | CSV upload (submissions + optional attendance/exam) |
 | `/dashboard/export/csv` | GET | dashboard | Instructor | CSV export (students/alerts/submissions) |
-| `/student/me` | GET | student | Student | Personal self-view dashboard |
+| `/student/me` | GET | student | Student | Personal self-view dashboard with credibility breakdown |
 
 ### 8.2 REST API Endpoints
 
@@ -734,7 +795,7 @@ All API responses use a consistent envelope:
 | `/api/health` | GET | Health check (no auth required) |
 | `/api/ingest` | POST | Upload CSV via API |
 | `/api/students` | GET | List all students with metrics |
-| `/api/student/<id>` | GET | Full student detail with Δt series |
+| `/api/student/<id>` | GET | Full student detail with Δt series and 5-factor breakdown |
 | `/api/alerts` | GET | Active alerts (filterable by severity/resolved) |
 | `/api/dashboard/summary` | GET | Class-wide aggregate statistics |
 | `/api/policy/trigger` | POST | Manually trigger a policy event |
@@ -749,6 +810,33 @@ All API responses use a consistent envelope:
 | Admin | ✅ | ✅ | ✅ | ✅ | ❌ |
 
 Enforced via `@login_required` and a custom `@instructor_required` decorator.
+
+### 8.4 Credibility Data Flow in Routes
+
+All three route modules that display credibility information (dashboard, API, student) follow the same pattern for computing scores:
+
+```python
+scorer = CredibilityScorer(
+    weight_delta_t=app.config["WEIGHT_DELTA_T_CONSISTENCY"],
+    weight_variance=app.config["WEIGHT_VARIANCE_STABILITY"],
+    weight_completion=app.config["WEIGHT_COMPLETION_RATE"],
+    weight_attendance=app.config["WEIGHT_ATTENDANCE"],
+    weight_exam=app.config["WEIGHT_EXAM_PERFORMANCE"],
+)
+
+result = scorer.compute_credibility_score(
+    delta_t_values=delta_t_list,
+    variance_value=variance,
+    submitted_count=submitted,
+    total_assignments=total,
+    attendance_pct=student.attendance_pct,
+    mid1=student.mid1_score,
+    mid2=student.mid2_score,
+    mid3=student.mid3_score,
+)
+```
+
+The student's attendance percentage and mid-term exam scores are read directly from the `Student` model and passed to the scorer. When a CSV upload includes the optional `attendance_pct`, `mid1_score`, `mid2_score`, and `mid3_score` columns, the ingestion pipeline updates these fields on the Student record.
 
 ---
 
@@ -770,7 +858,7 @@ All templates extend `base.html`, which provides:
 | Class-Wide Δt Trend | instructor.html | Line | Submissions grouped by assignment |
 | Credibility Distribution | instructor.html | Doughnut | Student score tier counts |
 | Student Δt Time-Series | student_detail.html | Line | Individual student's Δt history |
-| Credibility Radar | student_detail.html | Radar/Bar | Component score breakdown |
+| Credibility Radar | student_detail.html | Radar/Bar | 5-factor component score breakdown |
 | Variance Over Time | student_detail.html | Bar | Rolling variance series |
 | Personal Credibility Gauge | self_view.html | Doughnut (half) | Student's own score |
 | Personal Δt Trend | self_view.html | Line | Student's own history |
@@ -849,8 +937,8 @@ tests/
 | `db` | function | Fresh database per test (create_all → yield → drop_all) |
 | `client` | function | Flask test client |
 | `instructor_user` | function | Pre-created instructor account |
-| `student_user` | function | Student with linked Student profile |
-| `sample_student` | function | Student with 10 submissions (varied Δt values) |
+| `student_user` | function | Student with linked profile (attendance=82%, mid1=70, mid2=65, mid3=75) |
+| `sample_student` | function | Student with 10 submissions, attendance=88%, mid1=72, mid2=68, mid3=80 |
 
 ### 11.3 Test Categories
 
@@ -864,9 +952,11 @@ tests/
 - Hysteresis trend detection (returns dict or None)
 - Variance spike detection threshold
 - Alert resolution with consecutive improvements
-- Credibility score structure and tier mapping
-- Weight sum validation (must equal 1.0)
+- Credibility score structure and tier mapping (verifies all 5 components)
+- Weight sum validation (all 5 weights must equal 1.0)
 - Policy trigger conditions
+- **Attendance scoring**: perfect (≥95%), good (85–95%), minimum eligible (75%), poor (<60%), zero
+- **Exam scoring**: best 2 of 3 selection, all-high, all-low, single score with penalty, no scores (neutral), two-score handling
 - CSV validation with correct/missing/empty columns
 - Ingestion with valid data, late detection, invalid rows
 - Timestamp parsing across multiple formats
@@ -883,7 +973,7 @@ tests/
 - API alerts returns list structure
 - CSV export returns correct content-type
 - Model computed properties (active_alerts_count, total_submissions)
-- Model serialization (to_dict method)
+- Model serialization (to_dict method — includes attendance/exam fields)
 - Password hashing bidirectional verification
 
 ### 11.4 Running Tests
@@ -915,9 +1005,23 @@ Creates a realistic small dataset for demonstrations:
 | Users | 3 | instructor/password123, arjun/password123, admin/admin123 |
 | Courses | 3 | CS501, CS502, CS503 |
 | Students | 30 | Across 3 courses, varied credibility scores |
-| Submissions | ~276 | 8–10 per student with behavioral patterns |
-| Alerts | ~6 | Generated by hysteresis engine |
-| Policy Events | ~19 | Generated by credibility scorer |
+| Submissions | ~262 | 8–10 per student with behavioral patterns |
+| Alerts | ~9 | Generated by hysteresis engine |
+| Policy Events | ~29 | Generated by credibility scorer |
+
+Each student is assigned a behavioural profile that determines their submission timing, attendance rate, and exam score ranges:
+
+| Profile | % | Δt Pattern | Miss Rate | Attendance | Mid Exam Range |
+|---|---|---|---|---|---|
+| Excellent | 15% | 12–48h early, σ=6h | 2% | 92–99% | 78–98 |
+| Good | 25% | 2–24h early, σ=8h | 5% | 82–94% | 65–85 |
+| Average | 25% | -6 to +12h, σ=10h | 10% | 72–86% | 50–75 |
+| Struggling | 15% | -24 to +6h, σ=14h | 15% | 58–76% | 35–60 |
+| At Risk | 8% | -48 to -12h, σ=18h | 30% | 40–62% | 20–45 |
+| Declining | 7% | Starts excellent, worsens | 5→20% | 65–82% | 45–70 |
+| Improving | 5% | Starts struggling, improves | 20→3% | 70–88% | 55–80 |
+
+The seed process generates realistic `attendance_pct` and `mid1_score`, `mid2_score`, `mid3_score` values per profile, then runs the full credibility engine recomputation across all students.
 
 ### 12.2 Synthetic Dataset Generator (`generate_dataset.py`)
 
@@ -929,18 +1033,6 @@ For larger-scale testing and thesis evaluation:
 | Assignments | 10 |
 | Courses | 3 |
 | Total Records | ~1,800 |
-
-**7 Behavioral Profiles**:
-
-| Profile | % | Δt Pattern | Miss Rate |
-|---|---|---|---|
-| Excellent | 15% | 12–48h early, σ=6h | 2% |
-| Good | 25% | 2–24h early, σ=8h | 5% |
-| Average | 25% | -6 to +12h, σ=10h | 10% |
-| Struggling | 15% | -24 to +6h, σ=14h | 15% |
-| At Risk | 8% | -48 to -12h, σ=18h | 30% |
-| Declining | 7% | Starts excellent, progressively worsens | 5→20% |
-| Improving | 5% | Starts struggling, progressively improves | 20→3% |
 
 Output: `data/submissions.csv` and `data/test_submissions.csv` (50-record subset)
 
@@ -989,6 +1081,7 @@ python run.py
 6. App is live at `https://pass-academic-support.onrender.com`
 
 **Environment Variables on Render**:
+
 | Variable | Value |
 |---|---|
 | `SECRET_KEY` | Auto-generated random string |
@@ -1026,6 +1119,7 @@ The project was built systematically in this order:
 9. **Documentation** — README.md with architecture diagrams
 10. **Bug Fixes** — Multiple consistency passes to align models ↔ routes ↔ templates ↔ tests
 11. **Deployment** — Render configuration files + GitHub push
+12. **Five-Factor Credibility Enhancement** — Added attendance (25%) and exam performance / best 2 of 3 mids (30%) as credibility factors per mentor feedback. Updated Student model (4 new fields), CredibilityScorer (2 new methods, 5-weight formula), ingestion module (4 new optional CSV columns), all 3 display route modules, config weights, seed data generation, and test suite (11 new tests for attendance and exam scoring, total 83). Reduced Δt weight from 50% → 25%, variance 30% → 10%, completion 20% → 10% to accommodate new academic performance signals.
 
 ### 14.2 Key Design Decisions
 
@@ -1034,7 +1128,10 @@ The project was built systematically in this order:
 | **Application Factory Pattern** | Enables different configs for dev/test/prod; required for pytest fixtures |
 | **Blueprints** | Modular route organization; each concern (auth, dashboard, API, student) is isolated |
 | **Engine as pure Python classes** | No Flask dependency — engine can be tested independently without HTTP context |
-| **Computed properties on Student model** | `active_alerts_count`, `on_time_rate` are derived, not stored — always consistent |
+| **Five-Factor Credibility Model** | Combining behavioural signals (Δt, variance, completion) with academic signals (attendance, exams) produces a more holistic reliability index than submission timing alone |
+| **Best 2 of 3 Mid-Terms** | A forgiving policy — one bad exam doesn't destroy credibility. Encourages consistency across exams |
+| **Attendance as 25% weight** | Attendance is the strongest proxy for engagement that doesn't require assignment submission data. 75% threshold aligns with examination eligibility rules |
+| **Computed properties on Student model** | `active_alerts_count`, `on_time_rate`, `best_two_mid_avg` are derived, not stored — always consistent |
 | **JSON serialization in routes** | Chart data passed as `json.dumps()` strings into templates, parsed by Chart.js client-side |
 | **String-based student_id in URLs** | URLs like `/dashboard/student/1RV22CS001` are human-readable; routes accept string USN, not integer PK |
 | **CSRF exemption for API** | API is designed for programmatic access (tools, scripts); web forms still protected |
@@ -1052,6 +1149,7 @@ The project was built systematically in this order:
 | CSV column names in tests | Tests used `submitted_at`/`deadline` but ingestor requires `submission_timestamp`/`deadline_timestamp` | Fixed all test CSV headers |
 | API response envelope | Tests expected flat JSON but API wraps in `{"success": true, "data": {...}}` | Fixed test assertions to unwrap envelope |
 | Empty timestamp parsing | `_parse_timestamp("")` didn't raise — pandas fallback accepted it silently | Updated test to accept the behavior |
+| Seed data ordering | `profile_assignments` referenced before definition in student loop | Moved profiles and profile_assignments block before the student creation loop |
 
 ---
 
@@ -1081,6 +1179,12 @@ The project was built systematically in this order:
 
 **Solution**: `csrf.exempt(api_bp)` — exempts only the API blueprint while keeping all web form routes protected.
 
+### 15.5 Five-Factor Model Integration
+
+**Challenge**: Extending the credibility model from 3 factors to 5 required changes across 11 source files (model, engine, config, 3 route modules, run.py seed logic, conftest, and test files). All had to remain consistent.
+
+**Solution**: Systematic update in dependency order — model first (new DB columns), then engine (new scoring methods), then config (new weights), then routes (pass new data), then seeds (generate realistic values), then tests (verify all 5 components). The `_safe_float()` helper in ingestion ensured graceful handling of missing attendance/exam data in CSV uploads.
+
 ---
 
 ## 16. Future Enhancements
@@ -1090,13 +1194,15 @@ The project was built systematically in this order:
 | **LMS Integration** | Direct Moodle/Canvas API polling instead of CSV upload | Medium |
 | **PostgreSQL Migration** | Replace SQLite for multi-user concurrent access | Low |
 | **Email Notifications** | Alert instructors via email for critical-severity alerts | Low |
-| **Predictive Model** | ML-based grade prediction using Δt patterns as features | High |
+| **Predictive Model** | ML-based grade prediction using Δt patterns + credibility factors as features | High |
 | **Historical Comparison** | Compare current cohort Δt patterns against previous semesters | Medium |
 | **SSO Authentication** | Integrate with institutional SAML/OAuth providers | Medium |
 | **Real-Time WebSocket Updates** | Push alerts to dashboard without page refresh | Medium |
 | **PDF Report Generation** | Generate printable student reports for advisors | Low |
 | **Batch Policy Approval** | Instructor reviews and approves/rejects triggered policies | Low |
 | **Dark Mode** | Bootstrap 5.3 `data-bs-theme="dark"` support (partially built in) | Low |
+| **Weighted Factor Customisation** | Allow instructors to adjust the 5 credibility weights via UI | Low |
+| **Additional Exam Support** | Extend to support end-semester exams, lab internals, etc. | Medium |
 
 ---
 
@@ -1136,7 +1242,7 @@ curl http://localhost:5000/api/health
 # Get all students
 curl -b cookies.txt http://localhost:5000/api/students
 
-# Get student detail
+# Get student detail (includes 5-factor credibility breakdown)
 curl -b cookies.txt http://localhost:5000/api/student/1RV22CS001
 
 # Dashboard summary
@@ -1149,6 +1255,30 @@ curl -b cookies.txt "http://localhost:5000/api/alerts?severity=critical&resolved
 curl -b cookies.txt -F "file=@data/submissions.csv" http://localhost:5000/api/ingest
 ```
 
+## Appendix D: Credibility Score Quick Reference
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│               FIVE-FACTOR CREDIBILITY MODEL                  │
+├──────────────────────┬──────────┬───────────────────────────┤
+│ Component            │  Weight  │ Signal Type               │
+├──────────────────────┼──────────┼───────────────────────────┤
+│ Δt Consistency       │   25%    │ Behavioural (submissions) │
+│ Variance Stability   │   10%    │ Behavioural (consistency) │
+│ Completion Rate      │   10%    │ Behavioural (coverage)    │
+│ Attendance           │   25%    │ Academic (engagement)     │
+│ Exam Performance     │   30%    │ Academic (best 2/3 mids)  │
+├──────────────────────┼──────────┼───────────────────────────┤
+│ TOTAL                │  100%    │ Behavioural 45% + Acad 55%│
+└──────────────────────┴──────────┴───────────────────────────┘
+
+Tier Classification:
+  ≥ 85  →  Excellent  (High Credibility — attendance waiver)
+  50–84 →  Good       (Satisfactory — no action)
+  30–49 →  Warning    (Needs Attention — monitor)
+  < 30  →  Critical   (At Risk — intervention required)
+```
+
 ---
 
-*Document generated for PASS v1.0 — February 2026*
+*Document generated for PASS v1.1 (Five-Factor Model) — February 2026*

@@ -121,15 +121,15 @@ def seed_demo_data():
             "excellent": {"mean_hours": 24, "std": 6, "miss_rate": 0.0,
                           "attendance": (92, 100), "mid_range": (75, 95)},
             "good": {"mean_hours": 8, "std": 10, "miss_rate": 0.05,
-                      "attendance": (82, 95), "mid_range": (60, 85)},
+                      "attendance": (85, 98), "mid_range": (60, 85)},
             "average": {"mean_hours": 2, "std": 15, "miss_rate": 0.10,
-                         "attendance": (75, 88), "mid_range": (45, 70)},
+                         "attendance": (78, 90), "mid_range": (45, 70)},
             "struggling": {"mean_hours": -5, "std": 18, "miss_rate": 0.15,
-                            "attendance": (60, 78), "mid_range": (30, 55)},
+                            "attendance": (75, 82), "mid_range": (30, 55)},
             "at_risk": {"mean_hours": -12, "std": 22, "miss_rate": 0.25,
-                         "attendance": (40, 65), "mid_range": (15, 40)},
+                         "attendance": (75, 80), "mid_range": (15, 40)},
             "declining": {"mean_hours": 20, "std": 8, "miss_rate": 0.02,
-                           "attendance": (70, 90), "mid_range": (50, 80)},
+                           "attendance": (78, 92), "mid_range": (50, 80)},
         }
 
         profile_assignments = (
@@ -143,7 +143,7 @@ def seed_demo_data():
 
         students = []
         for i, name in enumerate(student_names):
-            usn = f"1RV22CS{str(i + 1).zfill(3)}"
+            roll_no = f"CS{str(i + 1).zfill(3)}"
             course = courses[i % len(courses)]
             profile_name = profile_assignments[i]
             profile = profiles[profile_name]
@@ -158,7 +158,7 @@ def seed_demo_data():
             mid3 = round(random.uniform(mid_lo, mid_hi), 1)
 
             s = Student(
-                student_id=usn,
+                student_id=roll_no,
                 name=name,
                 course_id=course.id,
                 status="active",
@@ -177,10 +177,10 @@ def seed_demo_data():
         db.session.flush()
 
         # ── Submissions ─────────────────────────────────────────
-        # Generate 10 assignments with deadlines over 10 weeks
+        # Generate 3 assignments with deadlines over 3 weeks
         base_date = datetime(2025, 1, 13, 23, 59, 0, tzinfo=timezone.utc)
-        assignments = [f"A{str(i+1).zfill(2)}" for i in range(10)]
-        deadlines = [base_date + timedelta(weeks=i) for i in range(10)]
+        assignments = [f"A{str(i+1).zfill(2)}" for i in range(3)]
+        deadlines = [base_date + timedelta(weeks=i) for i in range(3)]
 
         all_submissions = []
         for idx, student in enumerate(students):
@@ -242,7 +242,7 @@ def seed_demo_data():
             summary = mc.compute_student_summary(delta_t_values)
             variance_series = mc.compute_rolling_variance_series(delta_t_values)
 
-            total_assignments = 10  # We created 10 assignments
+            total_assignments = 3  # We created 3 assignments
             prev_score = student.credibility_score
 
             cred_result = cs.compute_credibility_score(

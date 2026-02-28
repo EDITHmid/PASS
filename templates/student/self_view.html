@@ -8,7 +8,7 @@
     <div>
         <h4 class="fw-bold mb-1">My Academic Profile</h4>
         <p class="text-muted small mb-0">
-            <i class="bi bi-hash me-1"></i>{{ student.student_id }}
+            <i class="bi bi-person-badge me-1"></i>Roll No: {{ student.student_id }}
             {% if student.course %}
             &nbsp;·&nbsp; <i class="bi bi-book me-1"></i>{{ student.course.name }}
             {% endif %}
@@ -102,7 +102,7 @@
             <h6 class="fw-bold mb-3"><i class="bi bi-sliders me-2"></i>Score Breakdown</h6>
             <div class="mb-3">
                 <div class="d-flex justify-content-between small mb-1">
-                    <span>Submission Timeliness (Δt) — 50%</span>
+                    <span>Submission Timeliness (Δt) — 25%</span>
                     <span class="fw-bold">{{ "%.1f"|format(breakdown.delta_t_score) }}</span>
                 </div>
                 <div class="progress" style="height:8px;">
@@ -111,7 +111,7 @@
             </div>
             <div class="mb-3">
                 <div class="d-flex justify-content-between small mb-1">
-                    <span>Variance Stability (σ) — 30%</span>
+                    <span>Variance Stability (σ) — 10%</span>
                     <span class="fw-bold">{{ "%.1f"|format(breakdown.variance_score) }}</span>
                 </div>
                 <div class="progress" style="height:8px;">
@@ -120,11 +120,29 @@
             </div>
             <div class="mb-3">
                 <div class="d-flex justify-content-between small mb-1">
-                    <span>Completion Rate — 20%</span>
+                    <span>Completion Rate — 10%</span>
                     <span class="fw-bold">{{ "%.1f"|format(breakdown.completion_score) }}</span>
                 </div>
                 <div class="progress" style="height:8px;">
                     <div class="progress-bar bg-success" style="width:{{ breakdown.completion_score }}%;border-radius:4px;"></div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <div class="d-flex justify-content-between small mb-1">
+                    <span>Attendance — 25%</span>
+                    <span class="fw-bold">{{ "%.1f"|format(breakdown.attendance_score) }}</span>
+                </div>
+                <div class="progress" style="height:8px;">
+                    <div class="progress-bar bg-warning" style="width:{{ breakdown.attendance_score }}%;border-radius:4px;"></div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <div class="d-flex justify-content-between small mb-1">
+                    <span>Exam Performance — 30%</span>
+                    <span class="fw-bold">{{ "%.1f"|format(breakdown.exam_score) }}</span>
+                </div>
+                <div class="progress" style="height:8px;">
+                    <div class="progress-bar bg-danger" style="width:{{ breakdown.exam_score }}%;border-radius:4px;"></div>
                 </div>
             </div>
             <hr>
