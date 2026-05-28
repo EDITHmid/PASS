@@ -207,6 +207,9 @@ class DataIngestor:
 
         value = str(value).strip()
 
+        if not value:
+            raise ValueError("Empty timestamp value")
+
         # Try common formats
         formats = [
             "%Y-%m-%dT%H:%M:%S",

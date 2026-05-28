@@ -77,14 +77,20 @@
 <!-- Charts Row -->
 <div class="row g-3 mb-4">
     <div class="col-lg-5">
-        <div class="chart-container">
+        <div class="chart-container position-relative">
             <h6 class="fw-bold mb-3"><i class="bi bi-pie-chart me-2"></i>Credibility Distribution</h6>
+            <div class="chart-spinner-overlay" id="spinnerCredDist">
+                <div class="spinner-border text-primary" role="status"></div>
+            </div>
             <div style="position:relative; height:220px;"><canvas id="credDistChart"></canvas></div>
         </div>
     </div>
     <div class="col-lg-7">
-        <div class="chart-container">
+        <div class="chart-container position-relative">
             <h6 class="fw-bold mb-3"><i class="bi bi-bar-chart me-2"></i>Score Overview</h6>
+            <div class="chart-spinner-overlay" id="spinnerScoreBar">
+                <div class="spinner-border text-primary" role="status"></div>
+            </div>
             <div style="position:relative; height:220px;"><canvas id="scoreBarChart"></canvas></div>
         </div>
     </div>
@@ -174,6 +180,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const dist = {{ distribution|safe }};
         new Chart(ctx, {
             type: 'doughnut',
+            type: 'doughnut',
             data: {
                 labels: ['High (≥85)', 'Medium (50-84)', 'Low (30-49)', 'Critical (<30)'],
                 datasets: [{
@@ -226,6 +233,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    document.getElementById('spinnerCredDist')?.classList.add('d-none');
+    document.getElementById('spinnerScoreBar')?.classList.add('d-none');
 });
 </script>
 {% endblock %}

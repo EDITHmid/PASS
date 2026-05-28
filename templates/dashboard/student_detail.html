@@ -87,15 +87,21 @@
 <div class="row g-3 mb-4">
     <!-- Δt Time-Series Chart -->
     <div class="col-lg-8">
-        <div class="chart-container">
+        <div class="chart-container position-relative">
             <h6 class="fw-bold mb-3"><i class="bi bi-graph-up me-2"></i>Submission Δt Over Time</h6>
+            <div class="chart-spinner-overlay" id="spinnerDt">
+                <div class="spinner-border text-primary" role="status"></div>
+            </div>
             <div style="position:relative; height:280px;"><canvas id="studentDeltaTChart"></canvas></div>
         </div>
     </div>
     <!-- Credibility Breakdown -->
     <div class="col-lg-4">
-        <div class="chart-container">
+        <div class="chart-container position-relative">
             <h6 class="fw-bold mb-3"><i class="bi bi-pie-chart me-2"></i>Credibility Breakdown</h6>
+            <div class="chart-spinner-overlay" id="spinnerCredBreakdown">
+                <div class="spinner-border text-primary" role="status"></div>
+            </div>
             <div style="position:relative; height:200px;"><canvas id="credBreakdownChart"></canvas></div>
             <div class="mt-3">
                 <div class="d-flex justify-content-between small mb-1">
@@ -138,8 +144,11 @@
 <!-- Variance Chart -->
 <div class="row g-3 mb-4">
     <div class="col-12">
-        <div class="chart-container">
+        <div class="chart-container position-relative">
             <h6 class="fw-bold mb-3"><i class="bi bi-bar-chart me-2"></i>Variance Stability (Rolling σ)</h6>
+            <div class="chart-spinner-overlay" id="spinnerVariance">
+                <div class="spinner-border text-primary" role="status"></div>
+            </div>
             <div style="position:relative; height:180px;"><canvas id="varianceChart"></canvas></div>
         </div>
     </div>
@@ -321,6 +330,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    document.getElementById('spinnerDt')?.classList.add('d-none');
+
     // ── Credibility Breakdown Radar ────────────────────────────
     const credCtx = document.getElementById('credBreakdownChart');
     if (credCtx) {
@@ -353,6 +364,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    document.getElementById('spinnerCredBreakdown')?.classList.add('d-none');
 
     // ── Variance Rolling Chart ─────────────────────────────────
     const varCtx = document.getElementById('varianceChart');
@@ -406,6 +419,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    document.getElementById('spinnerVariance')?.classList.add('d-none');
 });
 </script>
 {% endblock %}

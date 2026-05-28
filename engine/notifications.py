@@ -5,7 +5,7 @@ Handles email notifications for critical alerts, password resets,
 and periodic summary reports to teachers, parents, and admins.
 """
 
-from flask import current_app, render_template
+from flask import current_app
 
 
 def send_email(recipient, subject, body, html=None):
@@ -16,13 +16,17 @@ def send_email(recipient, subject, body, html=None):
 
     try:
         from flask_mail import Message
-        from app import mail
+        from app import mail as _mail
+
+        if _mail is None:
+            current_app.logger.warning("Mail not configured; email not sent.")
+            return False
 
         msg = Message(subject, recipients=[recipient])
         msg.body = body
         if html:
             msg.html = html
-        mail.send(msg)
+        _mail.send(msg)
         return True
     except Exception as e:
         current_app.logger.error(f"Failed to send email: {e}")

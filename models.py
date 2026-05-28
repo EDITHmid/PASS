@@ -87,7 +87,7 @@ class Course(db.Model):
     # Relationships
     instructor = db.relationship("User", backref="courses_taught", lazy=True)
     students = db.relationship("Student", backref="course", lazy=True)
-    submissions = db.relationship("Submission", backref="course", lazy=True)
+    submissions = db.relationship("Submission", backref="course", lazy=True, cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Course {self.course_id}: {self.course_name}>"
@@ -124,13 +124,15 @@ class Student(db.Model):
 
     # Relationships
     submissions = db.relationship(
-        "Submission", backref="student", lazy=True, order_by="Submission.submitted_at"
+        "Submission", backref="student", lazy=True,
+        order_by="Submission.submitted_at", cascade="all, delete-orphan"
     )
     alerts = db.relationship(
-        "Alert", backref="student", lazy=True, order_by="Alert.created_at.desc()"
+        "Alert", backref="student", lazy=True,
+        order_by="Alert.created_at.desc()", cascade="all, delete-orphan"
     )
     policy_events = db.relationship(
-        "PolicyEvent", backref="student", lazy=True
+        "PolicyEvent", backref="student", lazy=True, cascade="all, delete-orphan"
     )
 
     @property
@@ -269,6 +271,7 @@ class Alert(db.Model):
             "severity": self.severity,
             "description": self.description,
             "resolved": self.resolved,
+            "consecutive_improvements": self.consecutive_improvements,
             "created_at": self.created_at.isoformat(),
         }
 
@@ -368,7 +371,7 @@ class Guardian(db.Model):
 
     # Relationships
     user = db.relationship("User", backref="guardian_profile", uselist=False, lazy=True)
-    students = db.relationship("StudentGuardian", backref="guardian", lazy=True)
+    students = db.relationship("StudentGuardian", backref="guardian", lazy=True, cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Guardian {self.full_name}>"
@@ -435,7 +438,7 @@ class PasswordResetToken(db.Model):
     expires_at = db.Column(db.DateTime, nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
-    user = db.relationship("User", backref="reset_tokens", lazy=True)
+    user = db.relationship("User", backref=db.backref("reset_tokens", lazy=True, cascade="all, delete-orphan"))
 
     @staticmethod
     def generate(user_id, expiry_hours=24):
@@ -452,3 +455,40 @@ class PasswordResetToken(db.Model):
 
     def __repr__(self):
         return f"<PasswordResetToken user={self.user_id} used={self.used}>"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Persistent Configuration
+# ─────────────────────────────────────────────────────────────────────────────
+
+class ConfigSetting(db.Model):
+    """
+    Key-value configuration store for runtime-persistent settings.
+    Currently used for scoring weights, but extensible to any setting.
+    """
+
+    __tablename__ = "config_settings"
+
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(100), unique=True, nullable=False, index=True)
+    value = db.Column(db.Float, nullable=False)
+
+    @classmethod
+    def get_weights(cls):
+        """Return all weight settings as a dict."""
+        settings = cls.query.filter(cls.key.startswith("weight_")).all()
+        return {s.key: s.value for s in settings}
+
+    @classmethod
+    def set_weight(cls, key, value):
+        """Upsert a single weight setting."""
+        setting = cls.query.filter_by(key=key).first()
+        if setting:
+            setting.value = value
+        else:
+            setting = cls(key=key, value=value)
+            db.session.add(setting)
+        return setting
+
+    def __repr__(self):
+        return f"<ConfigSetting {self.key}={self.value}>"

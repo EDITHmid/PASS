@@ -29,7 +29,7 @@ def init_db():
     """Create all database tables."""
     with app.app_context():
         db.create_all()
-        print("[✓] Database tables created.")
+        app.logger.info("Database tables created.")
 
 
 def seed_demo_data():
@@ -53,10 +53,10 @@ def seed_demo_data():
     with app.app_context():
         # Skip if data already exists
         if User.query.first():
-            print("[i] Database already has data. Use --reset to recreate.")
+            app.logger.info("Database already has data. Use --reset to recreate.")
             return
 
-        print("[...] Seeding demo data...")
+        app.logger.info("Seeding demo data...")
 
         # ── Users ───────────────────────────────────────────────
         instructor_user = User(
@@ -346,11 +346,10 @@ def seed_demo_data():
                 policy_count += 1
 
         db.session.commit()
-        print(f"  [+] {alert_count} alerts, {policy_count} policy events generated.")
-        print("[✓] Demo data seeded successfully!")
-        print()
+        app.logger.info(f"{alert_count} alerts, {policy_count} policy events generated.")
+        app.logger.info("Demo data seeded successfully!")
         print("  Demo Accounts:")
-        print("  ─────────────────────────────────")
+        print("  ---------------------------------")
         print("  Principal:   principal / password123")
         print("  Instructor:  instructor / password123")
         print("  Student:     arjun / password123")
@@ -362,9 +361,9 @@ def reset_db():
     """Drop all tables and recreate."""
     with app.app_context():
         db.drop_all()
-        print("[✓] All tables dropped.")
+        app.logger.info("All tables dropped.")
         db.create_all()
-        print("[✓] Tables recreated.")
+        app.logger.info("Tables recreated.")
 
 
 if __name__ == "__main__":
@@ -377,9 +376,9 @@ if __name__ == "__main__":
     else:
         init_db()
         print()
-        print("  ╔══════════════════════════════════════════╗")
-        print("  ║   PASS — Proactive Academic Support      ║")
-        print("  ║   http://127.0.0.1:5000                  ║")
-        print("  ╚══════════════════════════════════════════╝")
+        print("  +------------------------------------------+")
+        print("  |  PASS -- Proactive Academic Support      |")
+        print("  |  http://127.0.0.1:5000                   |")
+        print("  +------------------------------------------+")
         print()
         app.run(debug=True, host="127.0.0.1", port=5000)

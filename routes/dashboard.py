@@ -22,12 +22,13 @@ from flask import (
 )
 from flask_login import login_required, current_user
 
-from app import db
+from app import db, csrf
 from models import Student, Submission, Alert, PolicyEvent, Course, IngestionLog
 from engine.ingestion import DataIngestor
 from engine.metrics import MetricComputer
 from engine.hysteresis import HysteresisFilter
 from engine.credibility import CredibilityScorer
+from engine.ai_query import AIQueryEngine
 
 dashboard_bp = Blueprint("dashboard", __name__, template_folder="../templates")
 
@@ -349,6 +350,8 @@ def _safe_float(value):
 @login_required
 def student_report(student_id):
     """Generate a printable PDF-friendly credibility report."""
+    if current_user.role not in ("instructor", "admin", "principal"):
+        abort(403)
     from flask import current_app
     student = Student.query.filter_by(student_id=student_id).first_or_404()
 
@@ -659,6 +662,13 @@ def _recompute_all_metrics():
             existing_alerts=existing_alerts,
         )
 
+        # Persist consecutive_improvements back to DB before creating new alerts
+        for alert_dict in existing_alerts:
+            if "consecutive_improvements" in alert_dict and alert_dict.get("alert_id"):
+                db_alert = Alert.query.filter_by(alert_id=alert_dict["alert_id"]).first()
+                if db_alert:
+                    db_alert.consecutive_improvements = alert_dict["consecutive_improvements"]
+
         # Create new alerts
         for alert_data in analysis["new_alerts"]:
             alert = Alert(
@@ -695,3 +705,22 @@ def _recompute_all_metrics():
             db.session.add(event)
 
     db.session.commit()
+
+
+@dashboard_bp.route("/ai-query", methods=["POST"])
+@login_required
+@csrf.exempt
+def ai_query():
+    """Process a natural-language query and return AI-style response."""
+    from flask import request as flask_request, jsonify
+
+    if current_user.role not in ("instructor", "admin", "principal"):
+        return jsonify({"error": "Unauthorized"}), 403
+
+    data = flask_request.get_json(silent=True)
+    if not data or "query" not in data:
+        return jsonify({"error": "Missing query"}), 400
+
+    engine = AIQueryEngine(db)
+    result = engine.process(data["query"])
+    return jsonify(result)

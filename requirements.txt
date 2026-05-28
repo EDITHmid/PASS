@@ -39,5 +39,4 @@ gunicorn==23.0.0
 # Email (optional — for password reset & notifications)
 Flask-Mail==0.9.1
 
-# PDF Reports
-weasyprint==62.3
+# PDF Reports (disabled — requires system deps unavailable on Render free tier)

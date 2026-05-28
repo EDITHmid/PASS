@@ -101,16 +101,22 @@
 <!-- Charts Row -->
 <div class="row g-3 mb-4">
     <div class="col-lg-8">
-        <div class="chart-container">
+        <div class="chart-container position-relative">
             <h6 class="fw-bold mb-3"><i class="bi bi-graph-up me-2"></i>Class-Wide Δt Trend (FR-14)</h6>
+            <div class="chart-spinner-overlay" id="spinnerDeltaT">
+                <div class="spinner-border text-primary" role="status"></div>
+            </div>
             <div style="position:relative; height:260px;">
                 <canvas id="deltaTChart"></canvas>
             </div>
         </div>
     </div>
     <div class="col-lg-4">
-        <div class="chart-container">
+        <div class="chart-container position-relative">
             <h6 class="fw-bold mb-3"><i class="bi bi-pie-chart me-2"></i>Credibility Distribution</h6>
+            <div class="chart-spinner-overlay" id="spinnerCredDist">
+                <div class="spinner-border text-primary" role="status"></div>
+            </div>
             <div style="position:relative; height:260px;">
                 <canvas id="credDistChart"></canvas>
             </div>
@@ -309,6 +315,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return (vals.reduce((a,b) => a+b, 0) / vals.length).toFixed(1);
         });
 
+        document.getElementById('spinnerDeltaT')?.classList.add('d-none');
         new Chart(dtCtx, {
             type: 'line',
             data: {
@@ -358,6 +365,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const credCtx = document.getElementById('credDistChart');
     if (credCtx) {
         const dist = {{ cred_distribution|safe }};
+        document.getElementById('spinnerCredDist')?.classList.add('d-none');
         new Chart(credCtx, {
             type: 'doughnut',
             data: {

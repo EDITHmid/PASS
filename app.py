@@ -85,8 +85,9 @@ def create_app(config_name=None):
 
     # Create database tables
     with app.app_context():
-        from models import User, Student, Submission, Alert, PolicyEvent, Course, Guardian, StudentGuardian, AcademicYear, PasswordResetToken
+        from models import User, Student, Submission, Alert, PolicyEvent, Course, Guardian, StudentGuardian, AcademicYear, PasswordResetToken, ConfigSetting
         db.create_all()
+        _load_persisted_weights(app)
 
     # Register error handlers
     register_error_handlers(app)
@@ -115,6 +116,18 @@ def register_error_handlers(app):
     def forbidden(error):
         from flask import render_template
         return render_template("errors/403.html"), 403
+
+
+def _load_persisted_weights(app):
+    """Load scoring weights from DB into app.config so they survive restarts."""
+    try:
+        from models import ConfigSetting
+        db_weights = ConfigSetting.get_weights()
+        for db_key, val in db_weights.items():
+            config_key = f"WEIGHT_{db_key.upper()}"
+            app.config[config_key] = val
+    except Exception:
+        pass  # table might not exist yet on first run
 
 
 def register_context_processors(app):

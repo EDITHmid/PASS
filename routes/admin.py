@@ -9,7 +9,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_required, current_user
 
 from app import db
-from models import User, Student, Course, Submission, Alert, PolicyEvent, AcademicYear
+from models import User, Student, Course, Submission, Alert, PolicyEvent, AcademicYear, ConfigSetting
 from engine.metrics import MetricComputer
 from engine.credibility import CredibilityScorer
 
@@ -81,7 +81,7 @@ def manage_users():
     return render_template("admin/manage_users.html", users=users)
 
 
-@admin_bp.route("/users/toggle/<int:user_id>")
+@admin_bp.route("/users/toggle/<int:user_id>", methods=["POST"])
 @login_required
 @admin_required
 def toggle_user(user_id):
@@ -101,32 +101,37 @@ def configure_weights():
     if request.method == "POST":
         try:
             weights = {
-                "WEIGHT_DELTA_T_CONSISTENCY": float(request.form.get("weight_delta_t", 0.25)),
-                "WEIGHT_VARIANCE_STABILITY": float(request.form.get("weight_variance", 0.10)),
-                "WEIGHT_COMPLETION_RATE": float(request.form.get("weight_completion", 0.10)),
-                "WEIGHT_ATTENDANCE": float(request.form.get("weight_attendance", 0.25)),
-                "WEIGHT_EXAM_PERFORMANCE": float(request.form.get("weight_exam", 0.30)),
+                "weight_delta_t": float(request.form.get("weight_delta_t", 0.25)),
+                "weight_variance": float(request.form.get("weight_variance", 0.10)),
+                "weight_completion": float(request.form.get("weight_completion", 0.10)),
+                "weight_attendance": float(request.form.get("weight_attendance", 0.25)),
+                "weight_exam": float(request.form.get("weight_exam", 0.30)),
             }
             total = sum(weights.values())
             if abs(total - 1.0) > 0.01:
                 flash(f"Weights must sum to 1.0 (currently {total:.2f}).", "danger")
                 return redirect(url_for("admin.configure_weights"))
 
+            for key, val in weights.items():
+                ConfigSetting.set_weight(key, val)
+            db.session.commit()
+
             from flask import current_app
             for key, val in weights.items():
-                current_app.config[key] = val
+                config_key = f"WEIGHT_{key.upper()}"
+                current_app.config[config_key] = val
 
-            flash("Scoring weights updated successfully!", "success")
+            flash("Scoring weights updated permanently!", "success")
         except (ValueError, TypeError):
             flash("Invalid weight values provided.", "danger")
         return redirect(url_for("admin.configure_weights"))
 
-    from flask import current_app
+    db_weights = ConfigSetting.get_weights()
     current_weights = {
-        "delta_t": current_app.config.get("WEIGHT_DELTA_T_CONSISTENCY", 0.25),
-        "variance": current_app.config.get("WEIGHT_VARIANCE_STABILITY", 0.10),
-        "completion": current_app.config.get("WEIGHT_COMPLETION_RATE", 0.10),
-        "attendance": current_app.config.get("WEIGHT_ATTENDANCE", 0.25),
-        "exam": current_app.config.get("WEIGHT_EXAM_PERFORMANCE", 0.30),
+        "delta_t": db_weights.get("weight_delta_t", 0.25),
+        "variance": db_weights.get("weight_variance", 0.10),
+        "completion": db_weights.get("weight_completion", 0.10),
+        "attendance": db_weights.get("weight_attendance", 0.25),
+        "exam": db_weights.get("weight_exam", 0.30),
     }
     return render_template("admin/weight_config.html", weights=current_weights)

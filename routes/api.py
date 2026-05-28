@@ -31,6 +31,19 @@ hysteresis_filter = HysteresisFilter()
 credibility_scorer = CredibilityScorer()
 
 
+def instructor_api_required(f):
+    """Decorator to restrict API routes to instructors and admins."""
+    from functools import wraps
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return api_response(message="Authentication required.", success=False, status_code=401)
+        if current_user.role not in ("instructor", "admin", "principal"):
+            return api_response(message="Instructor or admin access required.", success=False, status_code=403)
+        return f(*args, **kwargs)
+    return decorated
+
+
 def api_response(data=None, message=None, success=True, status_code=200):
     """Standard API response envelope."""
     body = {"success": success}
@@ -47,6 +60,7 @@ def api_response(data=None, message=None, success=True, status_code=200):
 
 @api_bp.route("/ingest", methods=["POST"])
 @login_required
+@instructor_api_required
 def ingest_data():
     """
     Upload CSV data for ingestion.
@@ -144,6 +158,7 @@ def get_alerts():
 
 @api_bp.route("/student/<student_id>", methods=["GET"])
 @login_required
+@instructor_api_required
 def get_student(student_id):
     """
     Returns Δt history, variance data, and credibility score for one student.
@@ -267,6 +282,7 @@ def get_dashboard_summary():
 
 @api_bp.route("/policy/trigger", methods=["POST"])
 @login_required
+@instructor_api_required
 def trigger_policy():
     """Manually trigger or override a policy event."""
     data = request.get_json()
@@ -310,6 +326,7 @@ def trigger_policy():
 
 @api_bp.route("/export/csv", methods=["GET"])
 @login_required
+@instructor_api_required
 def export_csv_api():
     """Export data as CSV via API."""
     from routes.dashboard import export_csv
@@ -322,6 +339,7 @@ def export_csv_api():
 
 @api_bp.route("/students", methods=["GET"])
 @login_required
+@instructor_api_required
 def get_all_students():
     """Get all students with basic metrics."""
     students = Student.query.filter_by(status="active").order_by(

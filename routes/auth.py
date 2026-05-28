@@ -50,7 +50,11 @@ def login():
 
             next_page = request.args.get("next")
             if next_page:
-                return redirect(next_page)
+                from urllib.parse import urlparse, urljoin
+                parsed = urlparse(next_page)
+                if not parsed.netloc and not parsed.scheme:
+                    return redirect(next_page)
+                return redirect(url_for("auth.index"))
 
             if user.role == "student":
                 return redirect(url_for("student.self_view"))
