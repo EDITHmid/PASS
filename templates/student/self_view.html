@@ -25,9 +25,8 @@
                 <div style="position:relative; width:180px; height:180px;"><canvas id="credGauge"></canvas></div>
                 <div class="position-absolute top-50 start-50 translate-middle">
                     {% set score = student.credibility_score or 0 %}
-                    <div class="fs-2 fw-bold {{ 'text-danger' if score < 30 else ('text-warning' if score < 50 else ('text-primary' if score < 85 else 'text-success')) }}">
-                        {{ "%.0f"|format(score) }}
-                    </div>
+                    <div class="fs-2 fw-bold {{ 'text-danger' if score < 30 else ('text-warning' if score < 50 else ('text-primary' if score < 85 else 'text-success')) }}"
+                         id="gaugeScoreDisplay">0</div>
                     <div class="small text-muted">/ 100</div>
                 </div>
             </div>
@@ -154,11 +153,62 @@
     </div>
     <div class="col-lg-6">
         <div class="chart-container h-100">
-            <h6 class="fw-bold mb-3"><i class="bi bi-graph-up me-2"></i>My Δt Trend</h6>
-            <div style="position:relative; height:220px;"><canvas id="myDeltaTChart"></canvas></div>
+            <h6 class="fw-bold mb-3 d-flex justify-content-between">
+                <span><i class="bi bi-graph-up me-2"></i>My Δt Trend</span>
+                <span class="small text-muted" id="dtStatus"></span>
+            </h6>
+            <div style="position:relative; height:180px;"><canvas id="myDeltaTChart"></canvas></div>
+            <div class="mt-2 small text-center text-muted" id="dtHelp">
+                <i class="bi bi-info-circle me-1"></i>
+                Green = on-time (positive Δt), Red = late (negative Δt)
+            </div>
         </div>
     </div>
 </div>
+
+<!-- Submissions Table -->
+{% if submissions %}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0"><i class="bi bi-table me-2"></i>My Submissions</h6>
+        <span class="small text-muted">{{ submissions|length }} total</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="small fw-semibold ps-3">Assignment</th>
+                        <th class="small fw-semibold">Submitted</th>
+                        <th class="small fw-semibold text-center">Δt (hours)</th>
+                        <th class="small fw-semibold text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in submissions %}
+                    <tr>
+                        <td class="ps-3 fw-semibold small">{{ sub.assignment_id }}</td>
+                        <td class="small text-muted">{{ sub.submitted_at.strftime('%b %d, %H:%M') }}</td>
+                        <td class="text-center">
+                            {% set dt = sub.delta_t_hours %}
+                            <span class="fw-semibold small {{ 'text-success' if dt >= 0 else 'text-danger' }}">
+                                {{ "%.1f"|format(dt) }}h
+                                {% if dt >= 0 %}<i class="bi bi-arrow-up-short"></i>{% else %}<i class="bi bi-arrow-down-short"></i>{% endif %}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge {{ 'bg-success' if sub.submission_status == 'on-time' else 'bg-danger' }} rounded-pill">
+                                {{ sub.submission_status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <!-- ═══════════════════════════════════════════════════════════
      FINAL EXAM ELIGIBILITY — Gap-to-Threshold Analysis
@@ -397,17 +447,30 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // ── Credibility Gauge (Doughnut) ───────────────────────────
+    // ── Count-up animation ─────────────────────────────────────
+    function animateCountUp(el, target, duration) {
+        const start = performance.now();
+        function step(now) {
+            const elapsed = now - start;
+            const progress = Math.min(elapsed / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            el.textContent = Math.round(eased * target);
+            if (progress < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+    }
+
+    // ── Credibility Gauge (Doughnut) with animation ────────────
     const gaugeCtx = document.getElementById('credGauge');
     if (gaugeCtx) {
         const score = {{ student.credibility_score or 0 }};
         const color = score < 30 ? '#ef476f' : score < 50 ? '#ffd166' : score < 85 ? '#118ab2' : '#06d6a0';
 
-        new Chart(gaugeCtx, {
+        const chart = new Chart(gaugeCtx, {
             type: 'doughnut',
             data: {
                 datasets: [{
-                    data: [score, 100 - score],
+                    data: [0, 100],
                     backgroundColor: [color, '#f0f0f0'],
                     borderWidth: 0
                 }]
@@ -420,51 +483,90 @@ document.addEventListener('DOMContentLoaded', function() {
                 plugins: { legend: { display: false }, tooltip: { enabled: false } }
             }
         });
+
+        // Animate gauge fill
+        const displayEl = document.getElementById('gaugeScoreDisplay');
+        animateCountUp(displayEl, score, 800);
+        let startVal = 0;
+        function animateGauge() {
+            const step = Math.ceil(score / 20);
+            if (startVal < score) {
+                startVal = Math.min(startVal + step, score);
+                chart.data.datasets[0].data = [startVal, 100 - startVal];
+                chart.update();
+                if (startVal < score) requestAnimationFrame(animateGauge);
+            }
+        }
+        requestAnimationFrame(animateGauge);
     }
 
     // ── Δt Trend Chart ─────────────────────────────────────────
     const dtCtx = document.getElementById('myDeltaTChart');
     if (dtCtx) {
         const submissions = {{ submissions_json|safe }};
-        new Chart(dtCtx, {
-            type: 'line',
-            data: {
-                labels: submissions.map(s => s.assignment_id),
-                datasets: [{
-                    label: 'My Δt (hours)',
-                    data: submissions.map(s => s.delta_t_hours),
-                    borderColor: '#118ab2',
-                    backgroundColor: 'rgba(17,138,178,0.08)',
-                    fill: true,
-                    tension: 0.3,
-                    pointBackgroundColor: submissions.map(s =>
-                        s.delta_t_hours >= 0 ? '#06d6a0' : '#ef476f'
-                    ),
-                    pointRadius: 5
-                }, {
-                    label: 'Deadline',
-                    data: submissions.map(() => 0),
-                    borderColor: '#ef476f',
-                    borderDash: [5, 5],
-                    pointRadius: 0,
-                    fill: false
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'bottom', labels: { usePointStyle: true } }
+        if (submissions.length > 0) {
+            const dtValues = submissions.map(s => s.delta_t_hours);
+            const allOnTime = dtValues.every(v => v >= 0);
+            const allLate = dtValues.every(v => v < 0);
+            const statusEl = document.getElementById('dtStatus');
+            if (allOnTime) statusEl.innerHTML = '<i class="bi bi-check-circle text-success me-1"></i>All on-time';
+            else if (allLate) statusEl.innerHTML = '<i class="bi bi-exclamation-circle text-danger me-1"></i>All late';
+            else statusEl.innerHTML = '<i class="bi bi-dash-circle text-warning me-1"></i>Mixed';
+
+            new Chart(dtCtx, {
+                type: 'line',
+                data: {
+                    labels: submissions.map(s => s.assignment_id),
+                    datasets: [{
+                        label: 'My Δt (hours)',
+                        data: dtValues,
+                        borderColor: '#118ab2',
+                        backgroundColor: 'rgba(17,138,178,0.08)',
+                        fill: true,
+                        tension: 0.3,
+                        pointBackgroundColor: dtValues.map(v =>
+                            v >= 0 ? '#06d6a0' : '#ef476f'
+                        ),
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }, {
+                        label: 'Deadline',
+                        data: submissions.map(() => 0),
+                        borderColor: '#ef476f',
+                        borderDash: [5, 5],
+                        pointRadius: 0,
+                        fill: false
+                    }]
                 },
-                scales: {
-                    y: {
-                        title: { display: true, text: 'Hours' },
-                        grid: { color: 'rgba(0,0,0,0.05)' }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => {
+                                    if (ctx.datasetIndex === 0) {
+                                        const val = ctx.parsed.y;
+                                        return val >= 0 ? val + 'h before deadline' : Math.abs(val) + 'h after deadline';
+                                    }
+                                    return ctx.dataset.label;
+                                }
+                            }
+                        }
                     },
-                    x: { grid: { display: false } }
+                    scales: {
+                        y: {
+                            title: { display: true, text: 'Hours' },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        },
+                        x: { grid: { display: false } }
+                    }
                 }
-            }
-        });
+            });
+        } else {
+            document.getElementById('dtHelp').textContent = 'No submissions yet — Δt chart will appear once you submit assignments.';
+        }
     }
 
     // ── What-If Simulator ──────────────────────────────────────
@@ -497,19 +599,19 @@ document.addEventListener('DOMContentLoaded', function() {
         const diff = score - currentScore;
         const badge = document.getElementById('simImpactBadge');
         if (diff > 5) {
-            badge.className = 'badge bg-success';
+            badge.className = 'badge bg-success px-3 py-2';
             badge.textContent = '+' + diff.toFixed(1) + ' improvement!';
         } else if (diff < -5) {
-            badge.className = 'badge bg-danger';
+            badge.className = 'badge bg-danger px-3 py-2';
             badge.textContent = diff.toFixed(1) + ' decline';
         } else {
-            badge.className = 'badge bg-secondary';
+            badge.className = 'badge bg-secondary px-3 py-2';
             badge.textContent = 'No significant change';
         }
     }
 
     for (const key of Object.keys(simSliders)) {
-        simSliders[key].addEventListener('input', updateSimulator);
+        if (simSliders[key]) simSliders[key].addEventListener('input', updateSimulator);
     }
 });
 </script>

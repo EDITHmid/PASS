@@ -226,11 +226,24 @@
             padding: 1.5rem;
         }
 
+        /* Sidebar backdrop overlay */
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 999;
+        }
+        .sidebar-backdrop.show { display: block; }
+
         /* Mobile responsive */
         @media (max-width: 992px) {
             .sidebar { transform: translateX(-100%); }
             .sidebar.show { transform: translateX(0); }
             .main-content { margin-left: 0; }
+        }
+        @media (min-width: 993px) {
+            .sidebar-backdrop { display: none !important; }
         }
 
         /* Scrollbar styling */
@@ -267,6 +280,9 @@
     {% endwith %}
 
     {% block body %}
+    <!-- Sidebar Backdrop -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
     <!-- Sidebar -->
     {% if current_user.is_authenticated %}
     <nav class="sidebar" id="sidebar">
@@ -346,7 +362,7 @@
         <!-- Top Navbar -->
         <div class="top-navbar d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center">
-                <button class="btn btn-link text-dark d-lg-none me-2" onclick="document.getElementById('sidebar').classList.toggle('show')">
+                <button class="btn btn-link text-dark d-lg-none me-2" onclick="toggleSidebar()">
                     <i class="bi bi-list fs-4"></i>
                 </button>
                 <h5 class="mb-0 fw-semibold">{% block page_title %}Dashboard{% endblock %}</h5>
@@ -400,6 +416,16 @@
                 new bootstrap.Alert(el).close();
             });
         }, 5000);
+
+        // Sidebar toggle for mobile
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('show');
+            document.getElementById('sidebarBackdrop').classList.toggle('show');
+        }
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('show');
+            document.getElementById('sidebarBackdrop').classList.remove('show');
+        }
 
         // Notification badge count
         function updateNotifBadge() {
