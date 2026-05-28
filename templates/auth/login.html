@@ -5,171 +5,191 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 * { font-family: 'Inter', sans-serif; }
 
-@keyframes fadeUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-}
-@keyframes gradient-shift {
-    0%   { background-position: 0% 50%; }
-    50%  { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-@keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50%      { transform: translateY(-12px); }
-}
-@keyframes pulse-ring {
-    0%   { box-shadow: 0 0 0 0 rgba(67,97,238,0.4); }
-    70%  { box-shadow: 0 0 0 20px rgba(67,97,238,0); }
-    100% { box-shadow: 0 0 0 0 rgba(67,97,238,0); }
+:root {
+  --pass-dark: #0a0e1a;
+  --pass-border: rgba(255,255,255,0.06);
 }
 
-.animate-fade-up  { animation: fadeUp 0.8s ease-out both; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes gradient-shift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%      { transform: translateY(-16px) scale(1.02); }
+}
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(67,97,238,0.3); }
+  70%  { box-shadow: 0 0 0 24px rgba(67,97,238,0); }
+  100% { box-shadow: 0 0 0 0 rgba(67,97,238,0); }
+}
+
+.animate-fade-up   { animation: fadeUp 0.8s ease-out both; }
 .animate-fade-up-1 { animation: fadeUp 0.8s ease-out 0.15s both; }
 .animate-fade-up-2 { animation: fadeUp 0.8s ease-out 0.3s both; }
 .animate-fade-up-3 { animation: fadeUp 0.8s ease-out 0.45s both; }
 .animate-fade-up-4 { animation: fadeUp 0.8s ease-out 0.6s both; }
-.animate-fade-in   { animation: fadeIn 1s ease-out both; }
-.animate-float     { animation: float 5s ease-in-out infinite; }
+.animate-float     { animation: float 6s ease-in-out infinite; }
+
+.form-input {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  color: #e5e7eb !important;
+  border-radius: 10px !important;
+  padding: 0.7rem 1rem !important;
+  font-size: 0.9rem;
+  transition: all 0.3s;
+}
+.form-input:focus {
+  background: rgba(255,255,255,0.06) !important;
+  border-color: rgba(67,97,238,0.4) !important;
+  box-shadow: 0 0 0 3px rgba(67,97,238,0.1) !important;
+  outline: none;
+}
+.form-input::placeholder { color: rgba(255,255,255,0.25); }
 </style>
 
 <div class="min-vh-100 d-flex align-items-center position-relative overflow-hidden"
-     style="background:linear-gradient(-45deg,#073b4c,#0a4c61,#118ab2,#4361ee);background-size:400% 400%;animation:gradient-shift 12s ease infinite;">
+     style="background: var(--pass-dark);">
 
-    <!-- Decorative background elements -->
-    <div class="position-absolute top-0 start-0 w-100 h-100" style="pointer-events:none;">
-        <div class="position-absolute rounded-circle animate-float" style="width:300px;height:300px;background:radial-gradient(circle,rgba(6,214,160,0.08),transparent 70%);top:-80px;left:-80px;"></div>
-        <div class="position-absolute rounded-circle" style="width:400px;height:400px;background:radial-gradient(circle,rgba(67,97,238,0.06),transparent 70%);bottom:-120px;right:-120px;animation:float 7s ease-in-out infinite reverse;"></div>
-        <div class="position-absolute rounded-circle" style="width:200px;height:200px;background:radial-gradient(circle,rgba(255,209,102,0.05),transparent 70%);top:40%;right:10%;animation:float 6s ease-in-out infinite 1s;"></div>
-        <div class="position-absolute" style="top:20%;left:8%;width:2px;height:100px;background:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,0.08),rgba(255,255,255,0));"></div>
-        <div class="position-absolute" style="bottom:25%;right:15%;width:2px;height:80px;background:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,0.06),rgba(255,255,255,0));"></div>
-    </div>
+  <!-- Background effects -->
+  <div class="position-absolute top-0 start-0 w-100 h-100" style="pointer-events:none;">
+    <div style="position:absolute;inset:0;background-image:radial-gradient(circle at 20% 30%,rgba(67,97,238,0.06) 0%,transparent 50%),radial-gradient(circle at 80% 70%,rgba(6,214,160,0.04) 0%,transparent 50%);"></div>
+    <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px);background-size:60px 60px;"></div>
+    <div class="position-absolute rounded-circle animate-float" style="width:320px;height:320px;background:radial-gradient(circle,rgba(67,97,238,0.08),transparent 70%);top:-100px;left:-80px;"></div>
+    <div class="position-absolute rounded-circle" style="width:400px;height:400px;background:radial-gradient(circle,rgba(6,214,160,0.05),transparent 70%);bottom:-140px;right:-100px;animation:float 8s ease-in-out infinite reverse;"></div>
+  </div>
 
-    <div class="container position-relative" style="z-index:1;">
-        <div class="row justify-content-center">
-            <div class="col-md-5 col-lg-4">
+  <div class="container position-relative" style="z-index:1;">
+    <div class="row justify-content-center">
+      <div class="col-md-5 col-lg-4">
 
-                <!-- Logo -->
-                <div class="text-center mb-4 animate-fade-up">
-                    <a href="{{ url_for('auth.index') }}" class="text-decoration-none">
-                        <h2 class="text-white fw-bold" style="letter-spacing:2px;">
-                            <i class="bi bi-mortarboard-fill me-2" style="color:#06d6a0;"></i>PASS
-                        </h2>
-                    </a>
-                    <p class="text-white-50 small" style="letter-spacing:1px;text-transform:uppercase;font-size:0.65rem;">Proactive Academic Support System</p>
-                </div>
-
-                <!-- Login Card -->
-                <div class="animate-fade-up-1" style="perspective:1000px;">
-                    <div class="card border-0 overflow-hidden" style="border-radius:20px;background:rgba(255,255,255,0.95);backdrop-filter:blur(20px);box-shadow:0 24px 60px rgba(0,0,0,0.25);" id="loginCard">
-                        <!-- Accent top bar -->
-                        <div style="height:4px;background:linear-gradient(90deg,#4361ee,#118ab2,#06d6a0);"></div>
-
-                        <div class="card-body p-4 p-lg-5">
-                            <h5 class="fw-bold mb-1 animate-fade-up-2">Welcome back</h5>
-                            <p class="text-muted small mb-4 animate-fade-up-2">Sign in to your account</p>
-
-                            <form method="POST" action="{{ url_for('auth.login') }}" class="animate-fade-up-3">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-                                <div class="mb-3">
-                                    <label class="form-label small fw-semibold">Username</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light border-end-0" style="border-radius:10px 0 0 10px;"><i class="bi bi-person text-muted"></i></span>
-                                        <input type="text" class="form-control border-start-0" name="username"
-                                               placeholder="Enter your username" required autofocus
-                                               style="border-radius:0 10px 10px 0;background:#f8f9fa;border-color:#e5e7eb;">
-                                    </div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label small fw-semibold">Password</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light border-end-0" style="border-radius:10px 0 0 10px;"><i class="bi bi-lock text-muted"></i></span>
-                                        <input type="password" class="form-control border-start-0" name="password"
-                                               placeholder="Enter your password" required
-                                               style="border-radius:0 10px 10px 0;background:#f8f9fa;border-color:#e5e7eb;">
-                                    </div>
-                                </div>
-
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" id="remember" name="remember">
-                                        <label class="form-check-label small" for="remember">Remember me</label>
-                                    </div>
-                                    <a href="{{ url_for('auth.forgot_password') }}" class="small text-decoration-none" style="color:#4361ee;">Forgot password?</a>
-                                </div>
-
-                                <button type="submit" class="btn w-100 py-2 fw-semibold text-white border-0"
-                                        style="background:linear-gradient(135deg,#4361ee,#118ab2);border-radius:10px;transition:all 0.3s;"
-                                        onmouseover="this.style.boxShadow='0 4px 15px rgba(67,97,238,0.35)';this.style.transform='translateY(-1px)'"
-                                        onmouseout="this.style.boxShadow='none';this.style.transform='none'">
-                                    <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
-                                </button>
-                            </form>
-
-                            <hr class="my-4 animate-fade-up-3">
-
-                            <div class="text-center animate-fade-up-4">
-                                <p class="text-muted small mb-2">Don't have an account?</p>
-                                <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3" style="border-width:1.5px;">Create Account</a>
-                            </div>
-
-                            <!-- Demo credentials -->
-                            <div class="mt-4 p-3 rounded-3 animate-fade-up-4" style="background:rgba(67,97,238,0.04);border:1px solid rgba(67,97,238,0.08);">
-                                <p class="small fw-semibold mb-2" style="color:#4361ee;">
-                                    <i class="bi bi-info-circle me-1"></i>Demo Accounts
-                                </p>
-                                <div class="small text-muted" style="font-size:0.75rem;">
-                                    <div class="d-flex justify-content-between py-1">
-                                        <span><i class="bi bi-person-workspace me-1 text-primary"></i>Instructor</span>
-                                        <span style="font-family:monospace;font-size:0.7rem;">instructor / password123</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between py-1">
-                                        <span><i class="bi bi-mortarboard me-1 text-success"></i>Student</span>
-                                        <span style="font-family:monospace;font-size:0.7rem;">arjun / password123</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between py-1">
-                                        <span><i class="bi bi-building me-1 text-info"></i>Principal</span>
-                                        <span style="font-family:monospace;font-size:0.7rem;">principal / password123</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between py-1">
-                                        <span><i class="bi bi-people me-1 text-warning"></i>Parent</span>
-                                        <span style="font-family:monospace;font-size:0.7rem;">parent_arjun / password123</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="text-center mt-4 animate-fade-up-4">
-                    <a href="{{ url_for('auth.index') }}" class="text-white-50 text-decoration-none small">
-                        <i class="bi bi-arrow-left me-1"></i>Back to home
-                    </a>
-                </div>
-            </div>
+        <!-- Logo -->
+        <div class="text-center mb-4 animate-fade-up">
+          <a href="{{ url_for('auth.index') }}" class="text-decoration-none">
+            <h2 class="fw-bold d-flex align-items-center justify-content-center gap-2" style="color:#fff;letter-spacing:0.5px;">
+              <span class="d-inline-flex align-items-center justify-content-center rounded-3" style="width:36px;height:36px;background:linear-gradient(135deg,#4361ee,#06d6a0);font-size:0.95rem;">
+                <i class="bi bi-mortarboard-fill text-white"></i>
+              </span>
+              PASS
+            </h2>
+          </a>
+          <p style="color:rgba(255,255,255,0.3);font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;margin-top:0.3rem;">Proactive Academic Support System</p>
         </div>
+
+        <!-- Login Card -->
+        <div class="animate-fade-up-1" style="perspective:1000px;">
+          <div class="card border-0 overflow-hidden" id="loginCard"
+               style="border-radius:20px;background:rgba(17,24,39,0.8);backdrop-filter:blur(24px) saturate(1.3);-webkit-backdrop-filter:blur(24px) saturate(1.3);border:1px solid rgba(255,255,255,0.06);box-shadow:0 24px 60px rgba(0,0,0,0.4);">
+            <!-- Top gradient bar -->
+            <div style="height:3px;background:linear-gradient(90deg,#4361ee,#118ab2,#06d6a0);"></div>
+
+            <div class="card-body p-4 p-lg-5">
+              <h5 class="fw-bold mb-1 animate-fade-up-2" style="color:#fff;">Welcome back</h5>
+              <p class="small mb-4 animate-fade-up-2" style="color:rgba(255,255,255,0.4);">Sign in to your account</p>
+
+              <form method="POST" action="{{ url_for('auth.login') }}" class="animate-fade-up-3">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="mb-3">
+                  <label class="form-label small fw-semibold" style="color:rgba(255,255,255,0.6);">Username</label>
+                  <input type="text" class="form-control form-input" name="username"
+                         placeholder="Enter your username" required autofocus>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label small fw-semibold" style="color:rgba(255,255,255,0.6);">Password</label>
+                  <input type="password" class="form-control form-input" name="password"
+                         placeholder="Enter your password" required>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="remember" name="remember"
+                           style="background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.15);">
+                    <label class="form-check-label small" for="remember" style="color:rgba(255,255,255,0.5);">Remember me</label>
+                  </div>
+                  <a href="{{ url_for('auth.forgot_password') }}" class="small text-decoration-none" style="color:rgba(255,255,255,0.4);transition:color 0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.4)'">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="btn w-100 py-2 fw-semibold text-white border-0 position-relative overflow-hidden"
+                        style="background:linear-gradient(135deg,#4361ee,#118ab2);border-radius:10px;transition:all 0.3s;"
+                        onmouseover="this.style.boxShadow='0 6px 20px rgba(67,97,238,0.3)';this.style.transform='translateY(-1px)'"
+                        onmouseout="this.style.boxShadow='none';this.style.transform='none'">
+                  <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                </button>
+              </form>
+
+              <hr class="my-4 animate-fade-up-3" style="border-color:rgba(255,255,255,0.06);">
+
+              <div class="text-center animate-fade-up-4">
+                <p class="small mb-2" style="color:rgba(255,255,255,0.4);">Don't have an account?</p>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-sm rounded-pill px-3" style="border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);transition:all 0.3s;"
+                   onmouseover="this.style.borderColor='rgba(255,255,255,0.25)';this.style.color='#fff'"
+                   onmouseout="this.style.borderColor='rgba(255,255,255,0.12)';this.style.color='rgba(255,255,255,0.6)'">Create Account</a>
+              </div>
+
+              <!-- Demo credentials -->
+              <div class="mt-4 p-3 rounded-3 animate-fade-up-4" style="background:rgba(67,97,238,0.06);border:1px solid rgba(67,97,238,0.1);">
+                <p class="small fw-semibold mb-2 d-flex align-items-center gap-2" style="color:rgba(255,255,255,0.6);">
+                  <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#06d6a0;animation:pulse-ring 2s infinite;"></span>
+                  Demo Accounts
+                </p>
+                <div style="font-size:0.75rem;">
+                  <div class="d-flex justify-content-between py-1" style="color:rgba(255,255,255,0.4);">
+                    <span><i class="bi bi-building me-1" style="color:#118ab2;"></i>Principal</span>
+                    <span style="font-family:'SF Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.3);">principal / password123</span>
+                  </div>
+                  <div class="d-flex justify-content-between py-1" style="color:rgba(255,255,255,0.4);">
+                    <span><i class="bi bi-person-workspace me-1" style="color:#4361ee;"></i>Instructor</span>
+                    <span style="font-family:'SF Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.3);">instructor / password123</span>
+                  </div>
+                  <div class="d-flex justify-content-between py-1" style="color:rgba(255,255,255,0.4);">
+                    <span><i class="bi bi-mortarboard me-1" style="color:#06d6a0;"></i>Student</span>
+                    <span style="font-family:'SF Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.3);">arjun / password123</span>
+                  </div>
+                  <div class="d-flex justify-content-between py-1" style="color:rgba(255,255,255,0.4);">
+                    <span><i class="bi bi-people me-1" style="color:#ffd166;"></i>Parent</span>
+                    <span style="font-family:'SF Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.3);">parent_arjun / password123</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-center mt-4 animate-fade-up-4">
+          <a href="{{ url_for('auth.index') }}" style="color:rgba(255,255,255,0.3);font-size:0.85rem;text-decoration:none;transition:color 0.3s;" onmouseover="this.style.color='rgba(255,255,255,0.6)'" onmouseout="this.style.color='rgba(255,255,255,0.3)'">
+            <i class="bi bi-arrow-left me-1"></i>Back to home
+          </a>
+        </div>
+      </div>
     </div>
+  </div>
 </div>
 
 <script>
 // 3D tilt on login card
 const card = document.getElementById('loginCard');
 card.addEventListener('mousemove', e => {
-    const rect = card.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-    card.style.transform = `rotateY(${x*3}deg) rotateX(${-y*3}deg)`;
-    card.style.transition = 'transform 0.1s ease-out';
+  const rect = card.getBoundingClientRect();
+  const x = (e.clientX - rect.left) / rect.width - 0.5;
+  const y = (e.clientY - rect.top) / rect.height - 0.5;
+  card.style.transform = `rotateY(${x*3}deg) rotateX(${-y*3}deg)`;
+  card.style.transition = 'transform 0.1s ease-out';
 });
 card.addEventListener('mouseleave', () => {
-    card.style.transform = '';
-    card.style.transition = 'transform 0.4s ease-out';
+  card.style.transform = '';
+  card.style.transition = 'transform 0.4s ease-out';
 });
 </script>
 {% endblock %}
