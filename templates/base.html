@@ -705,7 +705,10 @@
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({query: query})
             })
-            .then(r => r.json())
+            .then(r => {
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+            })
             .then(data => {
                 document.getElementById('aiThinking')?.remove();
                 const reply = data.response || 'Sorry, I couldn\'t process that.';
@@ -714,6 +717,7 @@
             .catch(err => {
                 document.getElementById('aiThinking')?.remove();
                 addAiMsg('Connection error. Please try again.', 'bot');
+                console.error('AI query failed:', err);
             })
             .finally(() => {
                 aiChatSend.disabled = false;

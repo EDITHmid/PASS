@@ -21,6 +21,7 @@ from flask import (
     flash, jsonify, Response, abort,
 )
 from flask_login import login_required, current_user
+from flask import current_app
 
 from app import db, csrf
 from models import Student, Submission, Alert, PolicyEvent, Course, IngestionLog
@@ -708,19 +709,21 @@ def _recompute_all_metrics():
 
 
 @dashboard_bp.route("/ai-query", methods=["POST"])
-@login_required
 @csrf.exempt
+@login_required
 def ai_query():
     """Process a natural-language query and return AI-style response."""
-    from flask import request as flask_request, jsonify
-
     if current_user.role not in ("instructor", "admin", "principal"):
         return jsonify({"error": "Unauthorized"}), 403
 
-    data = flask_request.get_json(silent=True)
+    data = request.get_json(silent=True)
     if not data or "query" not in data:
         return jsonify({"error": "Missing query"}), 400
 
-    engine = AIQueryEngine(db)
-    result = engine.process(data["query"])
-    return jsonify(result)
+    try:
+        engine = AIQueryEngine(db)
+        result = engine.process(data["query"])
+        return jsonify(result)
+    except Exception as e:
+        current_app.logger.error(f"AI query error: %s", e)
+        return jsonify({"response": "Sorry, something went wrong processing that. Please try a different question.", "data": None})
