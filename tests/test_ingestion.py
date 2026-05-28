@@ -109,9 +109,7 @@ class TestDataIngestor:
             self.ingestor._parse_timestamp("not-a-date")
 
     def test_parse_empty_timestamp(self):
-        """Empty string should raise ValueError."""
-        result = self.ingestor._parse_timestamp("")
-        # pandas fallback may parse empty string; verify it returns a datetime
-        # If it returns NaT or raises, both are acceptable
+        """Empty string returns a datetime via pandas fallback."""
         from datetime import datetime
-        assert result is None or isinstance(result, datetime)
+        result = self.ingestor._parse_timestamp("")
+        assert isinstance(result, datetime)

@@ -284,7 +284,7 @@ def trigger_policy():
             status_code=400,
         )
 
-    student = Student.query.get(student_id)
+    student = db.session.get(Student, student_id)
     if not student:
         return api_response(message="Student not found.", success=False, status_code=404)
 

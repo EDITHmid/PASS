@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block title %}Principal Dashboard — PASS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1"><i class="bi bi-building me-2"></i>School Overview</h4>
+        <p class="text-muted small mb-0">Institution-wide academic health monitoring</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('admin.manage_users') }}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-people me-1"></i>Manage Users
+        </a>
+        <a href="{{ url_for('admin.configure_weights') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-sliders me-1"></i>Scoring Weights
+        </a>
+    </div>
+</div>
+
+<!-- KPI Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="stat-label">Total Students</div>
+                    <div class="stat-value">{{ total_students }}</div>
+                </div>
+                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:48px;height:48px;background:rgba(17,138,178,0.1);">
+                    <i class="bi bi-people-fill text-primary fs-5"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="stat-label">Active Alerts</div>
+                    <div class="stat-value text-danger">{{ total_alerts }}</div>
+                </div>
+                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:48px;height:48px;background:rgba(239,71,111,0.1);">
+                    <i class="bi bi-exclamation-triangle-fill text-danger fs-5"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="stat-label">Teachers</div>
+                    <div class="stat-value">{{ total_teachers }}</div>
+                </div>
+                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:48px;height:48px;background:rgba(6,214,160,0.1);">
+                    <i class="bi bi-person-workspace text-success fs-5"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="stat-label">Avg Credibility</div>
+                    <div class="stat-value">{{ "%.1f"|format(avg_credibility) }}</div>
+                </div>
+                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:48px;height:48px;background:rgba(255,209,102,0.1);">
+                    <i class="bi bi-speedometer2 text-warning fs-5"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-5">
+        <div class="chart-container">
+            <h6 class="fw-bold mb-3"><i class="bi bi-pie-chart me-2"></i>Credibility Distribution</h6>
+            <div style="position:relative; height:220px;"><canvas id="credDistChart"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="chart-container">
+            <h6 class="fw-bold mb-3"><i class="bi bi-bar-chart me-2"></i>Score Overview</h6>
+            <div style="position:relative; height:220px;"><canvas id="scoreBarChart"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<!-- At-Risk Students -->
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 py-3">
+                <h6 class="fw-bold mb-0"><i class="bi bi-person-exclamation me-2 text-warning"></i>Most At-Risk Students</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="small fw-semibold ps-3">Name</th>
+                                <th class="small fw-semibold">Roll No</th>
+                                <th class="small fw-semibold">Score</th>
+                                <th class="small fw-semibold">Course</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in at_risk_students %}
+                            <tr>
+                                <td class="ps-3 fw-semibold small">{{ s.name }}</td>
+                                <td class="small text-muted">{{ s.student_id }}</td>
+                                <td>
+                                    <span class="badge {{ 'bg-danger' if s.credibility_score < 30 else ('bg-warning text-dark' if s.credibility_score < 50 else ('bg-primary' if s.credibility_score < 85 else 'bg-success')) }}">
+                                        {{ "%.0f"|format(s.credibility_score) }}
+                                    </span>
+                                </td>
+                                <td class="small">{{ s.course.course_name if s.course else '—' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+        <h6 class="fw-bold mb-3"><i class="bi bi-gear me-2"></i>Institution Settings</h6>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <a href="{{ url_for('admin.manage_users') }}" class="text-decoration-none">
+                    <div class="p-3 bg-light rounded-3 h-100">
+                        <i class="bi bi-people fs-4 text-primary d-block mb-2"></i>
+                        <h6 class="fw-bold small mb-1">Manage Users</h6>
+                        <p class="text-muted small mb-0">Add, edit, or disable teacher and staff accounts</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="{{ url_for('admin.configure_weights') }}" class="text-decoration-none">
+                    <div class="p-3 bg-light rounded-3 h-100">
+                        <i class="bi bi-sliders fs-4 text-success d-block mb-2"></i>
+                        <h6 class="fw-bold small mb-1">Scoring Weights</h6>
+                        <p class="text-muted small mb-0">Customize how credibility scores are calculated</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="{{ url_for('dashboard.export_csv', type='students') }}" class="text-decoration-none">
+                    <div class="p-3 bg-light rounded-3 h-100">
+                        <i class="bi bi-download fs-4 text-info d-block mb-2"></i>
+                        <h6 class="fw-bold small mb-1">Export Reports</h6>
+                        <p class="text-muted small mb-0">Download school-wide data as CSV</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('credDistChart');
+    if (ctx) {
+        const dist = {{ distribution|safe }};
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['High (≥85)', 'Medium (50-84)', 'Low (30-49)', 'Critical (<30)'],
+                datasets: [{
+                    data: [dist.high || 0, dist.medium || 0, dist.low || 0, dist.critical || 0],
+                    backgroundColor: ['#06d6a0', '#118ab2', '#ffd166', '#ef476f'],
+                    borderWidth: 0,
+                    hoverOffset: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 12, font: { size: 11 } } }
+                }
+            }
+        });
+    }
+
+    // ── Score Bar Chart ─────────────────────────────────
+    const barCtx = document.getElementById('scoreBarChart');
+    if (barCtx) {
+        const dist = {{ distribution|safe }};
+        new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: ['High (≥85)', 'Medium (50-84)', 'Low (30-49)', 'Critical (<30)'],
+                datasets: [{
+                    label: 'Students',
+                    data: [dist.high || 0, dist.medium || 0, dist.low || 0, dist.critical || 0],
+                    backgroundColor: ['rgba(6,214,160,0.7)', 'rgba(17,138,178,0.7)', 'rgba(255,209,102,0.7)', 'rgba(239,71,111,0.7)'],
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 },
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

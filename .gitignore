@@ -44,3 +44,7 @@ htmlcov/
 
 # Uploads
 uploads/
+
+# Environment
+.env
+*.env.local

@@ -104,10 +104,10 @@
                         </span>
                     </div>
                     <div class="mt-2 d-flex gap-3 small text-muted">
-                        <span><i class="bi bi-check-circle text-success me-1"></i>{{ log.records_created }} created</span>
-                        <span><i class="bi bi-arrow-repeat text-info me-1"></i>{{ log.records_updated }} updated</span>
-                        {% if log.errors_count > 0 %}
-                        <span><i class="bi bi-x-circle text-danger me-1"></i>{{ log.errors_count }} errors</span>
+                        <span><i class="bi bi-check-circle text-success me-1"></i>{{ log.valid_records }} valid</span>
+                        <span><i class="bi bi-x-circle text-danger me-1"></i>{{ log.invalid_records }} invalid</span>
+                        {% if log.errors %}
+                        <span class="text-danger" title="{{ log.errors }}"><i class="bi bi-exclamation-triangle me-1"></i>has errors</span>
                         {% endif %}
                     </div>
                 </div>

@@ -263,6 +263,71 @@
     </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════
+     WHAT-IF SIMULATOR — See how changes affect your score
+     ═══════════════════════════════════════════════════════════ -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="fw-bold mb-0"><i class="bi bi-graph-up-arrow text-primary me-2"></i>What-If Simulator</h6>
+            <span class="badge bg-primary">Experimental</span>
+        </div>
+        <p class="text-muted small mb-3">Drag the sliders to see how improving each factor would change your credibility score.</p>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="small fw-semibold">Attendance <span class="text-muted">(25% weight)</span></label>
+                <div class="d-flex align-items-center gap-2">
+                    <input type="range" class="form-range" id="simAttendance" min="0" max="100" value="{{ student.attendance_pct or 75 }}">
+                    <span class="fw-bold small" id="simAttendanceVal">{{ "%.0f"|format(student.attendance_pct or 75) }}%</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <label class="small fw-semibold">Δt Consistency <span class="text-muted">(25% weight)</span></label>
+                <div class="d-flex align-items-center gap-2">
+                    <input type="range" class="form-range" id="simDeltaT" min="0" max="100" value="{{ breakdown.delta_t_score }}">
+                    <span class="fw-bold small" id="simDeltaTVal">{{ "%.0f"|format(breakdown.delta_t_score) }}</span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <label class="small fw-semibold">Exam Perf. <span class="text-muted">(30%)</span></label>
+                <div class="d-flex align-items-center gap-2">
+                    <input type="range" class="form-range" id="simExam" min="0" max="100" value="{{ breakdown.exam_score }}">
+                    <span class="fw-bold small" id="simExamVal">{{ "%.0f"|format(breakdown.exam_score) }}</span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <label class="small fw-semibold">Variance <span class="text-muted">(10%)</span></label>
+                <div class="d-flex align-items-center gap-2">
+                    <input type="range" class="form-range" id="simVariance" min="0" max="100" value="{{ breakdown.variance_score }}">
+                    <span class="fw-bold small" id="simVarianceVal">{{ "%.0f"|format(breakdown.variance_score) }}</span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <label class="small fw-semibold">Completion <span class="text-muted">(10%)</span></label>
+                <div class="d-flex align-items-center gap-2">
+                    <input type="range" class="form-range" id="simCompletion" min="0" max="100" value="{{ breakdown.completion_score }}">
+                    <span class="fw-bold small" id="simCompletionVal">{{ "%.0f"|format(breakdown.completion_score) }}</span>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <span class="text-muted small">Current Score:</span>
+                <span class="fw-bold fs-5" id="currentScoreDisplay">{{ "%.1f"|format(score) }}</span>
+                <span class="text-muted small mx-2">→</span>
+                <span class="text-muted small">Simulated:</span>
+                <span class="fw-bold fs-4 text-primary" id="simulatedScore">{{ "%.1f"|format(score) }}</span>
+            </div>
+            <div>
+                <span class="badge" id="simImpactBadge">No change</span>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Active Perks -->
 {% if active_perks %}
 <div class="card border-0 shadow-sm mb-4">
@@ -299,7 +364,7 @@
     </div>
     <div class="card-body p-0">
         {% for alert in alerts %}
-        <div class="alert-card mx-3 mb-2 {{ 'severity-high' if alert.severity == 'high' else ('severity-medium' if alert.severity == 'medium' else 'severity-low') }}">
+        <div class="alert-card mx-3 mb-2 {{ 'severity-critical' if alert.severity == 'critical' else ('severity-warning' if alert.severity == 'warning' else 'severity-info') }}">
             <div class="d-flex justify-content-between">
                 <div>
                     <div class="fw-semibold small">{{ alert.metric }}</div>
@@ -309,7 +374,7 @@
                     {% if alert.resolved %}
                     <span class="badge bg-success">Resolved</span>
                     {% else %}
-                    <span class="badge {{ 'bg-danger' if alert.severity == 'high' else ('bg-warning text-dark' if alert.severity == 'medium' else 'bg-info') }}">
+                    <span class="badge {{ 'bg-danger' if alert.severity == 'critical' else ('bg-warning text-dark' if alert.severity == 'warning' else 'bg-info') }}">
                         {{ alert.severity }}
                     </span>
                     {% endif %}
@@ -400,6 +465,51 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         });
+    }
+
+    // ── What-If Simulator ──────────────────────────────────────
+    const simSliders = {
+        attendance: document.getElementById('simAttendance'),
+        delta_t: document.getElementById('simDeltaT'),
+        exam: document.getElementById('simExam'),
+        variance: document.getElementById('simVariance'),
+        completion: document.getElementById('simCompletion'),
+    };
+    const simDisplay = {
+        attendance: document.getElementById('simAttendanceVal'),
+        delta_t: document.getElementById('simDeltaTVal'),
+        exam: document.getElementById('simExamVal'),
+        variance: document.getElementById('simVarianceVal'),
+        completion: document.getElementById('simCompletionVal'),
+    };
+
+    const weights = { attendance: 0.25, delta_t: 0.25, exam: 0.30, variance: 0.10, completion: 0.10 };
+    const currentScore = {{ score }};
+
+    function updateSimulator() {
+        let score = 0;
+        for (const key of ['attendance', 'delta_t', 'exam', 'variance', 'completion']) {
+            const val = parseFloat(simSliders[key].value);
+            simDisplay[key].textContent = key === 'attendance' ? val.toFixed(0) + '%' : val.toFixed(0);
+            score += val * weights[key];
+        }
+        document.getElementById('simulatedScore').textContent = score.toFixed(1);
+        const diff = score - currentScore;
+        const badge = document.getElementById('simImpactBadge');
+        if (diff > 5) {
+            badge.className = 'badge bg-success';
+            badge.textContent = '+' + diff.toFixed(1) + ' improvement!';
+        } else if (diff < -5) {
+            badge.className = 'badge bg-danger';
+            badge.textContent = diff.toFixed(1) + ' decline';
+        } else {
+            badge.className = 'badge bg-secondary';
+            badge.textContent = 'No significant change';
+        }
+    }
+
+    for (const key of Object.keys(simSliders)) {
+        simSliders[key].addEventListener('input', updateSimulator);
     }
 });
 </script>

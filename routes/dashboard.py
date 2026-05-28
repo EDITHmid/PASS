@@ -45,7 +45,7 @@ def instructor_required(f):
     def decorated(*args, **kwargs):
         if not current_user.is_authenticated:
             return redirect(url_for("auth.login"))
-        if current_user.role not in ("instructor", "admin"):
+        if current_user.role not in ("instructor", "admin", "principal"):
             abort(403)
         return f(*args, **kwargs)
 
@@ -266,6 +266,137 @@ def upload_csv():
     return render_template("dashboard/upload.html", logs=logs)
 
 
+@dashboard_bp.route("/dashboard/import-students", methods=["GET", "POST"])
+@login_required
+@instructor_required
+def import_students():
+    """Bulk import student roster from CSV."""
+    if request.method == "POST":
+        if "file" not in request.files:
+            flash("No file selected.", "danger")
+            return redirect(url_for("dashboard.import_students"))
+
+        file = request.files["file"]
+        if not file.filename.lower().endswith(".csv"):
+            flash("Only CSV files are accepted.", "danger")
+            return redirect(url_for("dashboard.import_students"))
+
+        try:
+            import pandas as pd
+            import io
+
+            content = file.read().decode("utf-8")
+            df = pd.read_csv(io.StringIO(content))
+            df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")
+
+            required = {"student_id", "name"}
+            missing = required - set(df.columns)
+            if missing:
+                flash(f"Missing required columns: {', '.join(missing)}", "danger")
+                return redirect(url_for("dashboard.import_students"))
+
+            created = 0
+            skipped = 0
+            for _, row in df.iterrows():
+                sid = str(row["student_id"]).strip()
+                name = str(row.get("name", sid)).strip()
+                if Student.query.filter_by(student_id=sid).first():
+                    skipped += 1
+                    continue
+
+                student = Student(
+                    student_id=sid,
+                    name=name,
+                    attendance_pct=_safe_float(row.get("attendance_pct")),
+                    mid1_score=_safe_float(row.get("mid1_score")),
+                    mid2_score=_safe_float(row.get("mid2_score")),
+                    mid3_score=_safe_float(row.get("mid3_score")),
+                )
+                # Link to course if course_id or course column provided
+                course_col = row.get("course_id") or row.get("course")
+                if course_col and pd.notna(course_col):
+                    course = Course.query.filter_by(course_id=str(course_col).strip()).first()
+                    if course:
+                        student.course_id = course.id
+
+                db.session.add(student)
+                created += 1
+
+            db.session.commit()
+            flash(f"Imported {created} students. {skipped} skipped (already exist).", "success")
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Error importing students: {str(e)}", "danger")
+
+        return redirect(url_for("dashboard.instructor_dashboard"))
+
+    return render_template("dashboard/import_students.html")
+
+
+def _safe_float(value):
+    """Safely convert a value to float, returning None on failure."""
+    import numpy as np
+    if value is None or (isinstance(value, float) and np.isnan(value)):
+        return None
+    try:
+        v = float(value)
+        return v if not np.isnan(v) else None
+    except (ValueError, TypeError):
+        return None
+
+
+@dashboard_bp.route("/dashboard/report/<student_id>")
+@login_required
+def student_report(student_id):
+    """Generate a printable PDF-friendly credibility report."""
+    from flask import current_app
+    student = Student.query.filter_by(student_id=student_id).first_or_404()
+
+    submissions = Submission.query.filter_by(student_id=student.id).order_by(
+        Submission.submitted_at.asc()
+    ).all()
+
+    delta_t_values = [s.delta_t for s in submissions]
+    summary = metric_computer.compute_student_summary(delta_t_values)
+
+    total_assignments = max(len(submissions), 1)
+    cred_result = credibility_scorer.compute_credibility_score(
+        delta_t_values=delta_t_values,
+        variance_value=summary["current_variance"],
+        submitted_count=len(submissions),
+        total_assignments=total_assignments,
+        attendance_pct=student.attendance_pct or 0.0,
+        mid1=student.mid1_score,
+        mid2=student.mid2_score,
+        mid3=student.mid3_score,
+    )
+
+    alerts = Alert.query.filter_by(student_id=student.id).order_by(
+        Alert.created_at.desc()
+    ).all()
+
+    components = [
+        {"label": "Δt Consistency", "weight": 25, "score": cred_result["components"]["delta_t_consistency"]["score"]},
+        {"label": "Variance Stability", "weight": 10, "score": cred_result["components"]["variance_stability"]["score"]},
+        {"label": "Completion", "weight": 10, "score": cred_result["components"]["completion_rate"]["score"]},
+        {"label": "Attendance", "weight": 25, "score": cred_result["components"]["attendance"]["score"]},
+        {"label": "Exam Performance", "weight": 30, "score": cred_result["components"]["exam_performance"]["score"]},
+    ]
+
+    from datetime import datetime
+    return render_template(
+        "reports/student_report.html",
+        student=student,
+        score=cred_result["overall_score"],
+        tier_label=cred_result["tier_label"],
+        components=components,
+        submissions=submissions,
+        alerts=alerts,
+        school_name=current_app.config.get("SCHOOL_NAME", "PASS"),
+        generated_at=datetime.now().strftime("%B %d, %Y"),
+    )
+
+
 @dashboard_bp.route("/dashboard/export/csv")
 @login_required
 @instructor_required
@@ -319,6 +450,91 @@ def export_csv():
             "Content-Disposition": f"attachment; filename=pass_export_{export_type}_{datetime.now().strftime('%Y%m%d')}.csv"
         },
     )
+
+
+@dashboard_bp.route("/dashboard/recompute", methods=["POST"])
+@login_required
+@instructor_required
+def trigger_recompute():
+    """Recompute all credibility scores and alerts."""
+    _recompute_all_metrics()
+    flash("All scores and alerts have been recalculated.", "success")
+    return redirect(url_for("dashboard.instructor_dashboard"))
+
+
+@dashboard_bp.route("/dashboard/notifications")
+@login_required
+@instructor_required
+def notifications():
+    """Notification center — view and filter all alerts."""
+    page = request.args.get("page", 1, type=int)
+    severity = request.args.get("severity", "")
+    status_filter = request.args.get("status", "")
+
+    query = Alert.query.join(Student).order_by(Alert.created_at.desc())
+
+    if severity in ("critical", "warning", "info"):
+        query = query.filter(Alert.severity == severity)
+    if status_filter == "unread":
+        query = query.filter(Alert.read == False)
+    elif status_filter == "resolved":
+        query = query.filter(Alert.resolved == True)
+    elif status_filter == "active":
+        query = query.filter(Alert.resolved == False)
+
+    pagination = query.paginate(page=page, per_page=25, error_out=False)
+    alerts = pagination.items
+
+    unread_count = Alert.query.filter_by(read=False, resolved=False).count()
+
+    return render_template(
+        "dashboard/notifications.html",
+        alerts=alerts,
+        pagination=pagination,
+        unread_count=unread_count,
+        active_severity=severity,
+        active_status=status_filter,
+    )
+
+
+@dashboard_bp.route("/dashboard/notifications/mark-read", methods=["POST"])
+@login_required
+@instructor_required
+def mark_notification_read():
+    """Mark a single alert as read."""
+    data = request.get_json(silent=True)
+    if not data or "alert_id" not in data:
+        return jsonify({"success": False, "error": "Missing alert_id"}), 400
+
+    alert = Alert.query.filter_by(alert_id=data["alert_id"]).first()
+    if not alert:
+        return jsonify({"success": False, "error": "Alert not found"}), 404
+
+    alert.read = True
+    alert.read_at = datetime.now(timezone.utc)
+    db.session.commit()
+    return jsonify({"success": True})
+
+
+@dashboard_bp.route("/dashboard/notifications/mark-all-read", methods=["POST"])
+@login_required
+@instructor_required
+def mark_all_notifications_read():
+    """Mark all unread, unresolved alerts as read."""
+    now = datetime.now(timezone.utc)
+    Alert.query.filter_by(read=False, resolved=False).update(
+        {"read": True, "read_at": now}
+    )
+    db.session.commit()
+    return jsonify({"success": True})
+
+
+@dashboard_bp.route("/dashboard/notifications/unread-count")
+@login_required
+def unread_notification_count():
+    """Return unread alert count for navbar badge."""
+    count = Alert.query.filter_by(read=False, resolved=False).count()
+    return jsonify({"count": count})
 
 
 # ─────────────────────────────────────────────────────────────────────────────

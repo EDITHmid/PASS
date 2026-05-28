@@ -33,6 +33,14 @@ class Config:
     UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 MB max upload
 
+    # Email Configuration (optional — for password reset & notifications)
+    MAIL_SERVER = os.environ.get("MAIL_SERVER", None)
+    MAIL_PORT = int(os.environ.get("MAIL_PORT", 587))
+    MAIL_USE_TLS = os.environ.get("MAIL_USE_TLS", "true").lower() == "true"
+    MAIL_USERNAME = os.environ.get("MAIL_USERNAME", None)
+    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", None)
+    MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER", "noreply@pass.edu")
+
     # PASS-Specific Configuration
     HYSTERESIS_WINDOW_SIZE = 3  # Consecutive assignments for trend confirmation
     HYSTERESIS_REVERSAL_COUNT = 2  # Consecutive improvements to resolve alert
@@ -48,6 +56,10 @@ class Config:
     WEIGHT_COMPLETION_RATE = 0.10
     WEIGHT_ATTENDANCE = 0.25
     WEIGHT_EXAM_PERFORMANCE = 0.30
+
+    # Institution Info (customize per school)
+    SCHOOL_NAME = os.environ.get("SCHOOL_NAME", "My School")
+    SCHOOL_ADDRESS = os.environ.get("SCHOOL_ADDRESS", "")
 
 
 class DevelopmentConfig(Config):

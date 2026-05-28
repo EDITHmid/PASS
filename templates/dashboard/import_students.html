@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Import Students — PASS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1"><i class="bi bi-person-plus me-2"></i>Import Student Roster</h4>
+        <p class="text-muted small mb-0">Bulk import students from a CSV file</p>
+    </div>
+    <a href="{{ url_for('dashboard.instructor_dashboard') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h6 class="fw-bold mb-3"><i class="bi bi-upload me-2 text-primary"></i>Upload Student CSV</h6>
+
+                <form method="POST" action="{{ url_for('dashboard.import_students') }}" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="upload-zone p-5 text-center rounded-3 mb-3"
+                         style="border: 2px dashed #dee2e6; background: #fafbfc; cursor: pointer;"
+                         onclick="document.getElementById('fileInput').click()">
+                        <i class="bi bi-file-earmark-arrow-up fs-1 text-muted d-block mb-2"></i>
+                        <p class="fw-semibold mb-1">Click to select CSV file</p>
+                        <p class="text-muted small mb-0">Student roster with name, roll number, and optional scores</p>
+                        <input type="file" name="file" id="fileInput" accept=".csv" class="d-none" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                        <i class="bi bi-upload me-2"></i>Import Students
+                    </button>
+                </form>
+
+                <div class="mt-4 p-3 bg-light rounded-3">
+                    <h6 class="fw-semibold small mb-2"><i class="bi bi-info-circle me-1"></i>Required CSV Format</h6>
+                    <table class="table table-sm table-borderless mb-0 small">
+                        <thead>
+                            <tr class="text-muted">
+                                <th>Column</th>
+                                <th>Required</th>
+                                <th>Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>student_id</code></td><td><span class="text-danger">Yes</span></td><td>CS001 (Roll No)</td></tr>
+                            <tr><td><code>name</code></td><td><span class="text-danger">Yes</span></td><td>Arjun Mehta</td></tr>
+                            <tr><td><code>course_id</code></td><td><span class="text-muted">Optional</span></td><td>CS501</td></tr>
+                            <tr><td><code>attendance_pct</code></td><td><span class="text-muted">Optional</span></td><td>87.5</td></tr>
+                            <tr><td><code>mid1_score</code></td><td><span class="text-muted">Optional</span></td><td>72.0</td></tr>
+                            <tr><td><code>mid2_score</code></td><td><span class="text-muted">Optional</span></td><td>68.5</td></tr>
+                            <tr><td><code>mid3_score</code></td><td><span class="text-muted">Optional</span></td><td>80.0</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h6 class="fw-bold mb-3"><i class="bi bi-lightbulb text-warning me-2"></i>Tips</h6>
+                <ul class="small text-muted mb-0">
+                    <li class="mb-2">Use the same <code>course_id</code> values as your courses in PASS</li>
+                    <li class="mb-2">Duplicate <code>student_id</code> entries are automatically skipped</li>
+                    <li class="mb-2">You can import attendance and mid-term scores along with the roster</li>
+                    <li class="mb-2">After importing, upload submission CSVs to start computing credibility scores</li>
+                    <li>Mid-term scores should be on a 0–100 scale</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

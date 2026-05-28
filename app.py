@@ -12,12 +12,20 @@ from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
 from flask_cors import CORS
 
+try:
+    from flask_mail import Mail
+    _mail_available = True
+except ImportError:
+    Mail = None
+    _mail_available = False
+
 from config import config_by_name
 
 # Initialize extensions (created here, bound to app in create_app)
 db = SQLAlchemy()
 login_manager = LoginManager()
 csrf = CSRFProtect()
+mail = Mail() if Mail is not None else None
 
 
 def create_app(config_name=None):
@@ -48,6 +56,8 @@ def create_app(config_name=None):
     db.init_app(app)
     login_manager.init_app(app)
     csrf.init_app(app)
+    if mail is not None:
+        mail.init_app(app)
     CORS(app, resources={r"/api/*": {"origins": "*"}})
 
     # Configure login manager
@@ -60,18 +70,22 @@ def create_app(config_name=None):
     from routes.dashboard import dashboard_bp
     from routes.api import api_bp
     from routes.student import student_bp
+    from routes.parent import parent_bp
+    from routes.admin import admin_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(api_bp, url_prefix="/api")
     app.register_blueprint(student_bp, url_prefix="/student")
+    app.register_blueprint(parent_bp, url_prefix="/parent")
+    app.register_blueprint(admin_bp, url_prefix="/admin")
 
     # Exempt API routes from CSRF for REST clients
     csrf.exempt(api_bp)
 
     # Create database tables
     with app.app_context():
-        from models import User, Student, Submission, Alert, PolicyEvent, Course
+        from models import User, Student, Submission, Alert, PolicyEvent, Course, Guardian, StudentGuardian, AcademicYear, PasswordResetToken
         db.create_all()
 
     # Register error handlers

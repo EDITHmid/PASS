@@ -20,7 +20,7 @@ from datetime import datetime, timedelta, timezone
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app import create_app, db
-from models import User, Course, Student, Submission, Alert, PolicyEvent
+from models import User, Course, Student, Submission, Alert, PolicyEvent, AcademicYear, Guardian, StudentGuardian
 
 app = create_app()
 
@@ -83,7 +83,45 @@ def seed_demo_data():
         )
         admin_user.set_password("admin123")
 
-        db.session.add_all([instructor_user, student_user, admin_user])
+        principal_user = User(
+            username="principal",
+            email="principal@pass.edu",
+            full_name="Dr. School Principal",
+            role="principal",
+        )
+        principal_user.set_password("password123")
+
+        parent_user = User(
+            username="parent_arjun",
+            email="parent.arjun@example.com",
+            full_name="Mrs. Mehta",
+            role="parent",
+        )
+        parent_user.set_password("password123")
+
+        db.session.add_all([instructor_user, student_user, admin_user, principal_user, parent_user])
+        db.session.flush()
+
+        # ── Academic Year ────────────────────────────────────────
+        academic_year = AcademicYear(
+            name="2025-26",
+            semester="Odd",
+            start_date=datetime(2025, 7, 1, tzinfo=timezone.utc),
+            end_date=datetime(2026, 6, 30, tzinfo=timezone.utc),
+            is_active=True,
+        )
+        db.session.add(academic_year)
+        db.session.flush()
+
+        # ── Parent Guardian ──────────────────────────────────────
+        guardian = Guardian(
+            user_id=parent_user.id,
+            full_name="Mrs. Mehta",
+            email="parent.arjun@example.com",
+            phone="+91-9876543210",
+            relationship="Mother",
+        )
+        db.session.add(guardian)
         db.session.flush()
 
         # ── Courses ─────────────────────────────────────────────
@@ -98,7 +136,9 @@ def seed_demo_data():
                 course_id=cid,
                 course_name=name,
                 semester=sem,
+                section="A",
                 instructor_id=instructor_user.id,
+                academic_year_id=academic_year.id,
             )
             db.session.add(c)
             courses.append(c)
@@ -176,6 +216,16 @@ def seed_demo_data():
             students.append(s)
         db.session.flush()
 
+        # Link guardian to first student
+        if students and guardian:
+            link = StudentGuardian(
+                student_id=students[0].id,
+                guardian_id=guardian.id,
+                is_primary=True,
+            )
+            db.session.add(link)
+            db.session.flush()
+
         # ── Submissions ─────────────────────────────────────────
         # Generate 3 assignments with deadlines over 3 weeks
         base_date = datetime(2025, 1, 13, 23, 59, 0, tzinfo=timezone.utc)
@@ -205,7 +255,7 @@ def seed_demo_data():
                 delta_t_seconds = dt_hours * 3600
                 submitted_at = deadline - timedelta(hours=dt_hours)
 
-                status = "on_time" if dt_hours >= 0 else "late"
+                status = "on-time" if dt_hours >= 0 else "late"
 
                 sub = Submission(
                     submission_id=f"SUB-{uuid.uuid4().hex[:8].upper()}",
@@ -301,8 +351,10 @@ def seed_demo_data():
         print()
         print("  Demo Accounts:")
         print("  ─────────────────────────────────")
+        print("  Principal:   principal / password123")
         print("  Instructor:  instructor / password123")
         print("  Student:     arjun / password123")
+        print("  Parent:      parent_arjun / password123")
         print("  Admin:       admin / admin123")
 
 

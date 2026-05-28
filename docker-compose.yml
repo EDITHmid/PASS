@@ -1,0 +1,51 @@
+# PASS — Docker Compose
+# Production-ready deployment with PostgreSQL
+#
+# Usage:
+#   docker-compose up -d          # Start services
+#   docker-compose exec app python run.py --seed   # Seed demo data
+#
+# Access: http://localhost:5000
+
+version: "3.8"
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: pass_user
+      POSTGRES_PASSWORD: pass_password_change_in_production
+      POSTGRES_DB: pass_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pass_user -d pass_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    environment:
+      FLASK_CONFIG: production
+      DATABASE_URL: postgresql://pass_user:pass_password_change_in_production@db:5432/pass_db
+      SECRET_KEY: change-this-to-a-random-secret-key
+      SCHOOL_NAME: "My School"
+      MAIL_SERVER: ${MAIL_SERVER:-}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+    ports:
+      - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - uploads:/app/uploads
+      - instance:/app/instance
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  uploads:
+  instance:

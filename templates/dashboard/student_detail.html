@@ -12,17 +12,22 @@
 </nav>
 
 <!-- Student Header -->
-<div class="d-flex justify-content-between align-items-start mb-4">
-    <div>
-        <h4 class="fw-bold mb-1">{{ student.name }}</h4>
-        <p class="text-muted small mb-0">
-            <i class="bi bi-person-badge me-1"></i>Roll No: {{ student.student_id }}
-            {% if student.course %}
-            &nbsp;·&nbsp; <i class="bi bi-book me-1"></i>{{ student.course.name }}
-            {% endif %}
-        </p>
-    </div>
-    <div class="text-end">
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h4 class="fw-bold mb-1">{{ student.name }}</h4>
+            <p class="text-muted small mb-0">
+                <i class="bi bi-person-badge me-1"></i>Roll No: {{ student.student_id }}
+                {% if student.course %}
+                &nbsp;·&nbsp; <i class="bi bi-book me-1"></i>{{ student.course.name }}
+                {% endif %}
+            </p>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            <a href="{{ url_for('dashboard.student_report', student_id=student.student_id) }}"
+               target="_blank" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-file-pdf me-1"></i>Report
+            </a>
+            <div class="text-end">
         {% set score = student.credibility_score or 0 %}
         <div class="d-flex align-items-center gap-3">
             <div>
@@ -124,9 +129,6 @@
                     <span>Exam Performance (30%)</span>
                     <span class="fw-semibold">{{ "%.1f"|format(breakdown.exam_score) }}</span>
                 </div>
-                <div class="progress" style="height:6px;">
-                    <div class="progress-bar bg-danger" style="width:{{ breakdown.exam_score }}%"></div>
-                </div>
             </div>
         </div>
     </div>
@@ -151,14 +153,14 @@
             </div>
             <div class="card-body p-0" style="max-height:350px;overflow-y:auto;">
                 {% for alert in alerts %}
-                <div class="alert-card mx-3 mb-2 {{ 'severity-high' if alert.severity == 'high' else ('severity-medium' if alert.severity == 'medium' else 'severity-low') }}">
+                <div class="alert-card mx-3 mb-2 {{ 'severity-critical' if alert.severity == 'critical' else ('severity-warning' if alert.severity == 'warning' else 'severity-info') }}">
                     <div class="d-flex justify-content-between">
                         <div>
                             <div class="fw-semibold small">{{ alert.metric }}</div>
                             <div class="text-muted small">{{ alert.description }}</div>
                         </div>
                         <div class="text-end">
-                            <span class="badge {{ 'bg-danger' if alert.severity == 'high' else ('bg-warning text-dark' if alert.severity == 'medium' else 'bg-info') }}">
+                            <span class="badge {{ 'bg-danger' if alert.severity == 'critical' else ('bg-warning text-dark' if alert.severity == 'warning' else 'bg-info') }}">
                                 {{ alert.severity }}
                             </span>
                             <div class="small text-muted mt-1">
@@ -245,8 +247,8 @@
                             </span>
                         </td>
                         <td class="text-center">
-                            <span class="badge {{ 'bg-success' if sub.status == 'on_time' else ('bg-warning text-dark' if sub.status == 'late' else 'bg-secondary') }}">
-                                {{ sub.status|replace('_', ' ')|title }}
+                            <span class="badge {{ 'bg-success' if sub.submission_status == 'on-time' else ('bg-warning text-dark' if sub.submission_status == 'late' else 'bg-secondary') }}">
+                                {{ sub.submission_status|replace('_', ' ')|title }}
                             </span>
                         </td>
                     </tr>
@@ -375,7 +377,7 @@ document.addEventListener('DOMContentLoaded', function() {
             data: {
                 labels: varLabels,
                 datasets: [{
-                    label: 'Rolling σ (window=5)',
+                    label: 'Rolling σ (window=3)',
                     data: rollingStd,
                     backgroundColor: rollingStd.map(v =>
                         v === null ? 'transparent' :

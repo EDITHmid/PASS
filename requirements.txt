@@ -35,3 +35,9 @@ email-validator==2.2.0
 
 # Production Server
 gunicorn==23.0.0
+
+# Email (optional — for password reset & notifications)
+Flask-Mail==0.9.1
+
+# PDF Reports
+weasyprint==62.3

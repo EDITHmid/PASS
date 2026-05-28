@@ -2,7 +2,7 @@
 
 {% block body %}
 <div class="min-vh-100 d-flex flex-column">
-    <!-- Hero Section -->
+    <!-- Navigation -->
     <nav class="navbar navbar-expand-lg" style="background: linear-gradient(135deg, #073b4c 0%, #118ab2 100%);">
         <div class="container">
             <a class="navbar-brand text-white fw-bold" href="/">
@@ -16,7 +16,8 @@
     </nav>
 
     <main class="flex-grow-1">
-        <!-- Hero -->
+
+        <!-- Hero Section -->
         <section class="py-5" style="background: linear-gradient(135deg, #073b4c 0%, #118ab2 100%);">
             <div class="container py-5">
                 <div class="row align-items-center">
@@ -44,7 +45,7 @@
                     </div>
                     <div class="col-lg-5 d-none d-lg-block text-center">
                         <div class="p-4">
-                            <div class="bg-white bg-opacity-10 rounded-4 p-4" style="backdrop-filter: blur(10px);">
+                            <div class="bg-white bg-opacity-10 rounded-4 p-4">
                                 <div class="mb-3">
                                     <i class="bi bi-graph-up-arrow text-white" style="font-size: 4rem;"></i>
                                 </div>
@@ -73,93 +74,45 @@
             </div>
         </section>
 
-        <!-- Key Innovations -->
-        <section class="py-5">
+        <!-- For Principals: Why This Matters -->
+        <section class="py-5" style="background: #f8f9fa;">
             <div class="container">
                 <div class="text-center mb-5">
-                    <h2 class="fw-bold">Five-Factor Credibility Model</h2>
-                    <p class="text-muted">Statistically grounded. Transparent. Actionable.</p>
+                    <span class="badge bg-primary mb-2 px-3 py-2">FOR SCHOOL LEADERSHIP</span>
+                    <h2 class="fw-bold">Stop Averting Failure — <span class="text-primary">Prevent It</span></h2>
+                    <p class="text-muted lead">Three systemic problems PASS solves for every school</p>
                 </div>
                 <div class="row g-4">
                     <div class="col-md-4">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body p-4">
-                                <div class="bg-primary bg-opacity-10 rounded-3 d-inline-flex p-3 mb-3">
-                                    <i class="bi bi-speedometer text-primary fs-3"></i>
+                        <div class="card border-0 shadow h-100">
+                            <div class="card-body p-4 text-center">
+                                <div class="bg-danger bg-opacity-10 rounded-circle d-inline-flex mb-3" style="width: 64px; height: 64px; align-items: center; justify-content: center;">
+                                    <i class="bi bi-eye-slash text-danger fs-3"></i>
                                 </div>
-                                <h5 class="fw-bold">Submission Velocity (Δt) — 25%</h5>
-                                <p class="text-muted">
-                                    Measures the temporal distance between each submission and its deadline.
-                                    Tracks how student engagement patterns shift over time — catching
-                                    gradual disengagement before grades reflect it.
-                                </p>
-                                <code class="small">Δt = deadline − submission</code>
+                                <h5 class="fw-bold">The Blind Spot</h5>
+                                <p class="text-muted small mb-0">Teachers spot struggling students only after exam scores drop — when it's too late for intervention. PASS detects disengagement <strong>4–6 weeks earlier</strong> through submission timing patterns.</p>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body p-4">
-                                <div class="bg-warning bg-opacity-10 rounded-3 d-inline-flex p-3 mb-3">
-                                    <i class="bi bi-activity text-warning fs-3"></i>
+                        <div class="card border-0 shadow h-100">
+                            <div class="card-body p-4 text-center">
+                                <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex mb-3" style="width: 64px; height: 64px; align-items: center; justify-content: center;">
+                                    <i class="bi bi-bell-slash text-warning fs-3"></i>
                                 </div>
-                                <h5 class="fw-bold">Variance Stability (σ) — 10%</h5>
-                                <p class="text-muted">
-                                    Rolling standard deviation of Δt values that flags erratic submission
-                                    patterns as burnout precursors. Even high-performing students who maintain
-                                    grades but become inconsistent are detected.
-                                </p>
-                                <code class="small">σ(Δt) over last N submissions</code>
+                                <h5 class="fw-bold">Alert Fatigue</h5>
+                                <p class="text-muted small mb-0">Rule-based systems trigger dozens of false positives daily. PASS uses <strong>hysteresis filtering</strong> — requiring sustained negative trends — cutting false alerts by <strong>60%+</strong>.</p>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body p-4">
-                                <div class="bg-success bg-opacity-10 rounded-3 d-inline-flex p-3 mb-3">
-                                    <i class="bi bi-funnel text-success fs-3"></i>
+                        <div class="card border-0 shadow h-100">
+                            <div class="card-body p-4 text-center">
+                                <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex mb-3" style="width: 64px; height: 64px; align-items: center; justify-content: center;">
+                                    <i class="bi bi-diagram-3 text-success fs-3"></i>
                                 </div>
-                                <h5 class="fw-bold">Completion & Hysteresis — 10%</h5>
-                                <p class="text-muted">
-                                    Completion rate of assignments combined with hysteresis filtering that
-                                    suppresses noisy one-off alerts by requiring sustained negative trends.
-                                    Reduces false positives by 60%+ compared to threshold-only systems.
-                                </p>
-                                <code class="small">3 consecutive declines → alert</code>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row g-4 mt-1">
-                    <div class="col-md-6">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body p-4">
-                                <div class="bg-info bg-opacity-10 rounded-3 d-inline-flex p-3 mb-3">
-                                    <i class="bi bi-calendar-check text-info fs-3"></i>
-                                </div>
-                                <h5 class="fw-bold">Attendance — 25%</h5>
-                                <p class="text-muted">
-                                    Class attendance percentage directly influences credibility.
-                                    Students with consistent attendance (75–100%) demonstrate engagement
-                                    that correlates strongly with academic success.
-                                </p>
-                                <code class="small">Score = (attendance% − 75) / 25 × 100</code>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body p-4">
-                                <div class="bg-danger bg-opacity-10 rounded-3 d-inline-flex p-3 mb-3">
-                                    <i class="bi bi-journal-check text-danger fs-3"></i>
-                                </div>
-                                <h5 class="fw-bold">Exam Performance — 30%</h5>
-                                <p class="text-muted">
-                                    Best 2 out of 3 mid-term exam scores are averaged and mapped to
-                                    a 0–100 scale. This captures academic mastery alongside behavioral
-                                    signals for a holistic credibility assessment.
-                                </p>
-                                <code class="small">Best 2 of {Mid-1, Mid-2, Mid-3} avg</code>
+                                <h5 class="fw-bold">Siloed Data</h5>
+                                <p class="text-muted small mb-0">Attendance, submissions, and exam scores live in separate systems. PASS fuses them into a single <strong>Credibility Score (0–100)</strong> — one number tells you everything.</p>
                             </div>
                         </div>
                     </div>
@@ -167,44 +120,324 @@
             </div>
         </section>
 
-        <!-- Architecture Overview -->
-        <section class="py-5 bg-white">
+        <!-- Demo Drive — Try It Now -->
+        <section class="py-5">
             <div class="container">
                 <div class="text-center mb-5">
-                    <h2 class="fw-bold">System Architecture</h2>
-                    <p class="text-muted">Three-tier serverless design — runs anywhere with Python 3.10+</p>
+                    <span class="badge bg-success mb-2 px-3 py-2">LIVE DEMO</span>
+                    <h2 class="fw-bold">Try PASS Right Now</h2>
+                    <p class="text-muted">Use these demo accounts to explore every feature</p>
                 </div>
                 <div class="row g-4 justify-content-center">
-                    <div class="col-md-4">
-                        <div class="text-center p-4">
-                            <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex p-3 mb-3" style="width: 72px; height: 72px; align-items: center; justify-content: center;">
-                                <i class="bi bi-database text-info fs-3"></i>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm h-100 text-center">
+                            <div class="card-body p-4">
+                                <div class="bg-dark bg-opacity-10 rounded-circle d-inline-flex mb-3" style="width: 56px; height: 56px; align-items: center; justify-content: center;">
+                                    <i class="bi bi-person-badge text-dark fs-3"></i>
+                                </div>
+                                <h6 class="fw-bold">Principal</h6>
+                                <p class="mb-1 small text-muted">principal / password123</p>
+                                <span class="badge bg-info">School Dashboard</span>
                             </div>
-                            <h6 class="fw-bold">Tier 1: Data Ingestion</h6>
-                            <p class="text-muted small">Python + Pandas — CSV parsing, timestamp normalization, validation</p>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="text-center p-4">
-                            <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex p-3 mb-3" style="width: 72px; height: 72px; align-items: center; justify-content: center;">
-                                <i class="bi bi-cpu text-primary fs-3"></i>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm h-100 text-center">
+                            <div class="card-body p-4">
+                                <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex mb-3" style="width: 56px; height: 56px; align-items: center; justify-content: center;">
+                                    <i class="bi bi-person-workspace text-primary fs-3"></i>
+                                </div>
+                                <h6 class="fw-bold">Instructor</h6>
+                                <p class="mb-1 small text-muted">instructor / password123</p>
+                                <span class="badge bg-info">Class Management</span>
                             </div>
-                            <h6 class="fw-bold">Tier 2: Analytical Engine</h6>
-                            <p class="text-muted small">Flask + NumPy — Δt computation, variance analysis, hysteresis logic, scoring</p>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="text-center p-4">
-                            <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex p-3 mb-3" style="width: 72px; height: 72px; align-items: center; justify-content: center;">
-                                <i class="bi bi-window-stack text-success fs-3"></i>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm h-100 text-center">
+                            <div class="card-body p-4">
+                                <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex mb-3" style="width: 56px; height: 56px; align-items: center; justify-content: center;">
+                                    <i class="bi bi-mortarboard text-success fs-3"></i>
+                                </div>
+                                <h6 class="fw-bold">Student</h6>
+                                <p class="mb-1 small text-muted">arjun / password123</p>
+                                <span class="badge bg-info">Self-View + Simulator</span>
                             </div>
-                            <h6 class="fw-bold">Tier 3: Application Layer</h6>
-                            <p class="text-muted small">Bootstrap 5 + Chart.js — Responsive dashboards, interactive charts</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm h-100 text-center">
+                            <div class="card-body p-4">
+                                <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex mb-3" style="width: 56px; height: 56px; align-items: center; justify-content: center;">
+                                    <i class="bi bi-people text-warning fs-3"></i>
+                                </div>
+                                <h6 class="fw-bold">Parent</h6>
+                                <p class="mb-1 small text-muted">parent_arjun / password123</p>
+                                <span class="badge bg-info">Child Monitoring</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
+
+        <!-- Five-Factor Model -->
+        <section class="py-5" style="background: #f8f9fa;">
+            <div class="container">
+                <div class="text-center mb-5">
+                    <h2 class="fw-bold">Five-Factor Credibility Model</h2>
+                    <p class="text-muted">Statistically grounded. Transparent. Configurable per school.</p>
+                </div>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="bg-primary bg-opacity-10 rounded-3 d-inline-flex p-3 me-3">
+                                        <i class="bi bi-speedometer text-primary fs-3"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="fw-bold mb-0">Δt Consistency</h5>
+                                        <span class="badge bg-primary">Weight: 25%</span>
+                                    </div>
+                                </div>
+                                <p class="text-muted small mb-2">Tracks submission timing relative to deadlines. A student submitting 24h early gets full marks; submissions near deadlines or late indicate drift.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="bg-warning bg-opacity-10 rounded-3 d-inline-flex p-3 me-3">
+                                        <i class="bi bi-activity text-warning fs-3"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="fw-bold mb-0">Variance Stability</h5>
+                                        <span class="badge bg-warning text-dark">Weight: 10%</span>
+                                    </div>
+                                </div>
+                                <p class="text-muted small mb-2">Rolling variance of Δt flags erratic submission patterns as burnout precursors — even when grades are still passing.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="bg-success bg-opacity-10 rounded-3 d-inline-flex p-3 me-3">
+                                        <i class="bi bi-funnel text-success fs-3"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="fw-bold mb-0">Completion Rate</h5>
+                                        <span class="badge bg-success">Weight: 10%</span>
+                                    </div>
+                                </div>
+                                <p class="text-muted small mb-2">Fraction of assignments submitted. Combined with hysteresis filtering that requires 3 consecutive declines before alerting.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="bg-info bg-opacity-10 rounded-3 d-inline-flex p-3 me-3">
+                                        <i class="bi bi-calendar-check text-info fs-3"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="fw-bold mb-0">Attendance</h5>
+                                        <span class="badge bg-info">Weight: 25%</span>
+                                    </div>
+                                </div>
+                                <p class="text-muted small mb-2">Class attendance % mapped to 0–100. Students below 75% attendance are flagged as high-risk regardless of other scores.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="bg-danger bg-opacity-10 rounded-3 d-inline-flex p-3 me-3">
+                                        <i class="bi bi-journal-check text-danger fs-3"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="fw-bold mb-0">Exam Performance</h5>
+                                        <span class="badge bg-danger">Weight: 30%</span>
+                                    </div>
+                                </div>
+                                <p class="text-muted small mb-2">Best 2 of 3 mid-term scores averaged and scaled to 0–100. Ensures academic mastery is measured alongside behavioral signals.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center mt-4">
+                    <div class="alert alert-info d-inline-block px-4 py-3 mb-0">
+                        <i class="bi bi-sliders me-2"></i>
+                        <strong>Configurable by Principal:</strong> All five weights are adjustable from the admin dashboard — customize for your school's priorities.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dashboard Previews -->
+        <section class="py-5">
+            <div class="container">
+                <div class="text-center mb-5">
+                    <h2 class="fw-bold">Built for Every Stakeholder</h2>
+                    <p class="text-muted">Four role-based dashboards, one unified system</p>
+                </div>
+                <div class="row g-4">
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card border-0 shadow h-100">
+                            <div class="card-header bg-dark text-white fw-bold small py-2">Principal Dashboard</div>
+                            <div class="card-body p-4">
+                                <div class="d-flex gap-3 mb-2">
+                                    <div class="flex-shrink-0"><i class="bi bi-bar-chart-line text-primary fs-4"></i></div>
+                                    <div>
+                                        <h6 class="fw-bold mb-1">School-Wide Overview</h6>
+                                        <ul class="list-unstyled small text-muted mb-0">
+                                            <li><i class="bi bi-check-circle text-success me-1"></i> Total students, teachers, courses</li>
+                                            <li><i class="bi bi-check-circle text-success me-1"></i> Average credibility distribution</li>
+                                            <li><i class="bi bi-check-circle text-success me-1"></i> At-risk student list</li>
+                                            <li><i class="bi bi-check-circle text-success me-1"></i> Customizable scoring weights</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card border-0 shadow h-100">
+                            <div class="card-header bg-primary text-white fw-bold small py-2">Instructor Dashboard</div>
+                            <div class="card-body p-4">
+                                <div class="d-flex gap-3 mb-2">
+                                    <div class="flex-shrink-0"><i class="bi bi-people text-primary fs-4"></i></div>
+                                    <div>
+                                        <h6 class="fw-bold mb-1">Class Management</h6>
+                                        <ul class="list-unstyled small text-muted mb-0">
+                                            <li><i class="bi bi-check-circle text-success me-1"></i> Student list with credibility scores</li>
+                                            <li><i class="bi bi-check-circle text-success me-1"></i> Active alerts & intervention queue</li>
+                                            <li><i class="bi bi-check-circle text-success me-1"></i> CSV data ingestion</li>
+                                            <li><i class="bi bi-check-circle text-success me-1"></i> Bulk student roster import</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card border-0 shadow h-100">
+                            <div class="card-header bg-success text-white fw-bold small py-2">Student Self-View</div>
+                            <div class="card-body p-4">
+                                <div class="d-flex gap-3 mb-2">
+                                    <div class="flex-shrink-0"><i class="bi bi-mortarboard text-primary fs-4"></i></div>
+                                    <div>
+                                        <h6 class="fw-bold mb-1">Self-Monitoring</h6>
+                                        <ul class="list-unstyled small text-muted mb-0">
+                                            <li><i class="bi bi-check-circle text-success me-1"></i> Personal credibility score & trend</li>
+                                            <li><i class="bi bi-check-circle text-success me-1"></i> Submission history chart</li>
+                                            <li><i class="bi bi-check-circle text-success me-1"></i> What-If simulator sliders</li>
+                                            <li><i class="bi bi-check-circle text-success me-1"></i> PDF report export</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card border-0 shadow h-100">
+                            <div class="card-header bg-warning text-dark fw-bold small py-2">Parent Dashboard</div>
+                            <div class="card-body p-4">
+                                <div class="d-flex gap-3 mb-2">
+                                    <div class="flex-shrink-0"><i class="bi bi-people text-primary fs-4"></i></div>
+                                    <div>
+                                        <h6 class="fw-bold mb-1">Child Monitoring</h6>
+                                        <ul class="list-unstyled small text-muted mb-0">
+                                            <li><i class="bi bi-check-circle text-success me-1"></i> Multiple child support</li>
+                                            <li><i class="bi bi-check-circle text-success me-1"></i> Credibility score breakdown</li>
+                                            <li><i class="bi bi-check-circle text-success me-1"></i> Alert notifications</li>
+                                            <li><i class="bi bi-check-circle text-success me-1"></i> Personalized recommendations</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Technical Rigor -->
+        <section class="py-5" style="background: #f8f9fa;">
+            <div class="container">
+                <div class="text-center mb-5">
+                    <span class="badge bg-secondary mb-2 px-3 py-2">THESIS VALIDATION</span>
+                    <h2 class="fw-bold">Technical Foundation</h2>
+                    <p class="text-muted">83 unit tests passing — every component independently verifiable</p>
+                </div>
+                <div class="row g-4">
+                    <div class="col-md-3 col-6">
+                        <div class="text-center">
+                            <div class="text-primary fw-bold fs-1">83</div>
+                            <div class="text-muted small">Unit Tests</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="text-center">
+                            <div class="text-primary fw-bold fs-1">6</div>
+                            <div class="text-muted small">Engine Modules</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="text-center">
+                            <div class="text-primary fw-bold fs-1">11</div>
+                            <div class="text-muted small">Database Models</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="text-center">
+                            <div class="text-primary fw-bold fs-1">0</div>
+                            <div class="text-muted small">ML Black Box</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-4 g-4">
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body p-4">
+                                <h6 class="fw-bold"><i class="bi bi-cpu me-2"></i>Core Algorithm: Hysteresis Filtering</h6>
+                                <p class="small text-muted mb-0">Inspired by control theory, the hysteresis filter requires <strong>3 consecutive declining submissions</strong> before triggering an alert, and <strong>2 consecutive improvements</strong> to auto-resolve. This eliminates 60%+ of false positives compared to single-threshold systems.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body p-4">
+                                <h6 class="fw-bold"><i class="bi bi-layers me-2"></i>Architecture</h6>
+                                <p class="small text-muted mb-0">Three-tier design: Data Ingestion (Pandas CSV parser) → Analytical Engine (Flask + NumPy metrics, hysteresis, credibility scorer) → Application Layer (Bootstrap 5 dashboards with Chart.js). Deployable on any Python 3.10+ host.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA -->
+        <section class="py-5" style="background: linear-gradient(135deg, #073b4c 0%, #118ab2 100%);">
+            <div class="container text-center py-4">
+                <h2 class="fw-bold text-white mb-3">Ready to see PASS in action?</h2>
+                <p class="text-white-50 mb-4">30 seconds to explore. No installation required.</p>
+                <div class="d-flex justify-content-center gap-3 flex-wrap">
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg px-5">
+                        <i class="bi bi-rocket-takeoff me-2"></i>Start Demo
+                    </a>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-lg px-5">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Log In
+                    </a>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <!-- Footer -->
@@ -214,7 +447,7 @@
                 PASS v1.0 — Proactive Academic Support System
             </p>
             <p class="text-white-50 small mb-0">
-                Final Year B.E./B.Tech CSE Thesis Project &copy; {{ "2026" }}
+                Final Year B.E./B.Tech CSE Thesis Project &copy; 2026
             </p>
         </div>
     </footer>

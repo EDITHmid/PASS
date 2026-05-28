@@ -6,6 +6,7 @@ Tests for REST API endpoints (PRD Section 8.3).
 
 import json
 import pytest
+from app import db
 
 
 class TestAuthRoutes:
@@ -115,7 +116,7 @@ class TestDatabaseModels:
         """Verify student computed properties work correctly."""
         with app.app_context():
             from models import Student
-            student = Student.query.get(sample_student.id)
+            student = db.session.get(Student, sample_student.id)
             assert student.total_submissions == 10
             assert 0 <= student.on_time_rate <= 100
             assert isinstance(student.active_alerts_count, int)
@@ -124,7 +125,7 @@ class TestDatabaseModels:
         """Verify to_dict() serialization."""
         with app.app_context():
             from models import Student
-            student = Student.query.get(sample_student.id)
+            student = db.session.get(Student, sample_student.id)
             d = student.to_dict()
             assert "student_id" in d
             assert "name" in d

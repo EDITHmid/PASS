@@ -5,7 +5,8 @@ SQLAlchemy ORM models for the Proactive Academic Support System.
 Implements the schema defined in PRD Section 8.2.
 """
 
-from datetime import datetime, timezone
+import secrets
+from datetime import datetime, timezone, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 
@@ -18,7 +19,7 @@ from app import db, login_manager
 
 class User(UserMixin, db.Model):
     """
-    Application user (instructor, admin, or student).
+    Application user (instructor, admin, student, or principal).
     Handles authentication and role-based access control.
     """
 
@@ -30,8 +31,10 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(256), nullable=False)
     role = db.Column(
         db.String(20), nullable=False, default="student"
-    )  # 'instructor', 'student', 'admin'
+    )  # 'student', 'teacher', 'hod', 'principal', 'admin'
     full_name = db.Column(db.String(100), nullable=False, default="")
+    phone = db.Column(db.String(20), nullable=True)
+    email_notifications = db.Column(db.Boolean, default=True)
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(
         db.DateTime, default=lambda: datetime.now(timezone.utc)
@@ -74,7 +77,9 @@ class Course(db.Model):
     course_id = db.Column(db.String(20), unique=True, nullable=False, index=True)
     course_name = db.Column(db.String(150), nullable=False)
     semester = db.Column(db.String(20), nullable=False)
+    section = db.Column(db.String(10), default="A")  # Section A, B, C
     instructor_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    academic_year_id = db.Column(db.Integer, db.ForeignKey("academic_years.id"), nullable=True)
     created_at = db.Column(
         db.DateTime, default=lambda: datetime.now(timezone.utc)
     )
@@ -245,6 +250,8 @@ class Alert(db.Model):
     resolved = db.Column(db.Boolean, default=False)
     resolved_at = db.Column(db.DateTime, nullable=True)
     consecutive_improvements = db.Column(db.Integer, default=0)
+    read = db.Column(db.Boolean, default=False)
+    read_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(
         db.DateTime, default=lambda: datetime.now(timezone.utc)
     )
@@ -336,3 +343,112 @@ class IngestionLog(db.Model):
 
     def __repr__(self):
         return f"<IngestionLog {self.filename} [{self.status}]>"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Parent / Guardian Model
+# ─────────────────────────────────────────────────────────────────────────────
+
+class Guardian(db.Model):
+    """
+    Parent or guardian linked to one or more students.
+    Enables parent dashboard access to their child's academic data.
+    """
+
+    __tablename__ = "guardians"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True, unique=True)
+    full_name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), nullable=True)
+    phone = db.Column(db.String(20), nullable=True)
+    relationship = db.Column(db.String(50), default="Parent")
+    notification_enabled = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Relationships
+    user = db.relationship("User", backref="guardian_profile", uselist=False, lazy=True)
+    students = db.relationship("StudentGuardian", backref="guardian", lazy=True)
+
+    def __repr__(self):
+        return f"<Guardian {self.full_name}>"
+
+
+class StudentGuardian(db.Model):
+    """Many-to-many link between students and guardians."""
+
+    __tablename__ = "student_guardians"
+
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey("students.id"), nullable=False)
+    guardian_id = db.Column(db.Integer, db.ForeignKey("guardians.id"), nullable=False)
+    is_primary = db.Column(db.Boolean, default=False)
+
+    student = db.relationship("Student", backref=db.backref("guardian_links", lazy=True))
+
+    __table_args__ = (
+        db.UniqueConstraint("student_id", "guardian_id", name="uq_student_guardian"),
+    )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Academic Year / Semester
+# ─────────────────────────────────────────────────────────────────────────────
+
+class AcademicYear(db.Model):
+    """
+    Academic year and semester grouping.
+    Enables data isolation across different school years.
+    """
+
+    __tablename__ = "academic_years"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)  # e.g. "2025-26"
+    semester = db.Column(db.String(20), default="Annual")  # "Odd", "Even", "Annual"
+    start_date = db.Column(db.DateTime, nullable=True)
+    end_date = db.Column(db.DateTime, nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    courses = db.relationship("Course", backref="academic_year_ref", lazy=True)
+
+    def __repr__(self):
+        return f"<AcademicYear {self.name} ({self.semester})>"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Password Reset Token
+# ─────────────────────────────────────────────────────────────────────────────
+
+class PasswordResetToken(db.Model):
+    """
+    Secure one-time password reset tokens with expiration.
+    """
+
+    __tablename__ = "password_reset_tokens"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    token = db.Column(db.String(100), unique=True, nullable=False, index=True)
+    used = db.Column(db.Boolean, default=False)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    user = db.relationship("User", backref="reset_tokens", lazy=True)
+
+    @staticmethod
+    def generate(user_id, expiry_hours=24):
+        token = secrets.token_urlsafe(32)
+        expires = datetime.now(timezone.utc) + timedelta(hours=expiry_hours)
+        return PasswordResetToken(
+            user_id=user_id,
+            token=token,
+            expires_at=expires,
+        )
+
+    def is_valid(self):
+        return not self.used and datetime.now(timezone.utc) < self.expires_at
+
+    def __repr__(self):
+        return f"<PasswordResetToken user={self.user_id} used={self.used}>"

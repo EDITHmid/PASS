@@ -115,7 +115,7 @@ def sample_student(db):
             deadline=deadline,
             delta_t=dt_hours * 3600,
             delta_t_hours=dt_hours,
-            submission_status="on_time" if dt_hours >= 0 else "late",
+            submission_status="on-time" if dt_hours >= 0 else "late",
         )
         db.session.add(sub)
 

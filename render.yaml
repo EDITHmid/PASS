@@ -1,5 +1,7 @@
-# render.yaml — Render Blueprint
-# Deploy via: https://render.com/deploy
+# render.yaml — Render Blueprint (Free Tier)
+# One-click deploy: https://render.com/deploy
+# Uses SQLite on free tier — data resets on each deploy.
+# Demo accounts are auto-seeded on first deploy.
 
 services:
   - type: web
@@ -11,6 +13,10 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: PYTHON_VERSION
-        value: "3.13.9"
+        value: "3.12.10"
       - key: FLASK_ENV
         value: production
+      - key: SCHOOL_NAME
+        value: "Your School Name"
+      - key: SCHOOL_ADDRESS
+        value: ""

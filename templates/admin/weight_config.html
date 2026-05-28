@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}Scoring Weights — PASS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1"><i class="bi bi-sliders me-2"></i>Credibility Scoring Weights</h4>
+        <p class="text-muted small mb-0">Customize how each factor contributes to the final score</p>
+    </div>
+    <a href="{{ url_for('admin.principal_dashboard') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Back
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h6 class="fw-bold mb-3">Weight Configuration</h6>
+                <p class="text-muted small mb-4">Set the relative importance of each credibility factor. Weights must sum to <strong>1.0</strong> (100%).</p>
+
+                <form method="POST" action="{{ url_for('admin.configure_weights') }}" id="weightForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Δt Consistency (Submission Timeliness)</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" name="weight_delta_t"
+                                   value="{{ weights.delta_t }}" step="0.05" min="0" max="1" required>
+                            <span class="input-group-text bg-light small">weight</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Variance Stability</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" name="weight_variance"
+                                   value="{{ weights.variance }}" step="0.05" min="0" max="1" required>
+                            <span class="input-group-text bg-light small">weight</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Completion Rate</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" name="weight_completion"
+                                   value="{{ weights.completion }}" step="0.05" min="0" max="1" required>
+                            <span class="input-group-text bg-light small">weight</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Attendance</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" name="weight_attendance"
+                                   value="{{ weights.attendance }}" step="0.05" min="0" max="1" required>
+                            <span class="input-group-text bg-light small">weight</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Exam Performance (Best 2 of 3 Mids)</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" name="weight_exam"
+                                   value="{{ weights.exam }}" step="0.05" min="0" max="1" required>
+                            <span class="input-group-text bg-light small">weight</span>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="fw-bold">Total: </span>
+                            <span id="weightTotal" class="fw-bold fs-5">1.00</span>
+                            <span id="weightStatus" class="ms-2 small"></span>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="saveWeights" disabled>
+                            <i class="bi bi-check-circle me-1"></i>Save Weights
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h6 class="fw-bold mb-3"><i class="bi bi-info-circle me-2"></i>About Scoring</h6>
+                <div class="mb-3">
+                    <div class="fw-semibold small">Δt Consistency <span class="text-muted">(25% default)</span></div>
+                    <p class="text-muted small">Measures how consistently early submissions are. Higher weight favours students who submit well before deadlines.</p>
+                </div>
+                <div class="mb-3">
+                    <div class="fw-semibold small">Variance Stability <span class="text-muted">(10% default)</span></div>
+                    <p class="text-muted small">Penalises erratic submission patterns. Lower variance = more consistent behaviour.</p>
+                </div>
+                <div class="mb-3">
+                    <div class="fw-semibold small">Completion Rate <span class="text-muted">(10% default)</span></div>
+                    <p class="text-muted small">Percentage of assignments submitted. Missing submissions heavily impacts this factor.</p>
+                </div>
+                <div class="mb-3">
+                    <div class="fw-semibold small">Attendance <span class="text-muted">(25% default)</span></div>
+                    <p class="text-muted small">Class attendance percentage. Strongly correlated with academic outcomes.</p>
+                </div>
+                <div>
+                    <div class="fw-semibold small">Exam Performance <span class="text-muted">(30% default)</span></div>
+                    <p class="text-muted small">Best 2 of 3 mid-term exams averaged. Captures academic mastery alongside behaviour.</p>
+                </div>
+                <hr>
+                <p class="small text-muted mb-0">
+                    <i class="bi bi-lightbulb me-1"></i>
+                    <strong>Tip:</strong> If your school values attendance more, increase its weight. If exams matter most, increase exam weight. Ensure total = 1.0.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = document.querySelectorAll('#weightForm input[type="number"]');
+    const totalEl = document.getElementById('weightTotal');
+    const statusEl = document.getElementById('weightStatus');
+    const saveBtn = document.getElementById('saveWeights');
+
+    function updateTotal() {
+        let total = 0;
+        inputs.forEach(inp => total += parseFloat(inp.value) || 0);
+        totalEl.textContent = total.toFixed(2);
+        if (Math.abs(total - 1.0) < 0.01) {
+            statusEl.textContent = '✓ Balanced';
+            statusEl.className = 'ms-2 small text-success';
+            saveBtn.disabled = false;
+        } else {
+            statusEl.textContent = 'Must sum to 1.0';
+            statusEl.className = 'ms-2 small text-danger';
+            saveBtn.disabled = true;
+        }
+    }
+
+    inputs.forEach(inp => inp.addEventListener('input', updateTotal));
+    updateTotal();
+});
+</script>
+{% endblock %}
