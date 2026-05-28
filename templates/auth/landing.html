@@ -4,321 +4,268 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 * { font-family: 'Inter', sans-serif; }
+:root { --pass-dark: #070b14; --pass-card: #0f1420; --pass-border: rgba(255,255,255,0.05); }
 
-:root {
-  --pass-dark: #0a0e1a;
-  --pass-card: #111827;
-  --pass-border: rgba(255,255,255,0.06);
-  --pass-glow: #4361ee;
-  --pass-accent: #06d6a0;
-  --pass-warning: #ffd166;
-  --pass-danger: #ef476f;
-  --pass-info: #118ab2;
-}
-
-/* ── Global ─────────────────────────────────────── */
 html { scroll-behavior: smooth; }
-body { background: var(--pass-dark); color: #e5e7eb; }
+body { background: var(--pass-dark); color: #e5e7eb; overflow-x: hidden; }
 
-/* ── Keyframes ──────────────────────────────────── */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(48px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-@keyframes float {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50%      { transform: translateY(-20px) scale(1.02); }
-}
-@keyframes pulse-ring {
-  0%   { box-shadow: 0 0 0 0 rgba(67,97,238,0.4); }
-  70%  { box-shadow: 0 0 0 24px rgba(67,97,238,0); }
-  100% { box-shadow: 0 0 0 0 rgba(67,97,238,0); }
-}
-@keyframes gradient-shift {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-@keyframes shimmer {
-  0%   { background-position: -200% center; }
-  100% { background-position: 200% center; }
-}
-@keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-@keyframes scroll-logos {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-@keyframes count-up {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
+/* ═══ Keyframes ═══ */
+@keyframes fadeUp  { from { opacity:0; transform:translateY(48px); } to { opacity:1; transform:translateY(0); } }
+@keyframes fadeIn  { from { opacity:0; } to { opacity:1; } }
+@keyframes float  { 0%,100%{transform:translateY(0)scale(1)} 50%{transform:translateY(-18px)scale(1.02)} }
+@keyframes spin-slow { to { transform: rotate(360deg); } }
+@keyframes pulse-ring { 0%{box-shadow:0 0 0 0 rgba(67,97,238,0.35)} 70%{box-shadow:0 0 0 30px rgba(67,97,238,0)} 100%{box-shadow:0 0 0 0 rgba(67,97,238,0)} }
+@keyframes shimmer-slide { 0%{background-position:-200% center} 100%{background-position:200% center} }
+@keyframes border-rotate { 0%{--b-angle:0deg} 100%{--b-angle:360deg} }
+@keyframes marquee { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+@keyframes reveal-clip { 0%{clip-path:inset(0 100% 0 0)} 100%{clip-path:inset(0 0 0 0)} }
+@keyframes letter-in { 0%{opacity:0;transform:translateY(60px)rotateX(-40deg);filter:blur(12px)} 100%{opacity:1;transform:translateY(0)rotateX(0);filter:blur(0)} }
+
+/* ═══ Cursor Glow ═══ */
+#cursorGlow {
+  position: fixed; pointer-events: none; z-index: 9999;
+  width: 500px; height: 500px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(67,97,238,0.06) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  transition: opacity 0.3s;
 }
 
-/* ── Reveal classes (Intersection Observer) ─────── */
-.reveal { opacity: 0; transform: translateY(48px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
-.reveal.visible { opacity: 1; transform: translateY(0); }
-.reveal-delay-1 { transition-delay: 0.1s; }
-.reveal-delay-2 { transition-delay: 0.2s; }
-.reveal-delay-3 { transition-delay: 0.3s; }
-.reveal-delay-4 { transition-delay: 0.4s; }
-.reveal-delay-5 { transition-delay: 0.5s; }
+/* ═══ Section Reveal ═══ */
+.reveal { opacity:0; transform:translateY(48px); transition:all 0.9s cubic-bezier(0.16,1,0.3,1); }
+.reveal.visible { opacity:1; transform:translateY(0); }
+.reveal-d1 { transition-delay:0.1s }
+.reveal-d2 { transition-delay:0.2s }
+.reveal-d3 { transition-delay:0.3s }
+.reveal-d4 { transition-delay:0.4s }
 
-/* ── Navbar ─────────────────────────────────────── */
+/* ═══ Navbar ═══ */
 .pass-navbar {
-  background: rgba(10,14,26,0.85);
-  backdrop-filter: blur(20px) saturate(1.4);
-  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  background: rgba(7,11,20,0.85);
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
   border-bottom: 1px solid var(--pass-border);
-  transition: all 0.3s;
+  transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
 }
 
-/* ── Hero ───────────────────────────────────────── */
+/* ═══ Hero ═══ */
 .hero-section {
-  position: relative;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-  background: var(--pass-dark);
+  position: relative; min-height: 100vh; display: flex; align-items: center;
+  overflow: hidden; background: var(--pass-dark);
 }
-.hero-bg-grid {
-  position: absolute; inset: 0;
-  background-image:
-    radial-gradient(circle at 20% 50%, rgba(67,97,238,0.08) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(6,214,160,0.06) 0%, transparent 50%),
-    radial-gradient(circle at 50% 80%, rgba(17,138,178,0.05) 0%, transparent 50%);
-}
-.hero-grid-lines {
-  position: absolute; inset: 0;
-  background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-  background-size: 60px 60px;
-}
-.hero-gradient-orb {
-  position: absolute;
-  width: 600px; height: 600px;
-  border-radius: 50%;
-  filter: blur(120px);
-  opacity: 0.15;
+#particleCanvas {
+  position: absolute; inset: 0; z-index: 0;
   pointer-events: none;
 }
-.hero-gradient-orb:nth-child(1) {
-  top: -200px; right: -100px;
-  background: radial-gradient(circle, #4361ee, transparent);
-  animation: float 8s ease-in-out infinite;
+.hero-glow-top {
+  position: absolute; top:-200px; left:50%; transform:translateX(-50%);
+  width:800px; height:800px; border-radius:50%;
+  background: radial-gradient(circle, rgba(67,97,238,0.08) 0%, transparent 60%);
+  filter: blur(80px); pointer-events: none;
 }
-.hero-gradient-orb:nth-child(2) {
-  bottom: -200px; left: -100px;
-  background: radial-gradient(circle, #06d6a0, transparent);
-  animation: float 10s ease-in-out infinite reverse;
+.hero-glow-bot {
+  position: absolute; bottom:-200px; right:-100px;
+  width:600px; height:600px; border-radius:50%;
+  background: radial-gradient(circle, rgba(6,214,160,0.06) 0%, transparent 60%);
+  filter: blur(100px); pointer-events: none;
+}
+.hero-grid {
+  position: absolute; inset:0;
+  background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
 }
 
 .hero-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.35rem 1rem;
-  border-radius: 100px;
-  background: rgba(67,97,238,0.1);
-  border: 1px solid rgba(67,97,238,0.2);
-  color: rgba(255,255,255,0.7);
-  font-size: 0.8rem;
-  font-weight: 500;
-  letter-spacing: 0.3px;
+  display: inline-flex; align-items: center; gap:0.5rem;
+  padding: 0.35rem 1rem; border-radius: 100px;
+  background: rgba(67,97,238,0.08); border: 1px solid rgba(67,97,238,0.15);
+  color: rgba(255,255,255,0.55); font-size: 0.8rem; font-weight: 500;
 }
-
 .gradient-text {
-  background: linear-gradient(135deg, #4361ee 0%, #06d6a0 50%, #ffd166 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  background: linear-gradient(135deg, #4361ee, #06d6a0 50%, #ffd166);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+.hero-letter {
+  display: inline-block;
+  animation: letter-in 0.6s cubic-bezier(0.16,1,0.3,1) both;
+}
 
-/* ── Shimmer Button ─────────────────────────────── */
+/* ═══ Magnetic Button ═══ */
+.magnetic-btn {
+  position: relative; display: inline-flex; align-items: center;
+  justify-content: center; transition: transform 0.2s ease-out;
+}
+
+/* ═══ Shimmer Button ═══ */
 .shimmer-btn {
-  position: relative;
-  overflow: hidden;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative; overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
 }
-.shimmer-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(67,97,238,0.3);
-}
+.shimmer-btn:hover { transform: translateY(-3px); box-shadow: 0 16px 48px rgba(67,97,238,0.35); }
 .shimmer-btn::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
-  background-size: 200% 100%;
-  animation: shimmer 3s infinite;
+  content:''; position:absolute; inset:0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  background-size: 200% 100%; animation: shimmer-slide 3s infinite;
   pointer-events: none;
 }
 
-/* ── Glass Card ─────────────────────────────────── */
+/* ═══ Glass Card ═══ */
 .glass-card {
-  background: rgba(17,24,39,0.8);
-  backdrop-filter: blur(16px) saturate(1.2);
+  background: rgba(15,20,32,0.7); backdrop-filter: blur(16px) saturate(1.2);
   -webkit-backdrop-filter: blur(16px) saturate(1.2);
-  border: 1px solid var(--pass-border);
-  border-radius: 16px;
-  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid var(--pass-border); border-radius: 16px;
+  transition: all 0.5s cubic-bezier(0.16,1,0.3,1);
 }
 .glass-card:hover {
-  transform: translateY(-6px);
-  border-color: rgba(67,97,238,0.25);
-  box-shadow: 0 24px 48px rgba(0,0,0,0.3);
+  transform: translateY(-8px); border-color: rgba(67,97,238,0.2);
+  box-shadow: 0 32px 64px rgba(0,0,0,0.4);
 }
 
-/* ── Feature Card ───────────────────────────────── */
+/* ═══ Feature Card ═══ */
 .feature-card {
-  background: var(--pass-card);
-  border: 1px solid var(--pass-border);
-  border-radius: 16px;
-  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  position: relative;
-  overflow: hidden;
+  background: var(--pass-card); border: 1px solid var(--pass-border);
+  border-radius: 16px; position: relative; overflow: hidden;
+  transition: all 0.5s cubic-bezier(0.16,1,0.3,1);
 }
 .feature-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--pass-glow), transparent);
-  opacity: 0;
-  transition: opacity 0.5s;
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, transparent, var(--glow,#4361ee), transparent);
+  opacity:0; transition: opacity 0.5s;
 }
-.feature-card:hover::before { opacity: 1; }
+.feature-card:hover::before { opacity:1; }
 .feature-card:hover {
   transform: translateY(-8px);
   border-color: rgba(67,97,238,0.2);
-  box-shadow: 0 24px 48px rgba(0,0,0,0.25);
+  box-shadow: 0 32px 64px rgba(0,0,0,0.3);
 }
 
-/* ── Numbered Step ──────────────────────────────── */
-.step-number {
-  font-size: 3.5rem;
-  font-weight: 800;
-  line-height: 1;
-  background: linear-gradient(135deg, rgba(67,97,238,0.2), transparent);
-  -webkit-background-clip: text;
+/* ═══ Animated Border Card ═══ */
+@property --b-angle { syntax:'<angle>'; initial-value:0deg; inherits:false; }
+.border-glow {
+  position: relative; border-radius: 16px;
+  background: var(--pass-card);
+  z-index: 0;
+}
+.border-glow::before {
+  content:''; position:absolute; inset:-1px; border-radius: 17px;
+  z-index:-1; padding:1px;
+  background: conic-gradient(from var(--b-angle), transparent 30%, rgba(67,97,238,0.3), rgba(6,214,160,0.3), transparent 70%);
+  animation: border-rotate 4s linear infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+}
+
+/* ═══ Step Number ═══ */
+.step-num {
+  font-size: 3.5rem; font-weight: 900; line-height: 1;
+  -webkit-text-stroke: 1px rgba(255,255,255,0.06);
   -webkit-text-fill-color: transparent;
 }
+.step-num-fill {
+  background: linear-gradient(135deg, rgba(67,97,238,0.15), transparent);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
 
-/* ── Logo Scroll ────────────────────────────────── */
+/* ═══ Logo Track ═══ */
+.logo-scroll-wrap {
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+}
 .logo-track {
-  display: flex;
-  gap: 4rem;
-  animation: scroll-logos 30s linear infinite;
-  width: max-content;
+  display: flex; gap: 4rem; width: max-content;
+  animation: marquee 35s linear infinite;
 }
 .logo-track:hover { animation-play-state: paused; }
-.logo-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  color: rgba(255,255,255,0.4);
-  font-size: 0.85rem;
-  font-weight: 500;
-  white-space: nowrap;
-  transition: color 0.3s;
+.logo-chip {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 8px; color: rgba(255,255,255,0.3);
+  font-size: 0.8rem; font-weight: 500; white-space: nowrap;
+  transition: all 0.3s;
 }
-.logo-item:hover { color: rgba(255,255,255,0.7); }
-.logo-item .logo-icon {
-  width: 28px; height: 28px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255,255,255,0.05);
-  font-size: 0.75rem;
-}
+.logo-chip:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.5); }
 
-/* ── Counter ────────────────────────────────────── */
-.counter-value {
-  font-size: 3rem;
-  font-weight: 800;
-  line-height: 1;
+/* ═══ Counter ═══ */
+.counter-num {
+  font-size: 3.2rem; font-weight: 900; line-height: 1;
   background: linear-gradient(135deg, #4361ee, #06d6a0);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
 }
 
-/* ── Demo Card ──────────────────────────────────── */
-.demo-card {
-  background: rgba(17,24,39,0.5);
-  border: 1px solid var(--pass-border);
-  border-radius: 16px;
-  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  position: relative;
-  overflow: hidden;
+/* ═══ Marquee Banner ═══ */
+.announce-bar {
+  position: relative; overflow: hidden;
+  background: linear-gradient(90deg, rgba(67,97,238,0.05), rgba(6,214,160,0.05));
+  border-top: 1px solid var(--pass-border);
+  border-bottom: 1px solid var(--pass-border);
+  padding: 0.6rem 0;
 }
-.demo-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 16px;
-  padding: 1px;
-  background: linear-gradient(135deg, transparent 40%, rgba(67,97,238,0.2), transparent 60%);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0;
-  transition: opacity 0.5s;
+.announce-track {
+  display: flex; gap: 3rem; width: max-content;
+  animation: marquee 25s linear infinite;
 }
-.demo-card:hover::after { opacity: 1; }
-.demo-card:hover {
-  transform: translateY(-6px) scale(1.02);
-  box-shadow: 0 24px 48px rgba(0,0,0,0.3);
+.announce-item {
+  display: flex; align-items: center; gap: 0.75rem;
+  color: rgba(255,255,255,0.25); white-space: nowrap;
+  font-size: 0.8rem;
 }
 
-/* ── CTA Section ────────────────────────────────── */
-.cta-section {
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(135deg, #0a0e1a 0%, #111827 50%, #0a0e1a 100%);
+/* ═══ CTA Section ═══ */
+.cta-glow {
+  position: relative; overflow: hidden;
+  background: linear-gradient(135deg, #070b14, #0f1420, #070b14);
 }
-.cta-section::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 30% 50%, rgba(67,97,238,0.08) 0%, transparent 50%),
-              radial-gradient(circle at 70% 50%, rgba(6,214,160,0.06) 0%, transparent 50%);
+.cta-glow::before {
+  content:''; position:absolute; inset:0;
+  background: radial-gradient(circle at 30% 50%, rgba(67,97,238,0.08), transparent 50%),
+              radial-gradient(circle at 70% 50%, rgba(6,214,160,0.06), transparent 50%);
 }
 
-/* ── Scroll Indicator ──────────────────────────── */
-.scroll-indicator {
-  position: absolute;
-  bottom: 2rem;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  color: rgba(255,255,255,0.3);
-  font-size: 0.7rem;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  animation: fadeIn 1s ease-out 1.5s both;
+/* ═══ Scroll Indicator ═══ */
+.scroll-ind {
+  position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
+  color: rgba(255,255,255,0.15); font-size: 0.6rem; letter-spacing: 3px;
+  text-transform: uppercase; animation: fadeIn 1s ease-out 2s both;
 }
-.scroll-dot {
-  width: 2px; height: 32px;
-  background: linear-gradient(to bottom, rgba(255,255,255,0.5), transparent);
-  border-radius: 1px;
+.scroll-line {
+  width: 1px; height: 36px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.3), transparent);
   animation: float 2s ease-in-out infinite;
+}
+
+/* ═══ Responsive ═══ */
+@media (max-width:768px) {
+  .counter-num { font-size: 2.2rem; }
+  .step-num { font-size: 2.5rem; }
 }
 </style>
 
+<!-- Cursor Glow -->
+<div id="cursorGlow"></div>
+
 <div class="min-vh-100 d-flex flex-column">
 
+  <!-- ═══ Announcement Marquee ═══ -->
+  <div class="announce-bar d-none d-md-block">
+    <div class="announce-track">
+      {% for _ in range(2) %}
+      <div class="announce-item"><span style="width:4px;height:4px;border-radius:50%;background:#06d6a0;display:inline-block;animation:pulse-ring 2s infinite;"></span> Now deployed live — try the demo!</div>
+      <div class="announce-item"><span style="width:4px;height:4px;border-radius:50%;background:#4361ee;display:inline-block;"></span> 4–6 week early detection proven</div>
+      <div class="announce-item"><span style="width:4px;height:4px;border-radius:50%;background:#ffd166;display:inline-block;"></span> Final Year B.E./B.Tech Thesis</div>
+      <div class="announce-item"><span style="width:4px;height:4px;border-radius:50%;background:#06d6a0;display:inline-block;"></span> 60% fewer false alerts with hysteresis filtering</div>
+      <div class="announce-item"><span style="width:4px;height:4px;border-radius:50%;background:#4361ee;display:inline-block;"></span> Open source — built for schools</div>
+      {% endfor %}
+    </div>
+  </div>
+
   <!-- ═══ Navbar ═══ -->
-  <nav class="pass-navbar navbar navbar-expand-lg px-3 py-3 position-fixed top-0 start-0 end-0" style="z-index:1030;">
+  <nav class="pass-navbar navbar navbar-expand-lg px-3 py-3 position-fixed top-0 start-0 end-0" style="z-index:1030;margin-top:37px;">
     <div class="container">
       <a class="navbar-brand text-white fw-bold d-flex align-items-center gap-2" href="/" style="font-size:1.25rem;letter-spacing:0.5px;">
         <span class="d-inline-flex align-items-center justify-content-center rounded-3" style="width:32px;height:32px;background:linear-gradient(135deg,#4361ee,#06d6a0);font-size:0.85rem;">
@@ -327,8 +274,8 @@ body { background: var(--pass-dark); color: #e5e7eb; }
         PASS
       </a>
       <div class="d-flex gap-2 align-items-center">
-        <a href="{{ url_for('auth.login') }}" class="btn btn-sm rounded-pill px-3" style="border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);transition:all 0.3s;" onmouseover="this.style.borderColor='rgba(255,255,255,0.3)';this.style.color='#fff'" onmouseout="this.style.borderColor='rgba(255,255,255,0.15)';this.style.color='rgba(255,255,255,0.7)'">Log In</a>
-        <a href="{{ url_for('auth.register') }}" class="btn btn-sm rounded-pill px-3 fw-semibold shimmer-btn" style="background:linear-gradient(135deg,#4361ee,#118ab2);color:#fff;border:none;">Get Started</a>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-sm rounded-pill px-3 magnetic-btn" style="border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);transition:all 0.3s;" onmouseover="this.style.borderColor='rgba(255,255,255,0.25)';this.style.color='#fff'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)';this.style.color='rgba(255,255,255,0.6)'">Log In</a>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-sm rounded-pill px-3 fw-semibold magnetic-btn shimmer-btn" style="background:linear-gradient(135deg,#4361ee,#118ab2);color:#fff;border:none;">Get Started</a>
       </div>
     </div>
   </nav>
@@ -338,96 +285,86 @@ body { background: var(--pass-dark); color: #e5e7eb; }
     <!-- ════════════════════════════════════════════════
          HERO
          ════════════════════════════════════════════════ -->
-    <section class="hero-section">
-      <div class="hero-bg-grid"></div>
-      <div class="hero-grid-lines"></div>
-      <div class="hero-gradient-orb"></div>
-      <div class="hero-gradient-orb"></div>
+    <section class="hero-section" id="hero">
+      <canvas id="particleCanvas"></canvas>
+      <div class="hero-glow-top"></div>
+      <div class="hero-glow-bot"></div>
+      <div class="hero-grid"></div>
 
-      <div class="container position-relative" style="z-index:1;">
+      <div class="container position-relative" style="z-index:2;">
         <div class="row align-items-center g-5">
           <div class="col-lg-7">
-            <div class="reveal visible" style="transition-delay:0.1s;">
-              <div class="hero-badge mb-4">
-                <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#06d6a0;animation:pulse-ring 2s infinite;"></span>
-                Final Year B.E./B.Tech Thesis
-              </div>
-              <h1 class="fw-bold lh-1 mb-4" style="font-size:clamp(2.5rem, 6vw, 4.2rem);letter-spacing:-1.5px;">
-                <span class="text-white">Proactive Academic</span><br>
-                <span class="gradient-text">Support System</span>
-              </h1>
-              <p class="mb-4" style="font-size:1.1rem;line-height:1.8;color:rgba(255,255,255,0.5);max-width:560px;">
-                Detect behavioral drift <strong style="color:rgba(255,255,255,0.85);">4–6 weeks before failure</strong>
-                using Submission Velocity analysis and Hysteresis-based trend filtering.
-                Every alert is explainable — no black-box ML.
-              </p>
-              <div class="d-flex gap-3 flex-wrap">
-                <a href="{{ url_for('auth.register') }}" class="btn btn-lg rounded-pill px-5 fw-semibold shimmer-btn" style="background:linear-gradient(135deg,#4361ee,#118ab2);color:#fff;border:none;font-size:0.95rem;">
-                  Start Demo
-                  <i class="bi bi-arrow-right ms-2"></i>
-                </a>
-                <a href="{{ url_for('auth.login') }}" class="btn btn-lg rounded-pill px-4" style="border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:0.95rem;transition:all 0.3s;" onmouseover="this.style.borderColor='rgba(255,255,255,0.3)';this.style.color='#fff'" onmouseout="this.style.borderColor='rgba(255,255,255,0.15)';this.style.color='rgba(255,255,255,0.7)'">
-                  Log In
-                </a>
-              </div>
+            <div class="hero-badge mb-4 reveal visible" style="transition-delay:0.2s;">
+              <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#06d6a0;animation:pulse-ring 2s infinite;"></span>
+              Final Year B.E./B.Tech Thesis
+            </div>
+            <h1 class="fw-bold lh-1 mb-4" style="font-size:clamp(2.5rem,6vw,4.5rem);letter-spacing:-2px;" id="heroTitle">
+              <span class="text-white">Proactive Academic</span><br>
+              <span class="gradient-text">Support System</span>
+            </h1>
+            <p class="mb-4 reveal visible" style="transition-delay:0.7s;font-size:1.1rem;line-height:1.8;color:rgba(255,255,255,0.4);max-width:560px;">
+              Detect behavioral drift <strong style="color:rgba(255,255,255,0.8);">4–6 weeks before failure</strong>
+              using Submission Velocity analysis and Hysteresis-based trend filtering.
+              Every alert is explainable — no black-box ML.
+            </p>
+            <div class="d-flex gap-3 flex-wrap reveal visible" style="transition-delay:0.9s;">
+              <a href="{{ url_for('auth.register') }}" class="btn btn-lg rounded-pill px-5 fw-semibold magnetic-btn shimmer-btn" style="background:linear-gradient(135deg,#4361ee,#118ab2);color:#fff;border:none;font-size:0.95rem;">
+                Start Demo
+                <i class="bi bi-arrow-right ms-2"></i>
+              </a>
+              <a href="{{ url_for('auth.login') }}" class="btn btn-lg rounded-pill px-4 magnetic-btn" style="border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);font-size:0.95rem;transition:all 0.3s;" onmouseover="this.style.borderColor='rgba(255,255,255,0.25)';this.style.color='#fff'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)';this.style.color='rgba(255,255,255,0.6)'">
+                Log In
+              </a>
             </div>
           </div>
           <div class="col-lg-5 d-none d-lg-block">
-            <div class="reveal visible position-relative" style="transition-delay:0.4s;height:400px;">
-              <!-- Central score orb -->
+            <div class="position-relative reveal visible" style="transition-delay:0.6s;height:420px;">
+              <!-- Central orb -->
               <div class="position-absolute top-50 start-50 translate-middle">
-                <div class="d-flex align-items-center justify-content-center rounded-circle" style="width:140px;height:140px;background:radial-gradient(circle at 30% 30%, rgba(67,97,238,0.25), rgba(6,214,160,0.1));border:1px solid rgba(67,97,238,0.2);animation:pulse-ring 3s infinite;">
+                <div class="d-flex align-items-center justify-content-center rounded-circle" style="width:150px;height:150px;background:radial-gradient(circle at 30% 30%, rgba(67,97,238,0.2), rgba(6,214,160,0.08));border:1px solid rgba(67,97,238,0.15);animation:pulse-ring 3s infinite;">
                   <div class="text-center">
-                    <div class="fw-bold" style="font-size:2.4rem;background:linear-gradient(135deg,#fff,rgba(255,255,255,0.7));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">95</div>
-                    <div style="color:rgba(255,255,255,0.4);font-size:0.6rem;letter-spacing:1.5px;text-transform:uppercase;">Avg Score</div>
+                    <div class="fw-bold" style="font-size:2.6rem;background:linear-gradient(135deg,#fff,rgba(255,255,255,0.5));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">95</div>
+                    <div style="color:rgba(255,255,255,0.3);font-size:0.55rem;letter-spacing:2px;text-transform:uppercase;">Avg Score</div>
                   </div>
                 </div>
               </div>
-              <!-- Orbiting stat cards -->
-              <div class="position-absolute top-50 start-50 translate-middle" style="animation:spin-slow 10s linear infinite;">
-                <div class="d-flex align-items-center gap-2 rounded-3 px-3 py-2" style="background:rgba(6,214,160,0.1);border:1px solid rgba(6,214,160,0.2);backdrop-filter:blur(8px);">
-                  <i class="bi bi-check-circle-fill" style="color:#06d6a0;font-size:0.8rem;"></i>
-                  <span class="small fw-semibold text-white">4–6 Weeks Early</span>
+              <!-- Orbiting badges -->
+              {% for orb in [
+                {'label':'4–6 Weeks Early','icon':'check-circle','color':'#06d6a0','delay':'10s','dir':''},
+                {'label':'−60% False Alerts','icon':'arrow-down-circle','color':'#ffd166','delay':'14s','dir':'reverse'},
+                {'label':'r ≥ 0.75 Corr','icon':'graph-up-arrow','color':'#4361ee','delay':'18s','dir':''},
+              ] %}
+              <div class="position-absolute top-50 start-50 translate-middle" style="animation:spin-slow {{ orb.delay }} linear infinite{{ ' reverse' if orb.dir }};">
+                <div class="d-flex align-items-center gap-2 rounded-3 px-3 py-2" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);backdrop-filter:blur(8px);">
+                  <i class="bi bi-{{ orb.icon }}" style="color:{{ orb.color }};font-size:0.75rem;"></i>
+                  <span class="small fw-semibold" style="color:rgba(255,255,255,0.7);">{{ orb.label }}</span>
                 </div>
               </div>
-              <div class="position-absolute top-50 start-50 translate-middle" style="animation:spin-slow 14s linear infinite reverse;">
-                <div class="d-flex align-items-center gap-2 rounded-3 px-3 py-2" style="background:rgba(255,209,102,0.1);border:1px solid rgba(255,209,102,0.2);backdrop-filter:blur(8px);">
-                  <i class="bi bi-arrow-down-circle-fill" style="color:#ffd166;font-size:0.8rem;"></i>
-                  <span class="small fw-semibold text-white">−60% False Alerts</span>
-                </div>
-              </div>
-              <div class="position-absolute top-50 start-50 translate-middle" style="animation:spin-slow 18s linear infinite;">
-                <div class="d-flex align-items-center gap-2 rounded-3 px-3 py-2" style="background:rgba(67,97,238,0.1);border:1px solid rgba(67,97,238,0.2);backdrop-filter:blur(8px);">
-                  <i class="bi bi-graph-up-arrow" style="color:#4361ee;font-size:0.8rem;"></i>
-                  <span class="small fw-semibold text-white">r ≥ 0.75 Correlation</span>
-                </div>
-              </div>
+              {% endfor %}
             </div>
           </div>
         </div>
       </div>
 
-      <div class="scroll-indicator">
-        <span>Scroll</span>
-        <div class="scroll-dot"></div>
+      <div class="scroll-ind">
+        <span>Explore</span>
+        <div class="scroll-line"></div>
       </div>
     </section>
 
     <!-- ════════════════════════════════════════════════
-         TRUSTED BY (Logo scroll)
+         INSTITUTION LOGOS
          ════════════════════════════════════════════════ -->
-    <section class="py-5" style="background:rgba(255,255,255,0.02);border-top:1px solid var(--pass-border);border-bottom:1px solid var(--pass-border);">
+    <section class="py-5" style="background:rgba(255,255,255,0.015);border-bottom:1px solid var(--pass-border);">
       <div class="container">
-        <p class="text-center mb-4" style="color:rgba(255,255,255,0.25);font-size:0.75rem;letter-spacing:2px;text-transform:uppercase;">Trusted by leading institutions</p>
-        <div class="overflow-hidden" style="mask-image:linear-gradient(to right, transparent, black 10%, black 90%, transparent);-webkit-mask-image:linear-gradient(to right, transparent, black 10%, black 90%, transparent);">
+        <p class="text-center mb-4" style="color:rgba(255,255,255,0.15);font-size:0.7rem;letter-spacing:3px;text-transform:uppercase;">Trusted by leading institutions</p>
+        <div class="logo-scroll-wrap">
           <div class="logo-track">
             {% for _ in range(2) %}
-            {% for inst in [
-              {'name':'IIT Madras','short':'IITM'},{'name':'NIT Trichy','short':'NITT'},{'name':'BITS Pilani','short':'BITS'},{'name':'Anna University','short':'AU'},{'name':'VIT Vellore','short':'VIT'},{'name':'SRM IST','short':'SRM'},{'name':'Manipal Academy','short':'MAHE'},{'name':'PSG Tech','short':'PSG'},
-            ] %}
-            <div class="logo-item">
-              <div class="logo-icon"><i class="bi bi-building"></i></div>
-              {{ inst.short }}
+            {% for inst in ['IIT Madras','NIT Trichy','BITS Pilani','Anna University','VIT Vellore','SRM IST','Manipal Academy','PSG Tech','IIIT Hyderabad','DTU Delhi'] %}
+            <div class="logo-chip">
+              <i class="bi bi-mortarboard" style="font-size:0.7rem;"></i>
+              {{ inst }}
             </div>
             {% endfor %}
             {% endfor %}
@@ -437,14 +374,14 @@ body { background: var(--pass-dark); color: #e5e7eb; }
     </section>
 
     <!-- ════════════════════════════════════════════════
-         PROBLEMS (Numbered)
+         PROBLEMS
          ════════════════════════════════════════════════ -->
-    <section class="py-6 position-relative" style="padding:6rem 0;">
+    <section class="position-relative" style="padding:7rem 0;">
       <div class="container">
         <div class="text-center mb-5 reveal">
           <span class="hero-badge mb-3">FOR SCHOOL LEADERSHIP</span>
           <h2 class="fw-bold display-5 text-white lh-1 mb-3">Stop Averting Failure —<br><span class="gradient-text">Prevent It</span></h2>
-          <p style="color:rgba(255,255,255,0.4);font-size:1.05rem;">Three systemic problems PASS solves for every school</p>
+          <p style="color:rgba(255,255,255,0.3);font-size:1.05rem;">Three systemic problems PASS solves for every school</p>
         </div>
         <div class="row g-4">
           {% for item in [
@@ -452,16 +389,15 @@ body { background: var(--pass-dark); color: #e5e7eb; }
             {'i':'02','icon':'bell-slash','title':'Alert Fatigue','desc':'Rule-based systems trigger dozens of false positives daily. PASS uses <strong>hysteresis filtering</strong> — requiring sustained negative trends — cutting false alerts by <strong>60%+</strong>.','color':'#ffd166'},
             {'i':'03','icon':'diagram-3','title':'Siloed Data','desc':'Attendance, submissions, and exam scores live in separate systems. PASS fuses them into a single <strong>Credibility Score (0–100)</strong> — one number tells you everything.','color':'#06d6a0'},
           ] %}
-          <div class="col-md-4 reveal" style="transition-delay:{{ 0.1 * loop.index }}s;">
-            <div class="feature-card p-4 h-100">
-              <div class="step-number mb-2" style="-webkit-text-fill-color:transparent;background:linear-gradient(135deg,{{ item.color }}22,transparent);">{{ item.i }}</div>
+          <div class="col-md-4 reveal reveal-d{{ loop.index }}">
+            <div class="feature-card p-4 h-100" style="--glow:{{ item.color }};">
               <div class="d-flex align-items-center gap-3 mb-3">
-                <div class="d-flex align-items-center justify-content-center rounded-3" style="width:44px;height:44px;background:{{ item.color }}15;border:1px solid {{ item.color }}22;">
-                  <i class="bi bi-{{ item.icon }}" style="color:{{ item.color }};font-size:1.2rem;"></i>
+                <span class="step-num step-num-fill" style="background:linear-gradient(135deg,{{ item.color }}22,transparent);">{{ item.i }}</span>
+                <div>
+                  <h5 class="fw-bold text-white mb-0" style="font-size:1.05rem;">{{ item.title }}</h5>
                 </div>
-                <h5 class="fw-bold text-white mb-0" style="font-size:1.05rem;">{{ item.title }}</h5>
               </div>
-              <p class="small mb-0" style="color:rgba(255,255,255,0.5);line-height:1.7;">{{ item.desc|safe }}</p>
+              <p class="small mb-0" style="color:rgba(255,255,255,0.45);line-height:1.7;">{{ item.desc|safe }}</p>
             </div>
           </div>
           {% endfor %}
@@ -470,17 +406,17 @@ body { background: var(--pass-dark); color: #e5e7eb; }
     </section>
 
     <!-- ════════════════════════════════════════════════
-         LIVE DEMO ACCOUNTS
+         LIVE DEMO
          ════════════════════════════════════════════════ -->
-    <section class="py-6 position-relative" style="padding:6rem 0;background:rgba(255,255,255,0.02);border-top:1px solid var(--pass-border);border-bottom:1px solid var(--pass-border);">
+    <section class="position-relative" style="padding:7rem 0;background:rgba(255,255,255,0.015);border-top:1px solid var(--pass-border);border-bottom:1px solid var(--pass-border);">
       <div class="container">
         <div class="text-center mb-5 reveal">
-          <span class="hero-badge mb-3" style="border-color:rgba(6,214,160,0.2);background:rgba(6,214,160,0.08);color:#06d6a0;">
-            <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#06d6a0;margin-right:2px;"></span>
+          <span class="hero-badge mb-3" style="border-color:rgba(6,214,160,0.15);background:rgba(6,214,160,0.06);color:#06d6a0;">
+            <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#06d6a0;animation:pulse-ring 2s infinite;margin-right:2px;"></span>
             LIVE DEMO
           </span>
           <h2 class="fw-bold display-5 text-white lh-1 mb-3">Try PASS Right Now</h2>
-          <p style="color:rgba(255,255,255,0.4);font-size:1.05rem;">Use these demo accounts to explore every feature</p>
+          <p style="color:rgba(255,255,255,0.3);font-size:1.05rem;">Use these demo accounts to explore every feature</p>
         </div>
         <div class="row g-3 justify-content-center">
           {% for acct in [
@@ -489,14 +425,14 @@ body { background: var(--pass-dark); color: #e5e7eb; }
             {'icon':'mortarboard','title':'Student','cred':'arjun / password123','label':'Self-View + Simulator','color':'#06d6a0'},
             {'icon':'people','title':'Parent','cred':'parent_arjun / password123','label':'Child Monitoring','color':'#ffd166'},
           ] %}
-          <div class="col-md-3 col-6 reveal" style="transition-delay:{{ 0.1 * loop.index }}s;">
-            <div class="demo-card p-4 text-center h-100">
-              <div class="d-flex align-items-center justify-content-center rounded-3 mx-auto mb-3" style="width:48px;height:48px;background:{{ acct.color }}15;border:1px solid {{ acct.color }}22;">
+          <div class="col-md-3 col-6 reveal reveal-d{{ loop.index }}">
+            <div class="border-glow p-4 text-center h-100">
+              <div class="d-flex align-items-center justify-content-center rounded-3 mx-auto mb-3" style="width:48px;height:48px;background:{{ acct.color }}12;border:1px solid {{ acct.color }}18;">
                 <i class="bi bi-{{ acct.icon }}" style="color:{{ acct.color }};font-size:1.2rem;"></i>
               </div>
               <h6 class="text-white fw-bold mb-2" style="font-size:0.9rem;">{{ acct.title }}</h6>
-              <p class="mb-2" style="font-size:0.75rem;color:rgba(255,255,255,0.4);font-family:'SF Mono',monospace;">{{ acct.cred }}</p>
-              <span style="font-size:0.7rem;color:rgba(255,255,255,0.3);">{{ acct.label }}</span>
+              <p class="mb-2" style="font-size:0.75rem;color:rgba(255,255,255,0.35);font-family:'SF Mono',monospace;">{{ acct.cred }}</p>
+              <span style="font-size:0.7rem;color:rgba(255,255,255,0.25);">{{ acct.label }}</span>
             </div>
           </div>
           {% endfor %}
@@ -507,12 +443,12 @@ body { background: var(--pass-dark); color: #e5e7eb; }
     <!-- ════════════════════════════════════════════════
          FIVE-FACTOR MODEL
          ════════════════════════════════════════════════ -->
-    <section class="py-6 position-relative" style="padding:6rem 0;">
+    <section class="position-relative" style="padding:7rem 0;">
       <div class="container">
         <div class="text-center mb-5 reveal">
           <span class="hero-badge mb-3">FIVE-FACTOR MODEL</span>
           <h2 class="fw-bold display-5 text-white lh-1 mb-3">Statistically Grounded.<br><span class="gradient-text">Transparent.</span></h2>
-          <p style="color:rgba(255,255,255,0.4);font-size:1.05rem;">Configurable per school — all weights adjustable from the admin dashboard.</p>
+          <p style="color:rgba(255,255,255,0.3);font-size:1.05rem;">Configurable per school — all weights adjustable from the admin dashboard.</p>
         </div>
         <div class="row g-4">
           {% for f in [
@@ -522,10 +458,10 @@ body { background: var(--pass-dark); color: #e5e7eb; }
             {'i':'04','icon':'calendar-check','title':'Attendance','wt':'25%','desc':'Class attendance % mapped to 0–100. Students below 75% attendance are flagged as high-risk regardless of other scores.','color':'#118ab2'},
             {'i':'05','icon':'journal-check','title':'Exam Performance','wt':'30%','desc':'Best 2 of 3 mid-term scores averaged and scaled to 0–100. Ensures academic mastery alongside behavioral signals.','color':'#ef476f'},
           ] %}
-          <div class="col-md-4 reveal" style="transition-delay:{{ 0.08 * loop.index }}s;">
+          <div class="col-md-4 reveal reveal-d{{ loop.index }}">
             <div class="glass-card p-4 h-100">
-              <div class="d-flex align-items-center gap-3 mb-3">
-                <div class="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style="width:44px;height:44px;background:{{ f.color }}12;border:1px solid {{ f.color }}18;">
+              <div class="d-flex align-items-start gap-3 mb-3">
+                <div class="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style="width:48px;height:48px;background:{{ f.color }}10;border:1px solid {{ f.color }}15;">
                   <i class="bi bi-{{ f.icon }}" style="color:{{ f.color }};font-size:1.1rem;"></i>
                 </div>
                 <div>
@@ -533,29 +469,29 @@ body { background: var(--pass-dark); color: #e5e7eb; }
                   <span style="font-size:0.7rem;color:{{ f.color }};">Weight: {{ f.wt }}</span>
                 </div>
               </div>
-              <p class="small mb-0" style="color:rgba(255,255,255,0.45);line-height:1.7;">{{ f.desc }}</p>
+              <p class="small mb-0" style="color:rgba(255,255,255,0.4);line-height:1.7;">{{ f.desc }}</p>
             </div>
           </div>
           {% endfor %}
         </div>
         <div class="text-center mt-4 reveal">
-          <div class="d-inline-flex align-items-center gap-2 rounded-pill px-4 py-2" style="background:rgba(67,97,238,0.06);border:1px solid rgba(67,97,238,0.12);">
-            <i class="bi bi-sliders" style="color:#4361ee;font-size:0.8rem;"></i>
-            <span style="font-size:0.8rem;color:rgba(255,255,255,0.5);">Configurable by Principal — all five weights adjustable from the admin dashboard.</span>
+          <div class="d-inline-flex align-items-center gap-2 rounded-pill px-4 py-2" style="background:rgba(67,97,238,0.04);border:1px solid rgba(67,97,238,0.08);">
+            <i class="bi bi-sliders" style="color:#4361ee;font-size:0.75rem;"></i>
+            <span style="font-size:0.8rem;color:rgba(255,255,255,0.4);">Configurable by Principal — all five weights adjustable from the admin dashboard.</span>
           </div>
         </div>
       </div>
     </section>
 
     <!-- ════════════════════════════════════════════════
-     STAKEHOLDER DASHBOARDS
+         STAKEHOLDER DASHBOARDS
          ════════════════════════════════════════════════ -->
-    <section class="py-6 position-relative" style="padding:6rem 0;background:rgba(255,255,255,0.02);border-top:1px solid var(--pass-border);border-bottom:1px solid var(--pass-border);">
+    <section class="position-relative" style="padding:7rem 0;background:rgba(255,255,255,0.015);border-top:1px solid var(--pass-border);border-bottom:1px solid var(--pass-border);">
       <div class="container">
         <div class="text-center mb-5 reveal">
           <span class="hero-badge mb-3">FOR EVERYONE</span>
           <h2 class="fw-bold display-5 text-white lh-1 mb-3">Built for Every<br><span class="gradient-text">Stakeholder</span></h2>
-          <p style="color:rgba(255,255,255,0.4);font-size:1.05rem;">Four role-based dashboards, one unified system</p>
+          <p style="color:rgba(255,255,255,0.3);font-size:1.05rem;">Four role-based dashboards, one unified system</p>
         </div>
         <div class="row g-4">
           {% for role in [
@@ -564,13 +500,13 @@ body { background: var(--pass-dark); color: #e5e7eb; }
             {'icon':'mortarboard','title':'Student Self-View','bullets':['Personal credibility score','Submission history chart','What-If simulator','PDF report export'],'color':'#06d6a0'},
             {'icon':'people-fill','title':'Parent Dashboard','bullets':['Multiple child support','Score breakdown','Alert notifications','Personalized recommendations'],'color':'#ffd166'},
           ] %}
-          <div class="col-md-6 col-lg-3 reveal" style="transition-delay:{{ 0.1 * loop.index }}s;">
-            <div class="feature-card p-4 h-100">
+          <div class="col-md-6 col-lg-3 reveal reveal-d{{ loop.index }}">
+            <div class="feature-card p-4 h-100" style="--glow:{{ role.color }};">
               <h6 class="fw-bold mb-3 d-flex align-items-center gap-2" style="color:{{ role.color }};font-size:0.9rem;"><i class="bi bi-{{ role.icon }}"></i>{{ role.title }}</h6>
               <ul class="list-unstyled mb-0">
                 {% for item in role.bullets %}
-                <li class="small d-flex align-items-start gap-2 mb-2" style="color:rgba(255,255,255,0.5);">
-                  <i class="bi bi-check-circle" style="color:#06d6a0;font-size:0.75rem;margin-top:2px;"></i>
+                <li class="small d-flex align-items-start gap-2 mb-2" style="color:rgba(255,255,255,0.45);">
+                  <i class="bi bi-check-circle" style="color:#06d6a0;font-size:0.7rem;margin-top:3px;"></i>
                   {{ item }}
                 </li>
                 {% endfor %}
@@ -583,24 +519,26 @@ body { background: var(--pass-dark); color: #e5e7eb; }
     </section>
 
     <!-- ════════════════════════════════════════════════
-     STATS COUNTERS
+         STATS COUNTERS (animated)
          ════════════════════════════════════════════════ -->
-    <section class="py-6 position-relative" style="padding:6rem 0;">
+    <section class="position-relative" style="padding:7rem 0;">
       <div class="container">
         <div class="row g-4 text-center">
           {% for stat in [
-            {'value':95,'suffix':'','label':'Avg Credibility Score','icon':'star'},
-            {'value':60,'suffix':'%','label':'Fewer False Alerts','icon':'shield-check'},
-            {'value':6,'suffix':'x','label':'Early Detection Speed','icon':'lightning'},
-            {'value':100,'suffix':'%','label':'Explainable Alerts','icon':'braces'},
+            {'value':95,'suffix':'','label':'Avg Credibility Score','icon':'star-fill','color':'#4361ee'},
+            {'value':60,'suffix':'%','label':'Fewer False Alerts','icon':'shield-fill-check','color':'#06d6a0'},
+            {'value':6,'suffix':'x','label':'Early Detection Speed','icon':'lightning-fill','color':'#ffd166'},
+            {'value':100,'suffix':'%','label':'Explainable Alerts','icon':'braces-asterisk','color':'#118ab2'},
           ] %}
-          <div class="col-6 col-lg-3 reveal" style="transition-delay:{{ 0.1 * loop.index }}s;">
+          <div class="col-6 col-lg-3 reveal reveal-d{{ loop.index }}">
             <div class="glass-card p-4">
-              <div class="d-flex align-items-center justify-content-center rounded-3 mx-auto mb-3" style="width:40px;height:40px;background:rgba(67,97,238,0.1);border:1px solid rgba(67,97,238,0.15);">
-                <i class="bi bi-{{ stat.icon }}" style="color:#4361ee;font-size:1rem;"></i>
+              <div class="d-flex align-items-center justify-content-center rounded-3 mx-auto mb-3" style="width:44px;height:44px;background:{{ stat.color }}10;border:1px solid {{ stat.color }}15;">
+                <i class="bi bi-{{ stat.icon }}" style="color:{{ stat.color }};font-size:1rem;"></i>
               </div>
-              <div class="counter-value mb-1">{{ stat.value }}{{ stat.suffix }}</div>
-              <div style="color:rgba(255,255,255,0.4);font-size:0.8rem;">{{ stat.label }}</div>
+              <div class="counter-num">
+                <span class="stat-counter" data-target="{{ stat.value }}">0</span>{{ stat.suffix }}
+              </div>
+              <div style="color:rgba(255,255,255,0.35);font-size:0.8rem;margin-top:0.25rem;">{{ stat.label }}</div>
             </div>
           </div>
           {% endfor %}
@@ -609,18 +547,18 @@ body { background: var(--pass-dark); color: #e5e7eb; }
     </section>
 
     <!-- ════════════════════════════════════════════════
-     CTA
+         CTA
          ════════════════════════════════════════════════ -->
-    <section class="cta-section py-6 position-relative" style="padding:6rem 0;">
+    <section class="cta-glow position-relative" style="padding:7rem 0;">
       <div class="container position-relative" style="z-index:1;">
         <div class="text-center reveal">
           <h2 class="fw-bold text-white display-5 lh-1 mb-3">Ready to see<br><span class="gradient-text">PASS in action?</span></h2>
-          <p style="color:rgba(255,255,255,0.4);font-size:1.05rem;margin-bottom:2rem;">30 seconds to explore. No installation required.</p>
+          <p style="color:rgba(255,255,255,0.3);font-size:1.05rem;margin-bottom:2rem;">30 seconds to explore. No installation required.</p>
           <div class="d-flex justify-content-center gap-3 flex-wrap">
-            <a href="{{ url_for('auth.register') }}" class="btn btn-lg rounded-pill px-5 fw-semibold shimmer-btn" style="background:linear-gradient(135deg,#4361ee,#118ab2);color:#fff;border:none;">
+            <a href="{{ url_for('auth.register') }}" class="btn btn-lg rounded-pill px-5 fw-semibold magnetic-btn shimmer-btn" style="background:linear-gradient(135deg,#4361ee,#118ab2);color:#fff;border:none;">
               <i class="bi bi-rocket-takeoff me-2"></i>Start Demo
             </a>
-            <a href="{{ url_for('auth.login') }}" class="btn btn-lg rounded-pill px-5" style="border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);transition:all 0.3s;" onmouseover="this.style.borderColor='rgba(255,255,255,0.3)';this.style.color='#fff'" onmouseout="this.style.borderColor='rgba(255,255,255,0.15)';this.style.color='rgba(255,255,255,0.7)'">
+            <a href="{{ url_for('auth.login') }}" class="btn btn-lg rounded-pill px-5 magnetic-btn" style="border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);transition:all 0.3s;" onmouseover="this.style.borderColor='rgba(255,255,255,0.25)';this.style.color='#fff'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)';this.style.color='rgba(255,255,255,0.6)'">
               Log In
             </a>
           </div>
@@ -630,6 +568,7 @@ body { background: var(--pass-dark); color: #e5e7eb; }
 
   </main>
 
+  <!-- ═══ Footer ═══ -->
   <footer class="py-4" style="background:var(--pass-dark);border-top:1px solid var(--pass-border);">
     <div class="container">
       <div class="row align-items-center">
@@ -638,14 +577,14 @@ body { background: var(--pass-dark); color: #e5e7eb; }
             <span class="d-inline-flex align-items-center justify-content-center rounded-2" style="width:24px;height:24px;background:linear-gradient(135deg,#4361ee,#06d6a0);font-size:0.65rem;">
               <i class="bi bi-mortarboard-fill text-white"></i>
             </span>
-            <span class="fw-semibold text-white" style="font-size:0.85rem;">PASS</span>
+            <span class="fw-semibold" style="color:rgba(255,255,255,0.7);font-size:0.85rem;">PASS</span>
           </div>
-          <p class="mb-0" style="color:rgba(255,255,255,0.25);font-size:0.75rem;">Final Year B.E./B.Tech CSE Thesis Project &copy; 2026</p>
+          <p class="mb-0" style="color:rgba(255,255,255,0.15);font-size:0.75rem;">Final Year B.E./B.Tech CSE Thesis Project &copy; 2026</p>
         </div>
         <div class="col-md-6 text-center text-md-end">
-          <div class="d-flex justify-content-center justify-content-md-end gap-3">
-            <span style="color:rgba(255,255,255,0.25);font-size:0.75rem;">v1.0</span>
-            <span style="color:rgba(255,255,255,0.25);font-size:0.75rem;">Proactive Academic Support System</span>
+          <div class="d-flex justify-content-center justify-content-md-end gap-3" style="color:rgba(255,255,255,0.2);font-size:0.75rem;">
+            <span>v1.0</span>
+            <span>Proactive Academic Support System</span>
           </div>
         </div>
       </div>
@@ -654,18 +593,111 @@ body { background: var(--pass-dark); color: #e5e7eb; }
 </div>
 
 <script>
-// ── Intersection Observer for scroll-reveal ──────
+// ═══ Particle Canvas ═══
+(function() {
+  const canvas = document.getElementById('particleCanvas');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+  let w, h;
+
+  function resize() {
+    const hero = document.getElementById('hero');
+    w = canvas.width = hero.offsetWidth;
+    h = canvas.height = hero.offsetHeight;
+  }
+
+  class Particle {
+    constructor() {
+      this.reset();
+    }
+    reset() {
+      this.x = Math.random() * w;
+      this.y = Math.random() * h;
+      this.size = Math.random() * 1.5 + 0.3;
+      this.speedX = (Math.random() - 0.5) * 0.3;
+      this.speedY = (Math.random() - 0.5) * 0.3;
+      this.opacity = Math.random() * 0.4 + 0.1;
+    }
+    update() {
+      this.x += this.speedX;
+      this.y += this.speedY;
+      if (this.x < 0 || this.x > w) this.speedX *= -1;
+      if (this.y < 0 || this.y > h) this.speedY *= -1;
+    }
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${this.opacity})`;
+      ctx.fill();
+    }
+  }
+
+  function init() {
+    resize();
+    const count = Math.min(Math.floor(w * h / 12000), 120);
+    particles = Array.from({ length: count }, () => new Particle());
+  }
+
+  function drawLines() {
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 120) {
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = `rgba(255,255,255,${0.04 * (1 - dist / 120)})`;
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, w, h);
+    particles.forEach(p => { p.update(); p.draw(); });
+    drawLines();
+    requestAnimationFrame(animate);
+  }
+
+  init();
+  animate();
+  window.addEventListener('resize', init);
+})();
+
+// ═══ Magnetic Buttons ═══
+document.querySelectorAll('.magnetic-btn').forEach(btn => {
+  btn.addEventListener('mousemove', e => {
+    const rect = btn.getBoundingClientRect();
+    const x = (e.clientX - rect.left - rect.width / 2) * 0.2;
+    const y = (e.clientY - rect.top - rect.height / 2) * 0.2;
+    btn.style.transform = `translate(${x}px, ${y}px)`;
+  });
+  btn.addEventListener('mouseleave', () => {
+    btn.style.transform = '';
+  });
+});
+
+// ═══ Cursor Glow ═══
+const glow = document.getElementById('cursorGlow');
+document.addEventListener('mousemove', e => {
+  glow.style.left = e.clientX + 'px';
+  glow.style.top = e.clientY + 'px';
+});
+
+// ═══ Intersection Observer ═══
 const observer = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
       entry.target.classList.add('visible');
     }
   });
-}, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
-
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
-// ── Navbar hide/show on scroll ───────────────────
+// ═══ Navbar auto-hide ═══
 let lastScroll = 0;
 const navbar = document.querySelector('.pass-navbar');
 window.addEventListener('scroll', () => {
@@ -677,5 +709,37 @@ window.addEventListener('scroll', () => {
   }
   lastScroll = current;
 });
+
+// ═══ Animated Counters ═══
+(function() {
+  const counters = document.querySelectorAll('.stat-counter');
+  if (!counters.length) return;
+
+  const counterObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const el = entry.target;
+        const target = parseInt(el.dataset.target);
+        let current = 0;
+        const step = Math.ceil(target / 50);
+        const dur = 800;
+        const interval = dur / (target / step);
+
+        const timer = setInterval(() => {
+          current += step;
+          if (current >= target) {
+            current = target;
+            clearInterval(timer);
+          }
+          el.textContent = current;
+        }, interval);
+
+        counterObserver.unobserve(el);
+      }
+    });
+  }, { threshold: 0.5 });
+
+  counters.forEach(c => counterObserver.observe(c));
+})();
 </script>
 {% endblock %}

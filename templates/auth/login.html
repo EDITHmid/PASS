@@ -4,69 +4,58 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 * { font-family: 'Inter', sans-serif; }
+:root { --pass-dark: #070b14; }
 
-:root {
-  --pass-dark: #0a0e1a;
-  --pass-border: rgba(255,255,255,0.06);
-}
+@keyframes fadeUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+@keyframes float { 0%,100%{transform:translateY(0)scale(1)} 50%{transform:translateY(-16px)scale(1.02)} }
+@keyframes pulse-ring { 0%{box-shadow:0 0 0 0 rgba(67,97,238,0.3)} 70%{box-shadow:0 0 0 24px rgba(67,97,238,0)} 100%{box-shadow:0 0 0 0 rgba(67,97,238,0)} }
+@keyframes letter-in { 0%{opacity:0;transform:translateY(40px)rotateX(-30deg);filter:blur(8px)} 100%{opacity:1;transform:translateY(0)rotateX(0);filter:blur(0)} }
 
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-@keyframes gradient-shift {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-@keyframes float {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50%      { transform: translateY(-16px) scale(1.02); }
-}
-@keyframes pulse-ring {
-  0%   { box-shadow: 0 0 0 0 rgba(67,97,238,0.3); }
-  70%  { box-shadow: 0 0 0 24px rgba(67,97,238,0); }
-  100% { box-shadow: 0 0 0 0 rgba(67,97,238,0); }
-}
-
-.animate-fade-up   { animation: fadeUp 0.8s ease-out both; }
-.animate-fade-up-1 { animation: fadeUp 0.8s ease-out 0.15s both; }
-.animate-fade-up-2 { animation: fadeUp 0.8s ease-out 0.3s both; }
-.animate-fade-up-3 { animation: fadeUp 0.8s ease-out 0.45s both; }
-.animate-fade-up-4 { animation: fadeUp 0.8s ease-out 0.6s both; }
-.animate-float     { animation: float 6s ease-in-out infinite; }
+.anim-fade   { animation: fadeUp 0.8s ease-out both; }
+.anim-fade-1 { animation: fadeUp 0.8s ease-out 0.15s both; }
+.anim-fade-2 { animation: fadeUp 0.8s ease-out 0.3s both; }
+.anim-fade-3 { animation: fadeUp 0.8s ease-out 0.45s both; }
+.anim-fade-4 { animation: fadeUp 0.8s ease-out 0.6s both; }
+.anim-float  { animation: float 6s ease-in-out infinite; }
 
 .form-input {
-  background: rgba(255,255,255,0.04) !important;
-  border: 1px solid rgba(255,255,255,0.08) !important;
+  background: rgba(255,255,255,0.03) !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
   color: #e5e7eb !important;
   border-radius: 10px !important;
-  padding: 0.7rem 1rem !important;
+  padding: 0.75rem 1rem !important;
   font-size: 0.9rem;
   transition: all 0.3s;
 }
 .form-input:focus {
-  background: rgba(255,255,255,0.06) !important;
-  border-color: rgba(67,97,238,0.4) !important;
-  box-shadow: 0 0 0 3px rgba(67,97,238,0.1) !important;
+  background: rgba(255,255,255,0.05) !important;
+  border-color: rgba(67,97,238,0.35) !important;
+  box-shadow: 0 0 0 4px rgba(67,97,238,0.08) !important;
   outline: none;
 }
-.form-input::placeholder { color: rgba(255,255,255,0.25); }
+.form-input::placeholder { color: rgba(255,255,255,0.2); }
+
+#cursorGlow {
+  position: fixed; pointer-events: none; z-index: 9999;
+  width: 500px; height: 500px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(67,97,238,0.05) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+}
 </style>
+
+<div id="cursorGlow"></div>
 
 <div class="min-vh-100 d-flex align-items-center position-relative overflow-hidden"
      style="background: var(--pass-dark);">
 
-  <!-- Background effects -->
+  <!-- Background -->
   <div class="position-absolute top-0 start-0 w-100 h-100" style="pointer-events:none;">
-    <div style="position:absolute;inset:0;background-image:radial-gradient(circle at 20% 30%,rgba(67,97,238,0.06) 0%,transparent 50%),radial-gradient(circle at 80% 70%,rgba(6,214,160,0.04) 0%,transparent 50%);"></div>
-    <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px);background-size:60px 60px;"></div>
-    <div class="position-absolute rounded-circle animate-float" style="width:320px;height:320px;background:radial-gradient(circle,rgba(67,97,238,0.08),transparent 70%);top:-100px;left:-80px;"></div>
-    <div class="position-absolute rounded-circle" style="width:400px;height:400px;background:radial-gradient(circle,rgba(6,214,160,0.05),transparent 70%);bottom:-140px;right:-100px;animation:float 8s ease-in-out infinite reverse;"></div>
+    <div style="position:absolute;inset:0;background-image:radial-gradient(circle at 20% 30%,rgba(67,97,238,0.05) 0%,transparent 50%),radial-gradient(circle at 80% 70%,rgba(6,214,160,0.03) 0%,transparent 50%);"></div>
+    <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.012) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse at center,black 40%,transparent 70%);-webkit-mask-image:radial-gradient(ellipse at center,black 40%,transparent 70%);"></div>
+    <canvas id="particleCanvas" style="position:absolute;inset:0;"></canvas>
+    <div class="position-absolute rounded-circle anim-float" style="width:360px;height:360px;background:radial-gradient(circle,rgba(67,97,238,0.06),transparent 70%);top:-120px;left:-80px;"></div>
+    <div class="position-absolute rounded-circle" style="width:440px;height:440px;background:radial-gradient(circle,rgba(6,214,160,0.04),transparent 70%);bottom:-160px;right:-100px;animation:float 8s ease-in-out infinite reverse;"></div>
   </div>
 
   <div class="container position-relative" style="z-index:1;">
@@ -74,101 +63,90 @@
       <div class="col-md-5 col-lg-4">
 
         <!-- Logo -->
-        <div class="text-center mb-4 animate-fade-up">
+        <div class="text-center mb-4 anim-fade">
           <a href="{{ url_for('auth.index') }}" class="text-decoration-none">
             <h2 class="fw-bold d-flex align-items-center justify-content-center gap-2" style="color:#fff;letter-spacing:0.5px;">
-              <span class="d-inline-flex align-items-center justify-content-center rounded-3" style="width:36px;height:36px;background:linear-gradient(135deg,#4361ee,#06d6a0);font-size:0.95rem;">
+              <span class="d-inline-flex align-items-center justify-content-center rounded-3" style="width:36px;height:36px;background:linear-gradient(135deg,#4361ee,#06d6a0);font-size:0.9rem;">
                 <i class="bi bi-mortarboard-fill text-white"></i>
               </span>
               PASS
             </h2>
           </a>
-          <p style="color:rgba(255,255,255,0.3);font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;margin-top:0.3rem;">Proactive Academic Support System</p>
+          <p style="color:rgba(255,255,255,0.2);font-size:0.65rem;letter-spacing:2.5px;text-transform:uppercase;margin-top:0.3rem;">Proactive Academic Support System</p>
         </div>
 
         <!-- Login Card -->
-        <div class="animate-fade-up-1" style="perspective:1000px;">
+        <div class="anim-fade-1" style="perspective:1000px;">
           <div class="card border-0 overflow-hidden" id="loginCard"
-               style="border-radius:20px;background:rgba(17,24,39,0.8);backdrop-filter:blur(24px) saturate(1.3);-webkit-backdrop-filter:blur(24px) saturate(1.3);border:1px solid rgba(255,255,255,0.06);box-shadow:0 24px 60px rgba(0,0,0,0.4);">
-            <!-- Top gradient bar -->
+               style="border-radius:20px;background:rgba(15,20,32,0.75);backdrop-filter:blur(24px) saturate(1.4);-webkit-backdrop-filter:blur(24px) saturate(1.4);border:1px solid rgba(255,255,255,0.06);box-shadow:0 32px 80px rgba(0,0,0,0.5);">
             <div style="height:3px;background:linear-gradient(90deg,#4361ee,#118ab2,#06d6a0);"></div>
-
             <div class="card-body p-4 p-lg-5">
-              <h5 class="fw-bold mb-1 animate-fade-up-2" style="color:#fff;">Welcome back</h5>
-              <p class="small mb-4 animate-fade-up-2" style="color:rgba(255,255,255,0.4);">Sign in to your account</p>
+              <h5 class="fw-bold mb-1 anim-fade-2" style="color:#fff;">Welcome back</h5>
+              <p class="small mb-4 anim-fade-2" style="color:rgba(255,255,255,0.35);">Sign in to your account</p>
 
-              <form method="POST" action="{{ url_for('auth.login') }}" class="animate-fade-up-3">
+              <form method="POST" action="{{ url_for('auth.login') }}" class="anim-fade-3">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
                 <div class="mb-3">
-                  <label class="form-label small fw-semibold" style="color:rgba(255,255,255,0.6);">Username</label>
+                  <label class="form-label small fw-semibold" style="color:rgba(255,255,255,0.5);">Username</label>
                   <input type="text" class="form-control form-input" name="username"
                          placeholder="Enter your username" required autofocus>
                 </div>
-
                 <div class="mb-3">
-                  <label class="form-label small fw-semibold" style="color:rgba(255,255,255,0.6);">Password</label>
+                  <label class="form-label small fw-semibold" style="color:rgba(255,255,255,0.5);">Password</label>
                   <input type="password" class="form-control form-input" name="password"
                          placeholder="Enter your password" required>
                 </div>
-
                 <div class="d-flex justify-content-between align-items-center mb-3">
                   <div class="form-check">
                     <input type="checkbox" class="form-check-input" id="remember" name="remember"
-                           style="background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.15);">
-                    <label class="form-check-label small" for="remember" style="color:rgba(255,255,255,0.5);">Remember me</label>
+                           style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.12);">
+                    <label class="form-check-label small" for="remember" style="color:rgba(255,255,255,0.4);">Remember me</label>
                   </div>
-                  <a href="{{ url_for('auth.forgot_password') }}" class="small text-decoration-none" style="color:rgba(255,255,255,0.4);transition:color 0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.4)'">Forgot password?</a>
+                  <a href="{{ url_for('auth.forgot_password') }}" class="small text-decoration-none" style="color:rgba(255,255,255,0.3);transition:color 0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.3)'">Forgot password?</a>
                 </div>
-
                 <button type="submit" class="btn w-100 py-2 fw-semibold text-white border-0 position-relative overflow-hidden"
-                        style="background:linear-gradient(135deg,#4361ee,#118ab2);border-radius:10px;transition:all 0.3s;"
-                        onmouseover="this.style.boxShadow='0 6px 20px rgba(67,97,238,0.3)';this.style.transform='translateY(-1px)'"
+                        style="background:linear-gradient(135deg,#4361ee,#118ab2);border-radius:10px;transition:all 0.3s;" id="loginBtn"
+                        onmouseover="this.style.boxShadow='0 8px 24px rgba(67,97,238,0.3)';this.style.transform='translateY(-1px)'"
                         onmouseout="this.style.boxShadow='none';this.style.transform='none'">
                   <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
                 </button>
               </form>
 
-              <hr class="my-4 animate-fade-up-3" style="border-color:rgba(255,255,255,0.06);">
+              <hr class="my-4 anim-fade-3" style="border-color:rgba(255,255,255,0.04);">
 
-              <div class="text-center animate-fade-up-4">
-                <p class="small mb-2" style="color:rgba(255,255,255,0.4);">Don't have an account?</p>
-                <a href="{{ url_for('auth.register') }}" class="btn btn-sm rounded-pill px-3" style="border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);transition:all 0.3s;"
-                   onmouseover="this.style.borderColor='rgba(255,255,255,0.25)';this.style.color='#fff'"
-                   onmouseout="this.style.borderColor='rgba(255,255,255,0.12)';this.style.color='rgba(255,255,255,0.6)'">Create Account</a>
+              <div class="text-center anim-fade-4">
+                <p class="small mb-2" style="color:rgba(255,255,255,0.35);">Don't have an account?</p>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-sm rounded-pill px-3" style="border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.5);transition:all 0.3s;"
+                   onmouseover="this.style.borderColor='rgba(255,255,255,0.2)';this.style.color='#fff'"
+                   onmouseout="this.style.borderColor='rgba(255,255,255,0.08)';this.style.color='rgba(255,255,255,0.5)'">Create Account</a>
               </div>
 
               <!-- Demo credentials -->
-              <div class="mt-4 p-3 rounded-3 animate-fade-up-4" style="background:rgba(67,97,238,0.06);border:1px solid rgba(67,97,238,0.1);">
-                <p class="small fw-semibold mb-2 d-flex align-items-center gap-2" style="color:rgba(255,255,255,0.6);">
+              <div class="mt-4 p-3 rounded-3 anim-fade-4" style="background:rgba(67,97,238,0.04);border:1px solid rgba(67,97,238,0.07);">
+                <p class="small fw-semibold mb-2 d-flex align-items-center gap-2" style="color:rgba(255,255,255,0.5);">
                   <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#06d6a0;animation:pulse-ring 2s infinite;"></span>
                   Demo Accounts
                 </p>
                 <div style="font-size:0.75rem;">
-                  <div class="d-flex justify-content-between py-1" style="color:rgba(255,255,255,0.4);">
-                    <span><i class="bi bi-building me-1" style="color:#118ab2;"></i>Principal</span>
-                    <span style="font-family:'SF Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.3);">principal / password123</span>
+                  {% for acct in [
+                    {'icon':'building','role':'Principal','cred':'principal / password123','color':'#118ab2'},
+                    {'icon':'person-workspace','role':'Instructor','cred':'instructor / password123','color':'#4361ee'},
+                    {'icon':'mortarboard','role':'Student','cred':'arjun / password123','color':'#06d6a0'},
+                    {'icon':'people','role':'Parent','cred':'parent_arjun / password123','color':'#ffd166'},
+                  ] %}
+                  <div class="d-flex justify-content-between py-1" style="color:rgba(255,255,255,0.35);">
+                    <span><i class="bi bi-{{ acct.icon }} me-1" style="color:{{ acct.color }};"></i>{{ acct.role }}</span>
+                    <span style="font-family:'SF Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.2);">{{ acct.cred }}</span>
                   </div>
-                  <div class="d-flex justify-content-between py-1" style="color:rgba(255,255,255,0.4);">
-                    <span><i class="bi bi-person-workspace me-1" style="color:#4361ee;"></i>Instructor</span>
-                    <span style="font-family:'SF Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.3);">instructor / password123</span>
-                  </div>
-                  <div class="d-flex justify-content-between py-1" style="color:rgba(255,255,255,0.4);">
-                    <span><i class="bi bi-mortarboard me-1" style="color:#06d6a0;"></i>Student</span>
-                    <span style="font-family:'SF Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.3);">arjun / password123</span>
-                  </div>
-                  <div class="d-flex justify-content-between py-1" style="color:rgba(255,255,255,0.4);">
-                    <span><i class="bi bi-people me-1" style="color:#ffd166;"></i>Parent</span>
-                    <span style="font-family:'SF Mono',monospace;font-size:0.7rem;color:rgba(255,255,255,0.3);">parent_arjun / password123</span>
-                  </div>
+                  {% endfor %}
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="text-center mt-4 animate-fade-up-4">
-          <a href="{{ url_for('auth.index') }}" style="color:rgba(255,255,255,0.3);font-size:0.85rem;text-decoration:none;transition:color 0.3s;" onmouseover="this.style.color='rgba(255,255,255,0.6)'" onmouseout="this.style.color='rgba(255,255,255,0.3)'">
+        <div class="text-center mt-4 anim-fade-4">
+          <a href="{{ url_for('auth.index') }}" style="color:rgba(255,255,255,0.2);font-size:0.85rem;text-decoration:none;transition:color 0.3s;" onmouseover="this.style.color='rgba(255,255,255,0.5)'" onmouseout="this.style.color='rgba(255,255,255,0.2)'">
             <i class="bi bi-arrow-left me-1"></i>Back to home
           </a>
         </div>
@@ -178,18 +156,80 @@
 </div>
 
 <script>
-// 3D tilt on login card
-const card = document.getElementById('loginCard');
-card.addEventListener('mousemove', e => {
-  const rect = card.getBoundingClientRect();
-  const x = (e.clientX - rect.left) / rect.width - 0.5;
-  const y = (e.clientY - rect.top) / rect.height - 0.5;
-  card.style.transform = `rotateY(${x*3}deg) rotateX(${-y*3}deg)`;
-  card.style.transition = 'transform 0.1s ease-out';
+// ═══ Particles ═══
+(function() {
+  const canvas = document.getElementById('particleCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let particles = [], w, h;
+
+  function resize() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  }
+
+  class Particle {
+    constructor() { this.reset(); }
+    reset() {
+      this.x = Math.random() * w;
+      this.y = Math.random() * h;
+      this.size = Math.random() * 1.5 + 0.3;
+      this.speedX = (Math.random() - 0.5) * 0.25;
+      this.speedY = (Math.random() - 0.5) * 0.25;
+      this.opacity = Math.random() * 0.3 + 0.05;
+    }
+    update() {
+      this.x += this.speedX;
+      this.y += this.speedY;
+      if (this.x < 0 || this.x > w) this.speedX *= -1;
+      if (this.y < 0 || this.y > h) this.speedY *= -1;
+    }
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${this.opacity})`;
+      ctx.fill();
+    }
+  }
+
+  function init() {
+    resize();
+    particles = Array.from({ length: Math.min(Math.floor(w * h / 15000), 80) }, () => new Particle());
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, w, h);
+    particles.forEach(p => { p.update(); p.draw(); });
+    requestAnimationFrame(animate);
+  }
+
+  init(); animate();
+  window.addEventListener('resize', init);
+})();
+
+// ═══ Cursor Glow ═══
+const glow = document.getElementById('cursorGlow');
+document.addEventListener('mousemove', e => {
+  glow.style.left = e.clientX + 'px';
+  glow.style.top = e.clientY + 'px';
 });
-card.addEventListener('mouseleave', () => {
-  card.style.transform = '';
-  card.style.transition = 'transform 0.4s ease-out';
-});
+
+// ═══ 3D Tilt on Login Card ═══
+(function() {
+  const card = document.getElementById('loginCard');
+  if (!card) return;
+  let timeout;
+  card.addEventListener('mousemove', e => {
+    const rect = card.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    card.style.transform = `rotateY(${x*4}deg) rotateX(${-y*4}deg) translateZ(10px)`;
+    card.style.transition = 'transform 0.1s ease-out';
+  });
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = '';
+    card.style.transition = 'transform 0.5s cubic-bezier(0.16,1,0.3,1)';
+  });
+})();
 </script>
 {% endblock %}
