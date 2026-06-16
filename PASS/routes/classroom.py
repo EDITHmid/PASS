@@ -7,7 +7,7 @@ from flask_login import login_required
 from models import db, Class, Teacher, Schedule, Enrollment
 from decorators import role_required
 
-class_bp = Blueprint('class', __name__, url_prefix='/classes')
+class_bp = Blueprint('classroom', __name__, url_prefix='/classes')
 
 @class_bp.route('/')
 @login_required
@@ -29,7 +29,7 @@ def create_class():
         db.session.add(cls)
         db.session.commit()
         flash('Class created', 'success')
-        return redirect(url_for('class.list_classes'))
+        return redirect(url_for('classroom.list_classes'))
     teachers = Teacher.query.all()
     return render_template('classes/form.html', cls=None, teachers=teachers)
 
@@ -44,7 +44,7 @@ def view_class(cls_id):
         cls.teacher_id = request.form.get('teacher_id') or None
         db.session.commit()
         flash('Class updated', 'success')
-        return redirect(url_for('class.view_class', cls_id=cls.id))
+        return redirect(url_for('classroom.view_class', cls_id=cls.id))
     teachers = Teacher.query.all()
     enrollments = Enrollment.query.filter_by(class_id=cls.id).all()
     return render_template('classes/profile.html', cls=cls, teachers=teachers, enrollments=enrollments)

@@ -75,7 +75,7 @@ def create_app(config_name=None):
     from routes.admin import admin_bp
     from routes.attendance import attendance_bp
     from routes.grade import grade_bp
-    from routes.class import class_bp
+    from routes.classroom import class_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
