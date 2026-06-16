@@ -4,8 +4,8 @@ Provides list, add, and edit functionality.
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required
-from ..models import db, Attendance, Student
-from ..decorators import role_required
+from models import db, Attendance, Student
+from decorators import role_required
 
 attendance_bp = Blueprint('attendance', __name__, url_prefix='/attendance')
 

@@ -73,6 +73,9 @@ def create_app(config_name=None):
     from routes.billing import billing_bp
     from routes.parent import parent_bp
     from routes.admin import admin_bp
+    from routes.attendance import attendance_bp
+    from routes.grade import grade_bp
+    from routes.class import class_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -80,6 +83,9 @@ def create_app(config_name=None):
     app.register_blueprint(student_bp, url_prefix="/student")
     app.register_blueprint(parent_bp, url_prefix="/parent")
     app.register_blueprint(billing_bp, url_prefix="/billing")
+    app.register_blueprint(attendance_bp, url_prefix="/attendance")
+    app.register_blueprint(grade_bp, url_prefix="/grade")
+    app.register_blueprint(class_bp, url_prefix="/class")
 
     # Exempt API routes from CSRF for REST clients
     csrf.exempt(api_bp)

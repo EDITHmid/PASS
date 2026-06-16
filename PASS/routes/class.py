@@ -4,8 +4,8 @@ Provides CRUD for classes and a simple calendar view for schedules.
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required
-from ..models import db, Class, Teacher, Schedule, Enrollment
-from ..decorators import role_required
+from models import db, Class, Teacher, Schedule, Enrollment
+from decorators import role_required
 
 class_bp = Blueprint('class', __name__, url_prefix='/classes')
 

@@ -5,8 +5,8 @@ operations and expose the PASS risk widget on the profile page.
 
 from flask import Blueprint, render_template, request, flash, redirect, url_for
 from flask_login import login_required, current_user
-from ..models import db, Student, ContactInfo, Enrollment
-from ..decorators import role_required
+from models import db, Student, ContactInfo, Enrollment
+from decorators import role_required
 
 student_bp = Blueprint('student', __name__, url_prefix='/students')
 

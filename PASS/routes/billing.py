@@ -4,8 +4,8 @@ Provides list, create, and edit functionality for student fees.
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required
-from ..models import db, Invoice, Student
-from ..decorators import role_required
+from models import db, Invoice, Student
+from decorators import role_required
 
 billing_bp = Blueprint('billing', __name__, url_prefix='/billing')
 

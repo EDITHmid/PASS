@@ -4,8 +4,8 @@ Provides CRUD for student grades.
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required
-from ..models import db, Grade, Student
-from ..decorators import role_required
+from models import db, Grade, Student
+from decorators import role_required
 
 grade_bp = Blueprint('grade', __name__, url_prefix='/grades')
 
