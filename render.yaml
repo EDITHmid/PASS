@@ -3,7 +3,7 @@ services:
     name: pass-academic-support
     runtime: python
     buildCommand: pip install -r PASS/requirements.txt
-    startCommand: cd PASS && gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120
+    startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120
     envVars:
       - key: SECRET_KEY
         generateValue: true
