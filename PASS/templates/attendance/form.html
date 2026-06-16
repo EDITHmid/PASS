@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{{ record and 'Edit' or 'Add' }} Attendance{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h2 class="gradient-text mb-4">{{ record and 'Edit' or 'Add' }} Attendance</h2>
+  <form method="post" class="needs-validation" novalidate>
+    <div class="mb-3">
+      <label class="form-label">Student</label>
+      <select name="student_id" class="form-select" required>
+        <option value="" disabled {% if not record %}selected{% endif %}>Select student</option>
+        {% for s in students %}
+          <option value="{{ s.id }}" {% if record and s.id == record.student_id %}selected{% endif %}>{{ s.first_name }} {{ s.last_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="row mb-3">
+      <div class="col-md-4">
+        <label class="form-label">Date</label>
+        <input type="date" name="date" class="form-control" required value="{{ record.date|default('') }}">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Status</label>
+        <select name="status" class="form-select" required>
+          <option value="Present" {% if record and record.status == 'Present' %}selected{% endif %}>Present</option>
+          <option value="Absent" {% if record and record.status == 'Absent' %}selected{% endif %}>Absent</option>
+          <option value="Excused" {% if record and record.status == 'Excused' %}selected{% endif %}>Excused</option>
+        </select>
+      </div>
+    </div>
+    <button type="submit" class="btn btn-accent-2 btn-magnetic">Save</button>
+  </form>
+</div>
+{% endblock %}

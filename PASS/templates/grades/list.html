@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Grades{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h2 class="gradient-text mb-4">Grades</h2>
+  <a href="{{ url_for('grade.create_grade') }}" class="btn btn-accent-2 mb-3 btn-magnetic">Add Grade</a>
+  <table class="table table-dark table-hover">
+    <thead><tr><th>#</th><th>Student</th><th>Subject</th><th>Score</th><th>Actions</th></tr></thead>
+    <tbody>
+    {% for g in grades %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ g.student.first_name }} {{ g.student.last_name }}</td>
+        <td>{{ g.subject }}</td>
+        <td>{{ g.score }}</td>
+        <td><a href="{{ url_for('grade.view_grade', grade_id=g.id) }}" class="btn btn-sm btn-outline-light">Edit</a></td>
+      </tr>
+    {% else %}
+      <tr><td colspan="5" class="text-center">No grades recorded.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

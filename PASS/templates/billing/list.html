@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Invoices{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h2 class="gradient-text mb-4">Invoices</h2>
+  <a href="{{ url_for('billing.create_invoice') }}" class="btn btn-accent-2 mb-3 btn-magnetic">Create Invoice</a>
+  <table class="table table-dark table-hover">
+    <thead><tr><th>#</th><th>Student</th><th>Amount</th><th>Due Date</th><th>Paid</th><th>Actions</th></tr></thead>
+    <tbody>
+    {% for inv in invoices %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ inv.student.first_name }} {{ inv.student.last_name }}</td>
+        <td>${{ "{:.2f}".format(inv.amount) }}</td>
+        <td>{{ inv.due_date }}</td>
+        <td>{% if inv.paid %}<i class="bi bi-check-lg text-success"></i>{% else %}<i class="bi bi-x-lg text-danger"></i>{% endif %}</td>
+        <td><a href="{{ url_for('billing.edit_invoice', inv_id=inv.id) }}" class="btn btn-sm btn-outline-light">Edit</a></td>
+      </tr>
+    {% else %}
+      <tr><td colspan="6" class="text-center">No invoices.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

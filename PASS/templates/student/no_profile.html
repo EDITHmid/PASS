@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}No Profile — PASS{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+    <i class="bi bi-person-x fs-1 text-muted d-block mb-3"></i>
+    <h4 class="fw-bold">Student Profile Not Found</h4>
+    <p class="text-muted">Your account does not have a linked student profile yet.<br>
+    Please contact your instructor to be added to the system.</p>
+    <a href="{{ url_for('auth.index') }}" class="btn btn-primary">
+        <i class="bi bi-house me-2"></i>Go Home
+    </a>
+</div>
+{% endblock %}

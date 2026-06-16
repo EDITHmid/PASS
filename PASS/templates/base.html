@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PASS{% endblock %} &mdash; Proactive Academic Support System</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/erp_palette.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/animations.css') }}" rel="stylesheet">
+
+    <style>
+        :root {
+            --pass-dark: #06080f;
+            --pass-card: #0e1320;
+            --pass-card-hi: #1a2138;
+            --pass-border: rgba(255,255,255,0.08);
+            --pass-border-hi: rgba(255,255,255,0.14);
+            --pass-text: #f3f4f6;
+            --pass-text-muted: rgba(255,255,255,0.6);
+            --pass-text-faint: rgba(255,255,255,0.35);
+            --sidebar-width: 260px;
+            --c-blue: #4f7cff;
+            --c-violet: #a78bfa;
+            --c-rose: #fb7185;
+            --c-amber: #fbbf24;
+            --c-teal: #2dd4bf;
+            --c-green: #06d6a0;
+        }
+
+        .logo-wrap {
+            display: inline-flex; align-items: center; justify-content: center;
+            position: relative;
+            transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+            transform-style: preserve-3d;
+        }
+        .logo-wrap:hover { transform: scale(1.05); }
+        .logo-wrap img {
+            border-radius: 10px;
+            object-fit: contain;
+            transition: all 0.4s;
+            position: relative; z-index: 1;
+        }
+        .logo-glow {
+            position: absolute; inset: -4px;
+            background: linear-gradient(135deg, #4f7cff, #a78bfa, #fb7185, #fbbf24, #2dd4bf);
+            background-size: 400% 400%;
+            animation: gradient-flow 6s ease infinite;
+            border-radius: 14px;
+            opacity: 0.35;
+            filter: blur(8px);
+            transition: opacity 0.4s;
+            z-index: 0;
+        }
+        .logo-wrap:hover .logo-glow { opacity: 0.6; filter: blur(12px); }
+        .logo-wrap-static img { border-radius: 8px; object-fit: contain; }
+        .logo-wrap-static {
+            display: inline-flex; align-items: center; justify-content: center;
+            position: relative;
+        }
+        .logo-wrap-static .logo-glow {
+            inset: -3px;
+            background-size: 300% 300%;
+            border-radius: 11px;
+            opacity: 0.3;
+            filter: blur(6px);
+        }
+
+        * { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        html, body { background: var(--pass-dark); color: var(--pass-text); overflow-x: hidden; }
+
+        /* ═══ Keyframes ═══ */
+        @keyframes fadeUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+        @keyframes aurora-1 { 0%,100%{transform:translate(0,0) rotate(0deg) scale(1)} 33%{transform:translate(60px,-40px) rotate(120deg) scale(1.1)} 66%{transform:translate(-40px,30px) rotate(240deg) scale(0.95)} }
+        @keyframes aurora-2 { 0%,100%{transform:translate(0,0) rotate(0deg) scale(1)} 33%{transform:translate(-50px,40px) rotate(-100deg) scale(0.9)} 66%{transform:translate(40px,-30px) rotate(-200deg) scale(1.1)} }
+        @keyframes shimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
+        @keyframes gradient-flow { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+        @keyframes pulse-soft { 0%,100%{opacity:0.5;transform:scale(1)} 50%{opacity:0.8;transform:scale(1.03)} }
+        @keyframes msgSlide { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes aiSpin { to { transform: rotate(360deg); } }
+        @keyframes barGrow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+        .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s cubic-bezier(0.16,1,0.3,1); }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        .reveal-d1 { transition-delay: 0.06s; }
+        .reveal-d2 { transition-delay: 0.12s; }
+        .reveal-d3 { transition-delay: 0.18s; }
+        .reveal-d4 { transition-delay: 0.24s; }
+        .reveal-d5 { transition-delay: 0.3s; }
+        .reveal-d6 { transition-delay: 0.36s; }
+
+        .serif-accent { font-family: 'Instrument Serif', serif; font-style: italic; font-weight: 400; }
+        .gradient-text {
+            background: linear-gradient(135deg, #fbbf24 0%, #fb7185 35%, #a78bfa 70%, #4f7cff 100%);
+            background-size: 200% 200%;
+            animation: gradient-flow 8s ease infinite;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .btn-shimmer { position: relative; overflow: hidden; }
+        .btn-shimmer::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            background-size: 200% 100%; animation: shimmer 3.5s infinite; pointer-events: none;
+        }
+        .btn-magnetic { position: relative; display: inline-flex; align-items: center; justify-content: center; transition: transform 0.25s ease-out; }
+
+        /* ═══ Aurora background ═══ */
+        .page-aurora {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+        }
+        .page-aurora .a-blob {
+            position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.25;
+        }
+        .page-aurora .a-1 { top: -10%; left: 40%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(167,139,250,0.6) 0%, transparent 70%); animation: aurora-1 25s ease-in-out infinite; }
+        .page-aurora .a-2 { top: 50%; right: -10%; width: 450px; height: 450px; background: radial-gradient(circle, rgba(251,113,133,0.5) 0%, transparent 70%); animation: aurora-2 28s ease-in-out infinite; }
+        .page-aurora .a-3 { bottom: -10%; left: 10%; width: 600px; height: 500px; background: radial-gradient(circle, rgba(45,212,191,0.45) 0%, transparent 70%); animation: aurora-1 32s ease-in-out infinite reverse; }
+
+        #cursorGlow {
+            position: fixed; pointer-events: none; z-index: 9998; width: 600px; height: 600px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(79,124,255,0.05) 0%, transparent 60%);
+            transform: translate(-50%,-50%);
+        }
+
+        /* ═══ Sidebar ═══ */
+        .sidebar {
+            width: var(--sidebar-width);
+            min-height: 100vh;
+            background: #0a0e1a;
+            border-right: 1px solid rgba(255,255,255,0.06);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+            display: flex; flex-direction: column;
+        }
+        .sidebar .brand {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--pass-border);
+            display: flex; align-items: center; gap: 0.7rem;
+        }
+        .sidebar .brand-icon {
+            width: 36px; height: 36px; border-radius: 10px;
+            background: linear-gradient(135deg, #4f7cff 0%, #a78bfa 50%, #fb7185 100%);
+            background-size: 200% 200%;
+            animation: gradient-flow 6s ease infinite;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.95rem; color: #fff;
+            box-shadow: 0 4px 16px rgba(79,124,255,0.3);
+            flex-shrink: 0;
+        }
+        .sidebar .brand h4 { color: #fff; font-weight: 700; margin: 0; letter-spacing: -0.3px; font-size: 1.1rem; }
+        .sidebar .brand small { color: var(--pass-text-faint); font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1.5px; display: block; }
+
+        .sidebar .nav-section {
+            color: var(--pass-text-faint);
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            padding: 1rem 1.5rem 0.5rem;
+            font-weight: 500;
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.6);
+            padding: 0.7rem 1.5rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            border-left: 2px solid transparent;
+            transition: all 0.2s;
+            display: flex; align-items: center;
+            text-decoration: none;
+        }
+        .sidebar .nav-link i { width: 18px; margin-right: 0.7rem; font-size: 0.95rem; opacity: 0.7; }
+        .sidebar .nav-link:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.05);
+            border-left-color: rgba(79,124,255,0.4);
+        }
+        .sidebar .nav-link:hover i { opacity: 1; }
+        .sidebar .nav-link.active {
+            color: #fff;
+            background: linear-gradient(90deg, rgba(79,124,255,0.12) 0%, transparent 100%);
+            border-left-color: var(--c-blue);
+            box-shadow: inset 1px 0 0 rgba(79,124,255,0.2);
+        }
+        .sidebar .nav-link.active i { opacity: 1; }
+        .sidebar hr { border-color: var(--pass-border); margin: 0.5rem 1.25rem; }
+
+        .sidebar-user {
+            margin-top: auto;
+            padding: 1rem 1.25rem;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            display: flex; align-items: center; gap: 0.7rem;
+        }
+        .sidebar-user-avatar {
+            width: 36px; height: 36px; border-radius: 10px;
+            background: linear-gradient(135deg, #4f7cff, #a78bfa);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-weight: 600; font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+        .sidebar-user-info { flex: 1; min-width: 0; }
+        .sidebar-user-name { color: #fff; font-size: 0.8rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sidebar-user-role { color: rgba(255,255,255,0.4); font-size: 0.65rem; text-transform: capitalize; }
+
+        /* ═══ Main content ═══ */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ═══ Top navbar ═══ */
+        .top-navbar {
+            background: rgba(10, 14, 26, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding: 0.85rem 1.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .top-navbar h5 { color: #fff; font-weight: 600; margin: 0; font-size: 1.05rem; letter-spacing: -0.3px; }
+        .top-navbar .icon-btn {
+            width: 36px; height: 36px; border-radius: 10px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--pass-border);
+            color: rgba(255,255,255,0.7);
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+        .top-navbar .icon-btn:hover { background: rgba(255,255,255,0.08); color: #fff; border-color: var(--pass-border-hi); }
+
+        /* ═══ Page content ═══ */
+        .page-content { padding: 1.5rem 1.5rem 3rem; }
+
+        /* ═══ Cards (Bootstrap override) ═══ */
+        .card {
+            background: #101624 !important;
+            border: 1px solid var(--pass-border) !important;
+            border-radius: 16px !important;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.3) !important;
+            color: var(--pass-text);
+            transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+        }
+        .card:hover { border-color: var(--pass-border-hi) !important; box-shadow: 0 8px 32px rgba(0,0,0,0.4) !important; }
+        .card-header {
+            background: rgba(255,255,255,0.03) !important;
+            border-bottom: 1px solid var(--pass-border) !important;
+            color: #fff !important;
+        }
+        .card-body { color: var(--pass-text); }
+        .card-footer {
+            background: rgba(255,255,255,0.03) !important;
+            border-top: 1px solid var(--pass-border) !important;
+        }
+
+        /* ═══ Stat cards ═══ */
+        .stat-card {
+            background: #101624;
+            border: 1px solid var(--pass-border);
+            border-radius: 16px;
+            padding: 1.25rem;
+            transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+            position: relative; overflow: hidden;
+            height: 100%;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        }
+        .stat-card::before {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(circle at var(--mx, 50%) var(--my, 0%), rgba(79,124,255,0.06) 0%, transparent 50%);
+            opacity: 0; transition: opacity 0.4s; pointer-events: none;
+        }
+        .stat-card:hover::before { opacity: 1; }
+        .stat-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--pass-border-hi);
+            box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+        }
+        .stat-card .stat-icon {
+            width: 48px; height: 48px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+        .stat-card .stat-value {
+            font-size: 1.85rem; font-weight: 800; line-height: 1.2;
+            color: #fff; letter-spacing: -0.5px;
+        }
+        .stat-card .stat-label {
+            font-size: 0.7rem; color: rgba(255,255,255,0.5);
+            text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600;
+        }
+
+        /* ═══ Chart containers ═══ */
+        .chart-container {
+            background: #101624;
+            border: 1px solid var(--pass-border);
+            border-radius: 16px;
+            padding: 1.25rem;
+            transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+            height: 100%;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        }
+        .chart-container h6 { font-weight: 600; color: #fff; margin-bottom: 1rem; font-size: 0.95rem; }
+        .chart-container:hover { border-color: var(--pass-border-hi); transform: translateY(-2px); }
+        .chart-spinner-overlay {
+            position: absolute; inset: 0; z-index: 5;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(10,14,24,0.7);
+            border-radius: 16px;
+            transition: opacity 0.3s;
+        }
+
+        /* ═══ Alert cards ═══ */
+        .alert-card {
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-left: 3px solid;
+            padding: 0.85rem 1rem;
+            margin-bottom: 0.6rem;
+            transition: all 0.3s;
+        }
+        .alert-card:hover { background: rgba(255,255,255,0.06); transform: translateX(3px); }
+        .alert-card.severity-critical { border-left-color: var(--c-rose); }
+        .alert-card.severity-warning { border-left-color: var(--c-amber); }
+        .alert-card.severity-info { border-left-color: var(--c-blue); }
+
+        .badge-severity-critical { background: var(--c-rose) !important; }
+        .badge-severity-warning { background: var(--c-amber) !important; color: #1a1a1a !important; }
+        .badge-severity-info { background: var(--c-blue) !important; }
+
+        /* ═══ Tables (Bootstrap override) ═══ */
+        .table { color: var(--pass-text) !important; --bs-table-bg: transparent; --bs-table-color: var(--pass-text); margin-bottom: 0; }
+        .table > :not(caption) > * > * { background: transparent !important; color: rgba(255,255,255,0.85) !important; border-color: rgba(255,255,255,0.06) !important; }
+        .table thead th {
+            background: rgba(255,255,255,0.04) !important;
+            color: rgba(255,255,255,0.5) !important;
+            font-size: 0.7rem !important;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-weight: 700 !important;
+            border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+            padding: 0.85rem 0.75rem !important;
+        }
+        .table tbody td { font-size: 0.85rem; vertical-align: middle; padding: 0.85rem 0.75rem !important; }
+        .table tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); }
+        .table-hover > tbody > tr:hover > * { background: rgba(79,124,255,0.06) !important; color: #fff !important; }
+        .table-light, .table > thead { background: rgba(255,255,255,0.03) !important; }
+
+        /* ═══ Forms (Bootstrap override) ═══ */
+        .form-control, .form-select {
+            background: rgba(255,255,255,0.04) !important;
+            border: 1px solid var(--pass-border) !important;
+            color: var(--pass-text) !important;
+            border-radius: 10px !important;
+            transition: all 0.3s;
+        }
+        .form-control::placeholder { color: var(--pass-text-faint); }
+        .form-control:focus, .form-select:focus {
+            background: rgba(255,255,255,0.06) !important;
+            border-color: rgba(79,124,255,0.4) !important;
+            box-shadow: 0 0 0 3px rgba(79,124,255,0.08) !important;
+            color: #fff !important;
+        }
+        .form-label { color: var(--pass-text-muted); font-weight: 500; font-size: 0.8rem; }
+        .form-check-input { background-color: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.15); }
+        .form-check-input:checked { background-color: var(--c-blue); border-color: var(--c-blue); }
+        .form-range::-webkit-slider-thumb { background: var(--c-blue); }
+        .form-range::-moz-range-thumb { background: var(--c-blue); }
+        .form-select option { background: #0e1320; color: var(--pass-text); }
+
+        /* ═══ List group (Bootstrap override) ═══ */
+        .list-group { background: transparent !important; border-radius: 12px; }
+        .list-group-item {
+            background: #101624 !important;
+            color: var(--pass-text) !important;
+            border: 1px solid rgba(255,255,255,0.06) !important;
+            margin-bottom: 0.4rem;
+            border-radius: 12px !important;
+            transition: all 0.3s;
+        }
+        .list-group-item:hover {
+            background: #131a2c !important;
+            border-color: rgba(79,124,255,0.25) !important;
+            transform: translateX(2px);
+        }
+        .list-group-item.active {
+            background: linear-gradient(90deg, rgba(79,124,255,0.15) 0%, rgba(79,124,255,0.05) 100%) !important;
+            color: #fff !important;
+            border-color: rgba(79,124,255,0.3) !important;
+        }
+        .list-group-item strong { color: #fff; }
+
+        /* ═══ Pagination (Bootstrap override) ═══ */
+        .page-item .page-link {
+            background: #101624 !important;
+            border: 1px solid rgba(255,255,255,0.06) !important;
+            color: var(--pass-text) !important;
+            border-radius: 8px !important;
+            margin: 0 2px;
+            transition: all 0.2s;
+        }
+        .page-item .page-link:hover {
+            background: rgba(79,124,255,0.1) !important;
+            border-color: rgba(79,124,255,0.3) !important;
+            color: #fff !important;
+        }
+        .page-item.active .page-link {
+            background: linear-gradient(135deg, #4f7cff, #a78bfa) !important;
+            border-color: transparent !important;
+            color: #fff !important;
+        }
+        .page-item.disabled .page-link {
+            background: rgba(255,255,255,0.02) !important;
+            color: rgba(255,255,255,0.3) !important;
+            border-color: rgba(255,255,255,0.04) !important;
+        }
+
+        /* ═══ Dropdown menu (Bootstrap override) ═══ */
+        .dropdown-menu {
+            background: #0e1320 !important;
+            border: 1px solid rgba(255,255,255,0.08) !important;
+            border-radius: 12px !important;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.5) !important;
+            padding: 0.5rem !important;
+        }
+
+        /* ═══ Input group text (Bootstrap override) ═══ */
+        .input-group-text {
+            background: rgba(255,255,255,0.06) !important;
+            color: rgba(255,255,255,0.7) !important;
+            border: 1px solid rgba(255,255,255,0.08) !important;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        /* ═══ Code elements ═══ */
+        code, kbd, pre, samp {
+            background: rgba(79,124,255,0.1) !important;
+            color: #8aa9ff !important;
+            border: 1px solid rgba(79,124,255,0.15);
+            border-radius: 6px;
+            padding: 0.15em 0.45em;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+        pre { padding: 1rem; }
+
+        /* ═══ Horizontal rule ═══ */
+        hr {
+            border-color: rgba(255,255,255,0.08) !important;
+            opacity: 1;
+        }
+
+        /* ═══ Help / info boxes ═══ */
+        .help-box {
+            background: rgba(79,124,255,0.05);
+            border: 1px solid rgba(79,124,255,0.12);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            color: var(--pass-text);
+        }
+        .help-box h6 { color: #8aa9ff; font-weight: 600; }
+        .help-box code { font-size: 0.8em; }
+
+        /* ═══ Upload drop zone ═══ */
+        .upload-zone {
+            background: rgba(79,124,255,0.04) !important;
+            border: 2px dashed rgba(79,124,255,0.3) !important;
+            border-radius: 16px;
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-zone:hover {
+            background: rgba(79,124,255,0.08) !important;
+            border-color: rgba(79,124,255,0.5) !important;
+        }
+        .upload-zone.dragging {
+            background: rgba(79,124,255,0.12) !important;
+            border-color: var(--c-blue) !important;
+            transform: scale(1.01);
+        }
+
+        /* ═══ Buttons (Bootstrap override) ═══ */
+        .btn { font-weight: 500; border-radius: 10px; transition: all 0.3s; }
+        .btn-primary {
+            background: linear-gradient(135deg, #4f7cff 0%, #a78bfa 100%);
+            border: none;
+            box-shadow: 0 4px 16px rgba(79,124,255,0.25);
+        }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(79,124,255,0.4); background: linear-gradient(135deg, #4f7cff 0%, #a78bfa 100%); }
+        .btn-outline-primary {
+            color: var(--c-blue) !important;
+            border: 1px solid rgba(79,124,255,0.3) !important;
+            background: rgba(79,124,255,0.05) !important;
+        }
+        .btn-outline-primary:hover { background: rgba(79,124,255,0.15) !important; border-color: var(--c-blue) !important; }
+        .btn-outline-secondary { color: rgba(255,255,255,0.6) !important; border-color: var(--pass-border-hi) !important; }
+        .btn-outline-secondary:hover { background: rgba(255,255,255,0.05) !important; color: #fff !important; }
+        .btn-success { background: linear-gradient(135deg, #2dd4bf, #06b6a4); border: none; }
+        .btn-danger { background: linear-gradient(135deg, #fb7185, #e11d48); border: none; }
+        .btn-warning { background: linear-gradient(135deg, #fbbf24, #f59e0b); border: none; color: #1a1a1a; }
+        .btn-sm { padding: 0.4rem 0.75rem; font-size: 0.8rem; }
+        .btn-link { color: var(--c-blue); text-decoration: none; }
+        .btn-link:hover { color: #6b8aff; }
+
+        /* ═══ Text utilities ═══ */
+        .text-muted { color: rgba(255,255,255,0.55) !important; }
+        .text-dark { color: #fff !important; }
+        .text-primary { color: #6b8aff !important; }
+        .text-success { color: #2dd4bf !important; }
+        .text-danger { color: #fb7185 !important; }
+        .text-warning { color: #fbbf24 !important; }
+        .text-info { color: #60a5fa !important; }
+        h1, h2, h3, h4, h5, h6 { color: #fff; }
+        p { color: var(--pass-text); }
+        small { color: var(--pass-text-muted); }
+        .fw-bold, .fw-semibold { color: #fff; }
+
+        /* ═══ Badges (Bootstrap override) ═══ */
+        .badge { font-weight: 600; padding: 0.35em 0.7em; }
+        .bg-primary { background: #4f7cff !important; }
+        .bg-success { background: #06d6a0 !important; color: #06080f !important; }
+        .bg-danger { background: #fb7185 !important; }
+        .bg-warning { background: #fbbf24 !important; color: #0a0a0a !important; }
+        .bg-info { background: #60a5fa !important; }
+        .bg-secondary { background: rgba(255,255,255,0.12) !important; color: var(--pass-text) !important; }
+        .bg-light { background: rgba(255,255,255,0.05) !important; color: #d1d5db !important; }
+        .bg-white { background: rgba(255,255,255,0.06) !important; color: #d1d5db !important; }
+        .bg-tier-excellent { background: rgba(6,214,160,0.15) !important; color: #06d6a0 !important; }
+        .bg-tier-good { background: rgba(79,124,255,0.15) !important; color: #6b8aff !important; }
+        .bg-tier-warning { background: rgba(251,191,36,0.15) !important; color: #fbbf24 !important; }
+        .bg-tier-critical { background: rgba(251,113,133,0.15) !important; color: #fb7185 !important; }
+        .tier-excellent { color: var(--c-teal) !important; }
+        .tier-good { color: var(--c-blue) !important; }
+        .tier-warning { color: var(--c-amber) !important; }
+        .tier-critical { color: var(--c-rose) !important; }
+
+        /* ═══ Progress bars ═══ */
+        .progress { background: rgba(255,255,255,0.06) !important; border-radius: 100px !important; overflow: hidden; }
+        .progress-bar { border-radius: 100px; transition: width 1s cubic-bezier(0.16,1,0.3,1); }
+        .progress-bar.bg-success { background: linear-gradient(90deg, #2dd4bf, #06b6a4) !important; }
+        .progress-bar.bg-danger { background: linear-gradient(90deg, #fb7185, #e11d48) !important; }
+        .progress-bar.bg-warning { background: linear-gradient(90deg, #fbbf24, #f59e0b) !important; }
+        .progress-bar.bg-info { background: linear-gradient(90deg, #60a5fa, #4f7cff) !important; }
+        .progress-bar.bg-primary { background: linear-gradient(90deg, #4f7cff, #a78bfa) !important; }
+
+        /* ═══ Alerts (Bootstrap override) ═══ */
+        .alert { border-radius: 12px; border: 1px solid var(--pass-border); color: var(--pass-text); }
+        .alert-success { background: rgba(45,212,191,0.1); border-color: rgba(45,212,191,0.3); color: var(--c-teal); }
+        .alert-danger { background: rgba(251,113,133,0.1); border-color: rgba(251,113,133,0.3); color: var(--c-rose); }
+        .alert-warning { background: rgba(251,191,36,0.1); border-color: rgba(251,191,36,0.3); color: var(--c-amber); }
+        .alert-info { background: rgba(96,165,250,0.1); border-color: rgba(96,165,250,0.3); color: #93c5fd; }
+        .alert .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
+
+        /* ═══ Dropdowns ═══ */
+        .dropdown-menu {
+            background: var(--pass-card);
+            border: 1px solid var(--pass-border-hi);
+            border-radius: 12px;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+            padding: 0.4rem;
+            color: var(--pass-text);
+        }
+        .dropdown-item { color: var(--pass-text); border-radius: 8px; padding: 0.5rem 0.8rem; font-size: 0.85rem; }
+        .dropdown-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+        .dropdown-divider { border-color: var(--pass-border); }
+
+        /* ═══ Modal ═══ */
+        .modal-content {
+            background: var(--pass-card);
+            border: 1px solid var(--pass-border-hi);
+            border-radius: 16px;
+            color: var(--pass-text);
+        }
+        .modal-header { border-bottom: 1px solid var(--pass-border); }
+        .modal-footer { border-top: 1px solid var(--pass-border); }
+        .modal-title { color: #fff; }
+
+        /* ═══ Sidebar backdrop ═══ */
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            backdrop-filter: blur(4px);
+        }
+        .sidebar-backdrop.show { display: block; }
+
+        /* ═══ Mobile responsive ═══ */
+        @media (max-width: 992px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.show { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+        }
+        @media (min-width: 993px) {
+            .sidebar-backdrop { display: none !important; }
+        }
+
+        /* ═══ Scrollbar ═══ */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+        /* ═══ AI Chat Widget ═══ */
+        .ai-chat-widget {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            font-size: 0.875rem;
+        }
+        .ai-chat-toggle {
+            width: 56px; height: 56px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #4f7cff 0%, #a78bfa 50%, #fb7185 100%);
+            background-size: 200% 200%;
+            animation: gradient-flow 6s ease infinite;
+            color: #fff;
+            font-size: 1.4rem;
+            box-shadow: 0 8px 32px rgba(79,124,255,0.4), 0 0 0 1px rgba(255,255,255,0.1) inset;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .ai-chat-toggle:hover { transform: scale(1.08) rotate(8deg); box-shadow: 0 12px 40px rgba(79,124,255,0.5); }
+        .ai-chat-toggle i { line-height: 1; }
+        .ai-chat-panel {
+            position: absolute;
+            bottom: 70px;
+            right: 0;
+            width: 380px;
+            max-height: 540px;
+            background: rgba(15, 20, 32, 0.95);
+            border: 1px solid var(--pass-border-hi);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            backdrop-filter: blur(20px) saturate(1.4);
+            -webkit-backdrop-filter: blur(20px) saturate(1.4);
+        }
+        .ai-chat-panel.open { display: flex; animation: fadeUp 0.3s ease-out; }
+        .ai-chat-header {
+            padding: 14px 18px;
+            background: linear-gradient(135deg, rgba(79,124,255,0.15) 0%, rgba(167,139,250,0.15) 100%);
+            border-bottom: 1px solid var(--pass-border);
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .ai-chat-header .title { display: flex; align-items: center; gap: 0.5rem; }
+        .ai-chat-header .title i { background: linear-gradient(135deg, #4f7cff, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.1rem; }
+        .ai-chat-messages {
+            flex: 1;
+            padding: 14px 16px;
+            overflow-y: auto;
+            min-height: 280px;
+            max-height: 380px;
+            background: rgba(0,0,0,0.2);
+        }
+        .ai-chat-messages::-webkit-scrollbar { width: 4px; }
+        .ai-chat-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+        .ai-msg { display: flex; gap: 10px; margin-bottom: 12px; animation: msgSlide 0.25s ease-out; }
+        .ai-msg-avatar {
+            flex-shrink: 0;
+            width: 30px; height: 30px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem;
+        }
+        .ai-msg-bot .ai-msg-avatar { background: linear-gradient(135deg, rgba(79,124,255,0.2), rgba(167,139,250,0.2)); color: #a78bfa; }
+        .ai-msg-user .ai-msg-avatar { background: linear-gradient(135deg, rgba(45,212,191,0.2), rgba(79,124,255,0.2)); color: #2dd4bf; }
+        .ai-msg-content {
+            background: rgba(255,255,255,0.04);
+            padding: 9px 13px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            color: var(--pass-text);
+            max-width: 85%;
+            white-space: pre-wrap;
+            border: 1px solid var(--pass-border);
+        }
+        .ai-msg-user .ai-msg-content { background: rgba(79,124,255,0.12); border-color: rgba(79,124,255,0.2); color: #c8d6ff; }
+        .ai-msg-bot .ai-msg-content strong { color: #fff; }
+        .ai-msg-content .ai-spinner {
+            display: inline-block;
+            width: 14px; height: 14px;
+            border: 2px solid rgba(255,255,255,0.15);
+            border-top-color: #a78bfa;
+            border-radius: 50%;
+            animation: aiSpin 0.6s linear infinite;
+        }
+        .ai-chat-input {
+            display: flex;
+            padding: 10px 12px;
+            background: rgba(0,0,0,0.3);
+            border-top: 1px solid var(--pass-border);
+            gap: 8px;
+        }
+        .ai-chat-input input {
+            flex: 1;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--pass-border);
+            border-radius: 10px;
+            padding: 8px 12px;
+            color: #fff;
+            font-size: 0.8rem;
+            outline: none;
+        }
+        .ai-chat-input input::placeholder { color: var(--pass-text-faint); }
+        .ai-chat-input input:focus { border-color: rgba(79,124,255,0.4); }
+        .ai-chat-input button {
+            width: 38px; height: 38px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(135deg, #4f7cff, #a78bfa);
+            color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .ai-chat-input button:hover { transform: scale(1.05); }
+        .ai-chat-input button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+        @media (max-width: 480px) {
+            .ai-chat-panel { width: calc(100vw - 32px); right: 0; bottom: 60px; max-height: 70vh; }
+        }
+
+        /* ═══ Flash messages ═══ */
+        .flash-container { position: fixed; top: 80px; right: 20px; z-index: 9999; max-width: 400px; }
+        .flash-container .alert { animation: fadeUp 0.4s ease-out; }
+
+        /* ═══ Section tag ═══ */
+        .section-tag {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.3rem 0.8rem; border-radius: 100px;
+            background: rgba(255,255,255,0.04); border: 1px solid var(--pass-border);
+            color: var(--pass-text-muted); font-size: 0.7rem; letter-spacing: 1.5px;
+            text-transform: uppercase; font-weight: 500;
+        }
+
+        /* ═══ Tier badges ═══ */
+        .tier-pill { padding: 0.25rem 0.6rem; border-radius: 100px; font-size: 0.7rem; font-weight: 600; }
+        .tier-pill.tier-high { background: rgba(45,212,191,0.15); color: var(--c-teal); border: 1px solid rgba(45,212,191,0.3); }
+        .tier-pill.tier-medium { background: rgba(79,124,255,0.15); color: var(--c-blue); border: 1px solid rgba(79,124,255,0.3); }
+        .tier-pill.tier-low { background: rgba(251,191,36,0.15); color: var(--c-amber); border: 1px solid rgba(251,191,36,0.3); }
+        .tier-pill.tier-critical { background: rgba(251,113,133,0.15); color: var(--c-rose); border: 1px solid rgba(251,113,133,0.3); }
+
+        /* ═══ Empty state ═══ */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1.5rem;
+            color: var(--pass-text-muted);
+        }
+        .empty-state i { font-size: 3rem; opacity: 0.3; margin-bottom: 1rem; display: block; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div id="cursorGlow"></div>
+    <div class="page-aurora">
+        <div class="a-blob a-1"></div>
+        <div class="a-blob a-2"></div>
+        <div class="a-blob a-3"></div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi {% if category == 'success' %}bi-check-circle{% elif category == 'danger' %}bi-exclamation-triangle{% elif category == 'warning' %}bi-exclamation-circle{% else %}bi-info-circle{% endif %} me-2"></i>
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    {% block body %}
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+    {% if current_user.is_authenticated %}
+    <nav class="sidebar" id="sidebar">
+        <div class="brand" style="perspective:600px;">
+            <a href="{{ url_for('auth.index') }}" class="logo-wrap text-decoration-none" data-tilt>
+                <div class="logo-glow"></div>
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="PASS" width="36" height="36">
+            </a>
+            <div>
+                <h4>PASS</h4>
+                <small>Proactive Academic</small>
+            </div>
+        </div>
+
+        {% if current_user.role in ['principal', 'admin'] %}
+        <div class="nav-section">Overview</div>
+        <a href="{{ url_for('admin.principal_dashboard') }}" class="nav-link {% if request.endpoint == 'admin.principal_dashboard' %}active{% endif %}">
+            <i class="bi bi-building"></i> School Overview
+        </a>
+        <a href="{{ url_for('admin.manage_users') }}" class="nav-link {% if request.endpoint == 'admin.manage_users' %}active{% endif %}">
+            <i class="bi bi-people"></i> Manage Users
+        </a>
+        <a href="{{ url_for('admin.configure_weights') }}" class="nav-link {% if request.endpoint == 'admin.configure_weights' %}active{% endif %}">
+            <i class="bi bi-sliders"></i> Scoring Weights
+        </a>
+        <a href="{{ url_for('dashboard.notifications') }}" class="nav-link {% if request.endpoint == 'dashboard.notifications' %}active{% endif %}">
+            <i class="bi bi-bell"></i> Notifications
+        </a>
+        <a href="{{ url_for('dashboard.instructor_dashboard') }}" class="nav-link">
+            <i class="bi bi-speedometer2"></i> Instructor View
+        </a>
+        {% elif current_user.role in ['instructor', 'teacher'] %}
+        <div class="nav-section">Teaching</div>
+        <a href="{{ url_for('dashboard.instructor_dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard.instructor_dashboard' %}active{% endif %}">
+            <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+        <a href="{{ url_for('dashboard.notifications') }}" class="nav-link {% if request.endpoint == 'dashboard.notifications' %}active{% endif %}">
+            <i class="bi bi-bell"></i> Notifications
+        </a>
+        <a href="{{ url_for('dashboard.upload_csv') }}" class="nav-link {% if request.endpoint == 'dashboard.upload_csv' %}active{% endif %}">
+            <i class="bi bi-cloud-upload"></i> Upload Submissions
+        </a>
+        <a href="{{ url_for('dashboard.import_students') }}" class="nav-link {% if request.endpoint == 'dashboard.import_students' %}active{% endif %}">
+            <i class="bi bi-person-plus"></i> Import Students
+        </a>
+        <a href="{{ url_for('dashboard.export_csv', type='students') }}" class="nav-link">
+            <i class="bi bi-download"></i> Export Data
+        </a>
+        {% elif current_user.role == 'student' %}
+        <div class="nav-section">My Account</div>
+        <a href="{{ url_for('student.self_view') }}" class="nav-link {% if request.endpoint == 'student.self_view' %}active{% endif %}">
+            <i class="bi bi-person-badge"></i> My Dashboard
+        </a>
+        {% elif current_user.role == 'parent' %}
+        <div class="nav-section">My Family</div>
+        <a href="{{ url_for('parent.dashboard') }}" class="nav-link {% if request.endpoint == 'parent.dashboard' %}active{% endif %}">
+            <i class="bi bi-people-fill"></i> My Children
+        </a>
+        {% endif %}
+
+        <hr>
+        <a href="{{ url_for('auth.logout') }}" class="nav-link">
+            <i class="bi bi-box-arrow-left"></i> Logout
+        </a>
+
+        <div class="sidebar-user">
+            <div class="sidebar-user-avatar">{{ (current_user.full_name or 'U')[0]|upper }}</div>
+            <div class="sidebar-user-info">
+                <div class="sidebar-user-name">{{ current_user.full_name }}</div>
+                <div class="sidebar-user-role">{{ current_user.role }}</div>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <div class="main-content">
+        <div class="top-navbar">
+            <div class="d-flex align-items-center gap-2">
+                {% if current_user.is_authenticated %}
+                <button class="btn btn-link text-white d-lg-none p-0 me-1" onclick="toggleSidebar()" style="font-size:1.3rem;">
+                    <i class="bi bi-list"></i>
+                </button>
+                {% endif %}
+                <h5>{% block page_title %}Dashboard{% endblock %}</h5>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                {% if current_user.is_authenticated and current_user.role in ['instructor', 'teacher', 'principal', 'admin'] %}
+                <a href="{{ url_for('dashboard.notifications') }}" class="icon-btn position-relative" title="Notifications">
+                    <i class="bi bi-bell"></i>
+                    <span id="notif-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.55rem;display:none;">0</span>
+                </a>
+                {% endif %}
+                <div class="icon-btn" title="Time" style="cursor:default;min-width:auto;padding:0 0.75rem;width:auto;font-size:0.75rem;color:rgba(255,255,255,0.5);">
+                    <i class="bi bi-clock me-1"></i><span id="current-time"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-content">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    {% if current_user.is_authenticated and current_user.role in ('instructor', 'admin', 'principal') %}
+    <div id="aiChatWidget" class="ai-chat-widget">
+        <button class="ai-chat-toggle" id="aiChatToggle" title="Ask AI Assistant" onclick="toggleAiChat()">
+            <i class="bi bi-magic"></i>
+        </button>
+        <div class="ai-chat-panel" id="aiChatPanel">
+            <div class="ai-chat-header">
+                <div class="title">
+                    <i class="bi bi-magic"></i>PASS AI Assistant
+                </div>
+                <button class="btn btn-link p-0" onclick="toggleAiChat()" title="Close" style="color:rgba(255,255,255,0.5);font-size:0.9rem;">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="ai-chat-messages" id="aiChatMessages">
+                <div class="ai-msg ai-msg-bot">
+                    <div class="ai-msg-avatar"><i class="bi bi-magic"></i></div>
+                    <div class="ai-msg-content">
+                        Hi! Ask me about students, scores, alerts, or class stats.<br>
+                        <small style="opacity:0.6;">e.g. "How many students below 40?" or "Show Arjun's marks"</small>
+                    </div>
+                </div>
+            </div>
+            <div class="ai-chat-input">
+                <input type="text" id="aiChatInput" placeholder="Ask anything..." autocomplete="off">
+                <button onclick="sendAiQuery()" id="aiChatSend" title="Send">
+                    <i class="bi bi-send-fill"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% endblock %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+    <script>
+    (function() {
+        const el = document.getElementById('current-time');
+        function update() {
+            if (el) el.textContent = new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+        }
+        update();
+        setInterval(update, 30000);
+
+        setTimeout(() => {
+            document.querySelectorAll('.flash-container .alert').forEach(a => new bootstrap.Alert(a).close());
+        }, 5000);
+
+        window.toggleSidebar = function() {
+            document.getElementById('sidebar').classList.toggle('show');
+            document.getElementById('sidebarBackdrop').classList.toggle('show');
+        };
+        window.closeSidebar = function() {
+            document.getElementById('sidebar').classList.remove('show');
+            document.getElementById('sidebarBackdrop').classList.remove('show');
+        };
+
+        function updateNotifBadge() {
+            const b = document.getElementById('notif-badge');
+            if (!b) return;
+            fetch('{{ url_for("dashboard.unread_notification_count") }}')
+                .then(r => r.json())
+                .then(d => { if (d.count > 0) { b.textContent = d.count; b.style.display = 'inline'; } else b.style.display = 'none'; });
+        }
+        updateNotifBadge();
+        setInterval(updateNotifBadge, 30000);
+
+        // AI Chat
+        const aiInput = document.getElementById('aiChatInput');
+        const aiMsgs = document.getElementById('aiChatMessages');
+        const aiPanel = document.getElementById('aiChatPanel');
+        const aiToggle = document.getElementById('aiChatToggle');
+        const aiSend = document.getElementById('aiChatSend');
+
+        window.toggleAiChat = function() {
+            const isOpen = aiPanel.classList.toggle('open');
+            aiToggle.innerHTML = isOpen ? '<i class="bi bi-x-lg"></i>' : '<i class="bi bi-magic"></i>';
+            if (isOpen) setTimeout(() => aiInput?.focus(), 200);
+        };
+        function addAiMsg(text, role) {
+            const d = document.createElement('div');
+            d.className = 'ai-msg ai-msg-' + role;
+            d.innerHTML = '<div class="ai-msg-avatar"><i class="bi bi-' + (role === 'bot' ? 'magic' : 'person') + '"></i></div><div class="ai-msg-content">' + text + '</div>';
+            aiMsgs.appendChild(d);
+            aiMsgs.scrollTop = aiMsgs.scrollHeight;
+        }
+        function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+        window.sendAiQuery = function() {
+            const q = aiInput.value.trim();
+            if (!q) return;
+            addAiMsg(escapeHtml(q), 'user');
+            aiInput.value = '';
+            aiSend.disabled = true;
+            const t = document.createElement('div');
+            t.className = 'ai-msg ai-msg-bot';
+            t.id = 'aiThinking';
+            t.innerHTML = '<div class="ai-msg-avatar"><i class="bi bi-magic"></i></div><div class="ai-msg-content"><span class="ai-spinner"></span> Thinking...</div>';
+            aiMsgs.appendChild(t);
+            aiMsgs.scrollTop = aiMsgs.scrollHeight;
+            fetch('{{ url_for("dashboard.ai_query") }}', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({query: q})
+            })
+            .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+            .then(data => {
+                document.getElementById('aiThinking')?.remove();
+                addAiMsg((data.response || "Sorry, I couldn't process that.").replace(/\n/g, '<br>'), 'bot');
+            })
+            .catch(err => {
+                document.getElementById('aiThinking')?.remove();
+                addAiMsg('Connection error. Please try again.', 'bot');
+                console.error('AI query failed:', err);
+            })
+            .finally(() => { aiSend.disabled = false; aiInput.focus(); });
+        };
+        aiInput?.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); window.sendAiQuery(); } });
+
+        // Auto-apply reveal animation to rows, cards, and stat-cards
+        const autoReveal = document.querySelectorAll('.row, .card, .stat-card, .chart-container, .alert-card');
+        autoReveal.forEach((el, i) => {
+            el.classList.add('reveal');
+            const d = (i % 6) + 1;
+            el.classList.add('reveal-d' + d);
+        });
+        const obs = new IntersectionObserver(entries => {
+            entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+        }, { threshold: 0.05, rootMargin: '0px 0px -30px 0px' });
+        autoReveal.forEach(el => obs.observe(el));
+
+        // Magnetic buttons
+        document.querySelectorAll('.btn-magnetic').forEach(btn => {
+            btn.addEventListener('mousemove', e => {
+                const r = btn.getBoundingClientRect();
+                btn.style.transform = `translate(${(e.clientX - r.left - r.width/2) * 0.15}px, ${(e.clientY - r.top - r.height/2) * 0.15}px)`;
+            });
+            btn.addEventListener('mouseleave', () => { btn.style.transform = ''; });
+        });
+
+        // Stat card cursor-tracked glow
+        document.querySelectorAll('.stat-card').forEach(card => {
+            card.addEventListener('mousemove', e => {
+                const r = card.getBoundingClientRect();
+                card.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100) + '%');
+                card.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100) + '%');
+            });
+        });
+
+        // Cursor glow
+        const glow = document.getElementById('cursorGlow');
+        document.addEventListener('mousemove', e => { glow.style.left = e.clientX + 'px'; glow.style.top = e.clientY + 'px'; });
+
+        // 3D tilt on sidebar brand logo
+        const tiltLogo = document.querySelector('[data-tilt]');
+        if (tiltLogo) {
+            tiltLogo.addEventListener('mousemove', e => {
+                const r = tiltLogo.getBoundingClientRect();
+                const x = (e.clientX - r.left) / r.width - 0.5;
+                const y = (e.clientY - r.top) / r.height - 0.5;
+                tiltLogo.style.transform = `rotateY(${x*10}deg) rotateX(${-y*10}deg) scale(1.05)`;
+            });
+            tiltLogo.addEventListener('mouseleave', () => {
+                tiltLogo.style.transform = '';
+            });
+        }
+    })();
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

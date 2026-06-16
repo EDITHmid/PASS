@@ -1,0 +1,731 @@
+{% extends "base.html" %}
+
+{% block body %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap');
+* { font-family: 'Inter', sans-serif; }
+:root {
+  --pass-dark: #06080f;
+  --pass-card: #0e1320;
+  --pass-border: rgba(255,255,255,0.06);
+  --c-blue: #4f7cff;
+  --c-violet: #a78bfa;
+  --c-rose: #fb7185;
+  --c-amber: #fbbf24;
+  --c-teal: #2dd4bf;
+}
+
+html { scroll-behavior: smooth; }
+body { background: var(--pass-dark); color: #e5e7eb; overflow-x: hidden; }
+
+/* ═══ Keyframes ═══ */
+@keyframes fadeUp { from{opacity:0;transform:translateY(50px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-20px)} }
+@keyframes pulse-soft { 0%,100%{opacity:0.4;transform:scale(1)} 50%{opacity:0.7;transform:scale(1.05)} }
+@keyframes shimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
+@keyframes gradient-flow { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%}} }
+@keyframes border-rotate { 0%{--b-angle:0deg} 100%{--b-angle:360deg} }
+@keyframes letter-in { 0%{opacity:0;transform:translateY(60px)rotateX(-40deg);filter:blur(8px)} 100%{opacity:1;transform:translateY(0)rotateX(0);filter:blur(0)} }
+@keyframes aurora-1 { 0%,100%{transform:translate(0,0) rotate(0deg) scale(1)} 33%{transform:translate(60px,-40px) rotate(120deg) scale(1.1)} 66%{transform:translate(-40px,30px) rotate(240deg) scale(0.95)} }
+@keyframes aurora-2 { 0%,100%{transform:translate(0,0) rotate(0deg) scale(1)} 33%{transform:translate(-50px,40px) rotate(-100deg) scale(0.9)} 66%{transform:translate(40px,-30px) rotate(-200deg) scale(1.1)} }
+@keyframes bar-grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes ring-rotate { to { transform: rotate(360deg); } }
+@keyframes count-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ═══ Reveal ═══ */
+.reveal { opacity:0; transform:translateY(50px); transition:all 1s cubic-bezier(0.16,1,0.3,1); }
+.reveal.visible { opacity:1; transform:translateY(0); }
+.reveal-d1 { transition-delay:0.1s }
+.reveal-d2 { transition-delay:0.2s }
+.reveal-d3 { transition-delay:0.3s }
+.reveal-d4 { transition-delay:0.4s }
+
+/* ═══ Navbar ═══ */
+.pass-navbar {
+  background: rgba(6,8,15,0.7);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  border-bottom: 1px solid var(--pass-border);
+  transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+}
+
+/* ═══ Hero ═══ */
+.hero { position: relative; min-height: 100vh; display: flex; align-items: center; overflow: hidden; background: var(--pass-dark); }
+.hero-grid-bg {
+  position: absolute; inset: 0;
+  background-image: linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 80% 60% at center, black 20%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at center, black 20%, transparent 75%);
+}
+.aurora {
+  position: absolute; pointer-events: none; border-radius: 50%;
+  filter: blur(120px); opacity: 0.45;
+}
+.aurora-1 {
+  top: -10%; left: 30%; width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(167,139,250,0.6) 0%, transparent 70%);
+  animation: aurora-1 22s ease-in-out infinite;
+}
+.aurora-2 {
+  top: 40%; right: -10%; width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(251,113,133,0.5) 0%, transparent 70%);
+  animation: aurora-2 26s ease-in-out infinite;
+}
+.aurora-3 {
+  bottom: -10%; left: 10%; width: 700px; height: 500px;
+  background: radial-gradient(circle, rgba(45,212,191,0.4) 0%, transparent 70%);
+  animation: aurora-1 30s ease-in-out infinite reverse;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #fbbf24 0%, #fb7185 35%, #a78bfa 70%, #4f7cff 100%);
+  background-size: 200% 200%;
+  animation: gradient-flow 8s ease infinite;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-letter { display: inline-block; animation: letter-in 0.7s cubic-bezier(0.16,1,0.3,1) both; }
+.serif-accent { font-family: 'Instrument Serif', serif; font-style: italic; font-weight: 400; }
+
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.4rem 0.9rem; border-radius: 100px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.6); font-size: 0.78rem; font-weight: 500;
+  backdrop-filter: blur(8px);
+}
+.hero-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: #2dd4bf; box-shadow: 0 0 12px #2dd4bf; }
+
+/* ═══ Buttons ═══ */
+.btn-magnetic { position: relative; display: inline-flex; align-items: center; justify-content: center; transition: transform 0.25s ease-out; }
+.btn-shimmer { position: relative; overflow: hidden; }
+.btn-shimmer::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+  background-size: 200% 100%; animation: shimmer 3.5s infinite; pointer-events: none;
+}
+
+/* ═══ Floating Dashboard Mockup ═══ */
+.mockup-wrap {
+  position: relative;
+  perspective: 1500px;
+  width: 100%;
+  max-width: 440px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.mockup-card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 1.5rem;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.04) inset;
+  transform: rotateY(-6deg) rotateX(3deg);
+  transition: transform 0.6s cubic-bezier(0.16,1,0.3,1);
+  animation: float 6s ease-in-out infinite;
+  position: relative;
+  z-index: 2;
+}
+.mockup-card:hover { transform: rotateY(0deg) rotateX(0deg); }
+.mockup-title { color: rgba(255,255,255,0.5); font-size: 0.7rem; letter-spacing: 1.5px; text-transform: uppercase; }
+.mockup-score {
+  font-size: 2.8rem; font-weight: 800; line-height: 1;
+  background: linear-gradient(135deg, #2dd4bf, #4f7cff);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.mockup-bar {
+  height: 6px; border-radius: 3px; background: rgba(255,255,255,0.06);
+  position: relative; overflow: hidden;
+}
+.mockup-bar-fill {
+  position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px;
+  background: linear-gradient(90deg, var(--c-bar, #4f7cff), var(--c-bar2, #2dd4bf));
+  animation: bar-grow 1.2s cubic-bezier(0.16,1,0.3,1) both;
+  transform-origin: left;
+}
+.mockup-mini-bars { display: flex; align-items: flex-end; gap: 4px; height: 60px; }
+.mockup-mini-bar {
+  flex: 1; background: linear-gradient(180deg, var(--c-bar, #4f7cff), transparent);
+  border-radius: 3px 3px 0 0; opacity: 0.7;
+  animation: bar-grow 1s cubic-bezier(0.16,1,0.3,1) both;
+  transform-origin: bottom;
+}
+.mockup-ring {
+  width: 80px; height: 80px;
+  transform: rotate(-90deg);
+}
+.mockup-ring circle {
+  fill: none; stroke-width: 6;
+  stroke-dasharray: 220; stroke-dashoffset: 60;
+  stroke-linecap: round; stroke: url(#ringGrad);
+}
+
+/* Floating accent cards — positioned OUTSIDE main card with safe margins */
+.float-card {
+  position: absolute;
+  background: rgba(15,20,32,0.92);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 0.55rem 0.85rem;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+  display: flex; align-items: center; gap: 0.5rem;
+  font-size: 0.72rem; color: rgba(255,255,255,0.9);
+  white-space: nowrap;
+  z-index: 1;
+}
+.float-card-1 {
+  /* top right — well above and outside card top */
+  top: -22px; right: -20px;
+  animation: float 5s ease-in-out infinite;
+}
+.float-card-2 {
+  /* left middle — outside left edge of card */
+  top: 42%; left: -32px;
+  animation: float 6s ease-in-out infinite 1s;
+}
+.float-card-3 {
+  /* bottom right — outside card bottom */
+  bottom: -18px; right: 25%;
+  animation: float 7s ease-in-out infinite 0.5s;
+}
+
+/* ═══ Scroll Indicator ═══ */
+.scroll-ind {
+  position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
+  color: rgba(255,255,255,0.15); font-size: 0.6rem; letter-spacing: 3px;
+  text-transform: uppercase; animation: fadeIn 1s ease-out 2s both;
+}
+.scroll-line { width: 1px; height: 40px; background: linear-gradient(to bottom, rgba(255,255,255,0.3), transparent); animation: float 2.5s ease-in-out infinite; }
+
+/* ═══ Section tag ═══ */
+.section-tag {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.3rem 0.8rem; border-radius: 100px;
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.5); font-size: 0.7rem; letter-spacing: 1.5px;
+  text-transform: uppercase; font-weight: 500;
+}
+
+/* ═══ Feature card (with impact data) ═══ */
+.feature-card {
+  background: var(--pass-card);
+  border: 1px solid var(--pass-border);
+  border-radius: 20px; padding: 1.5rem;
+  transition: all 0.5s cubic-bezier(0.16,1,0.3,1);
+  position: relative; overflow: hidden;
+  height: 100%;
+}
+.feature-card::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(circle at var(--mx, 50%) var(--my, 0%), rgba(255,255,255,0.05) 0%, transparent 50%);
+  opacity: 0; transition: opacity 0.5s;
+}
+.feature-card:hover::before { opacity: 1; }
+.feature-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255,255,255,0.1);
+  box-shadow: 0 24px 48px rgba(0,0,0,0.3);
+}
+.feature-icon {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; margin-bottom: 1rem;
+}
+.feature-stat {
+  display: inline-flex; align-items: baseline; gap: 0.3rem;
+  font-family: 'Instrument Serif', serif; font-style: italic;
+  font-size: 1.5rem; line-height: 1; font-weight: 500;
+}
+
+/* ═══ Impact card (new) ═══ */
+.impact-card {
+  background: var(--pass-card);
+  border: 1px solid var(--pass-border);
+  border-radius: 20px;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+}
+.impact-card::after {
+  content: ''; position: absolute;
+  bottom: -50%; right: -30%;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, var(--card-glow, rgba(79,124,255,0.15)) 0%, transparent 70%);
+  filter: blur(40px);
+  pointer-events: none;
+}
+.impact-num {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic; font-weight: 500;
+  font-size: 3.5rem; line-height: 1;
+}
+.impact-bar-track {
+  height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden;
+  margin-top: 0.75rem;
+}
+.impact-bar-fill {
+  height: 100%; border-radius: 2px;
+  background: linear-gradient(90deg, var(--c-bar), var(--c-bar2));
+  animation: bar-grow 1.5s cubic-bezier(0.16,1,0.3,1) both;
+  transform-origin: left;
+}
+
+/* ═══ Counter ═══ */
+.counter-num {
+  font-size: 3.5rem; font-weight: 800; line-height: 1;
+  font-family: 'Instrument Serif', serif; font-style: italic; font-weight: 400;
+  background: linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.5) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+/* ═══ CTA ═══ */
+.cta-wrap {
+  position: relative; overflow: hidden;
+  background: var(--pass-dark);
+}
+.cta-wrap::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(167,139,250,0.08) 0%, transparent 60%);
+}
+.cta-glow-btn {
+  background: linear-gradient(135deg, #4f7cff 0%, #a78bfa 50%, #fb7185 100%);
+  background-size: 200% 200%;
+  animation: gradient-flow 6s ease infinite;
+  color: #fff; border: none;
+  box-shadow: 0 12px 40px rgba(167,139,250,0.3), 0 0 0 1px rgba(255,255,255,0.1) inset;
+}
+.cta-includes {
+  display: flex; justify-content: center; flex-wrap: wrap; gap: 1.5rem;
+  margin-top: 2.5rem; padding-top: 2rem;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.cta-include-item {
+  display: flex; align-items: center; gap: 0.4rem;
+  font-size: 0.75rem; color: rgba(255,255,255,0.4);
+}
+
+@media (max-width:991px) {
+  .mockup-card { transform: none; }
+  .float-card-1, .float-card-2, .float-card-3 { display: none; }
+}
+@media (max-width:768px) {
+  .counter-num { font-size: 2.4rem; }
+  .impact-num { font-size: 2.6rem; }
+}
+</style>
+
+<div class="min-vh-100 d-flex flex-column">
+
+  <!-- ═══ Navbar ═══ -->
+  <nav class="pass-navbar navbar px-3 py-3 position-fixed top-0 start-0 end-0" style="z-index:1030;">
+    <div class="container">
+      <a class="navbar-brand text-white fw-bold d-flex align-items-center gap-2" href="/" style="font-size:1.15rem;">
+        <span class="logo-wrap-static">
+          <div class="logo-glow"></div>
+          <img src="{{ url_for('static', filename='logo.png') }}" alt="PASS" width="28" height="28" style="border-radius:7px;">
+        </span>
+        <span style="letter-spacing:0.5px;">PASS</span>
+      </a>
+      <div class="d-flex gap-2 align-items-center">
+        <a href="{{ url_for('auth.login') }}" class="btn btn-sm px-3 btn-magnetic" style="color:rgba(255,255,255,0.55);font-weight:500;font-size:0.85rem;transition:color 0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.55)'">Log In</a>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-sm rounded-pill px-3 fw-semibold btn-magnetic btn-shimmer" style="background:rgba(255,255,255,0.95);color:#06080f;border:none;font-size:0.85rem;">Get Started</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="flex-grow-1">
+
+    <!-- ════════════════════════════════════════════════
+         HERO
+         ════════════════════════════════════════════════ -->
+    <section class="hero">
+      <div class="hero-grid-bg"></div>
+      <div class="aurora aurora-1"></div>
+      <div class="aurora aurora-2"></div>
+      <div class="aurora aurora-3"></div>
+
+      <div class="container position-relative" style="z-index:2;">
+        <div class="row align-items-center g-5">
+
+          <!-- LEFT -->
+          <div class="col-lg-6">
+            <div class="hero-badge mb-4 reveal visible" style="transition-delay:0.2s;">
+              <span class="dot"></span>
+              <span style="display:inline-flex;align-items:center;gap:0.4rem;">Built for modern institutions</span>
+            </div>
+            <h1 class="fw-bold lh-1 mb-4" style="font-size:clamp(2.8rem,6.5vw,4.8rem);letter-spacing:-2.5px;line-height:0.95;">
+              <span class="hero-letter text-white" style="animation-delay:0.1s">Spot</span>
+              <span class="hero-letter text-white" style="animation-delay:0.18s">struggling</span><br>
+              <span class="hero-letter text-white" style="animation-delay:0.26s">students</span>
+              <span class="hero-letter gradient-text" style="animation-delay:0.34s">before</span><br>
+              <span class="hero-letter serif-accent text-white" style="animation-delay:0.42s">failure does.</span>
+            </h1>
+            <p class="mb-4 reveal visible" style="transition-delay:0.7s;font-size:1.1rem;line-height:1.7;color:rgba(255,255,255,0.5);max-width:540px;">
+              The <strong style="color:rgba(255,255,255,0.85);">Proactive Academic Support System</strong> —
+              transparent AI that catches behavioral drift
+              <strong style="color:rgba(255,255,255,0.85);">4–6 weeks earlier</strong>.
+            </p>
+
+            <!-- Social proof (no creds, just real impact line) -->
+            <p class="reveal visible" style="transition-delay:0.8s;color:rgba(255,255,255,0.3);font-size:0.85rem;margin-bottom:2rem;display:flex;align-items:center;gap:0.5rem;">
+              <span style="display:inline-flex;width:18px;height:18px;align-items:center;justify-content:center;border-radius:50%;background:rgba(45,212,191,0.1);"><i class="bi bi-check2" style="color:#2dd4bf;font-size:0.85rem;"></i></span>
+              No black-box ML — every alert is explainable
+            </p>
+
+            <div class="d-flex gap-3 flex-wrap reveal visible" style="transition-delay:0.9s;">
+              <a href="{{ url_for('auth.register') }}" class="btn btn-lg rounded-pill px-5 fw-semibold btn-magnetic btn-shimmer" style="background:linear-gradient(135deg,#4f7cff,#a78bfa);color:#fff;border:none;font-size:0.95rem;box-shadow:0 8px 32px rgba(79,124,255,0.25);">
+                Start Free Demo
+                <i class="bi bi-arrow-right ms-2"></i>
+              </a>
+              <a href="{{ url_for('auth.login') }}" class="btn btn-lg rounded-pill px-4 btn-magnetic" style="border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);font-size:0.95rem;background:rgba(255,255,255,0.02);transition:all 0.3s;" onmouseover="this.style.borderColor='rgba(255,255,255,0.2)';this.style.color='#fff';this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)';this.style.color='rgba(255,255,255,0.7)';this.style.background='rgba(255,255,255,0.02)'">
+                Log In
+              </a>
+            </div>
+          </div>
+
+          <!-- RIGHT: floating dashboard mockup -->
+          <div class="col-lg-6 d-none d-lg-block">
+            <div class="mockup-wrap reveal visible" style="transition-delay:0.5s;">
+
+              <svg width="0" height="0" style="position:absolute;">
+                <defs>
+                  <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#4f7cff"/>
+                    <stop offset="100%" stop-color="#2dd4bf"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+
+              <!-- Main mockup card — score sits in top-left, no overlap with floats -->
+              <div class="mockup-card">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                  <div>
+                    <div class="mockup-title mb-1">Credibility Score</div>
+                    <div class="d-flex align-items-baseline gap-2">
+                      <div class="mockup-score">87</div>
+                      <span style="color:#2dd4bf;font-size:0.75rem;font-weight:500;">↑ +4.2</span>
+                    </div>
+                  </div>
+                  <div class="d-flex align-items-center justify-content-center" style="width:36px;height:36px;border-radius:10px;background:rgba(45,212,191,0.1);">
+                    <i class="bi bi-arrow-up-right" style="color:#2dd4bf;font-size:0.9rem;"></i>
+                  </div>
+                </div>
+
+                <!-- Mini ring chart -->
+                <div class="d-flex align-items-center gap-3 mb-3">
+                  <svg class="mockup-ring" viewBox="0 0 80 80">
+                    <circle cx="40" cy="40" r="35" stroke="rgba(255,255,255,0.06)" stroke-width="6" fill="none"/>
+                    <circle cx="40" cy="40" r="35" stroke="url(#ringGrad)" stroke-width="6" fill="none" stroke-dasharray="220" stroke-dashoffset="60" stroke-linecap="round"/>
+                  </svg>
+                  <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between" style="font-size:0.7rem;color:rgba(255,255,255,0.5);">
+                      <span>Δt Consistency</span><span style="color:#4f7cff;">92%</span>
+                    </div>
+                    <div class="mockup-bar mb-2">
+                      <div class="mockup-bar-fill" style="width:92%;--c-bar:#4f7cff;--c-bar2:#2dd4bf;"></div>
+                    </div>
+                    <div class="d-flex justify-content-between" style="font-size:0.7rem;color:rgba(255,255,255,0.5);">
+                      <span>Attendance</span><span style="color:#2dd4bf;">85%</span>
+                    </div>
+                    <div class="mockup-bar">
+                      <div class="mockup-bar-fill" style="width:85%;--c-bar:#2dd4bf;--c-bar2:#fbbf24;"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Bar chart -->
+                <div style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-bottom:0.4rem;">Submission timing (last 8 weeks)</div>
+                <div class="mockup-mini-bars">
+                  <div class="mockup-mini-bar" style="height:40%;--c-bar:#4f7cff;animation-delay:0.1s;"></div>
+                  <div class="mockup-mini-bar" style="height:55%;--c-bar:#4f7cff;animation-delay:0.15s;"></div>
+                  <div class="mockup-mini-bar" style="height:70%;--c-bar:#4f7cff;animation-delay:0.2s;"></div>
+                  <div class="mockup-mini-bar" style="height:50%;--c-bar:#a78bfa;animation-delay:0.25s;"></div>
+                  <div class="mockup-mini-bar" style="height:80%;--c-bar:#2dd4bf;animation-delay:0.3s;"></div>
+                  <div class="mockup-mini-bar" style="height:90%;--c-bar:#2dd4bf;animation-delay:0.35s;"></div>
+                  <div class="mockup-mini-bar" style="height:75%;--c-bar:#2dd4bf;animation-delay:0.4s;"></div>
+                  <div class="mockup-mini-bar" style="height:95%;--c-bar:#fbbf24;animation-delay:0.45s;"></div>
+                </div>
+              </div>
+
+              <!-- Floating accents — all OUTSIDE card bounds, never overlap score -->
+              <div class="float-card float-card-1">
+                <i class="bi bi-graph-up-arrow" style="color:#2dd4bf;"></i>
+                +12% this month
+              </div>
+              <div class="float-card float-card-2">
+                <i class="bi bi-bell-fill" style="color:#fb7185;"></i>
+                Alert resolved
+              </div>
+              <div class="float-card float-card-3">
+                <i class="bi bi-check-circle-fill" style="color:#fbbf24;"></i>
+                4-wk on-time streak
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="scroll-ind">
+        <span>Scroll</span>
+        <div class="scroll-line"></div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════
+         THE FIVE SIGNALS (with real impact data)
+         ════════════════════════════════════════════════ -->
+    <section class="position-relative" style="padding:7rem 0;">
+      <div class="container">
+        <div class="text-center mb-5 reveal">
+          <span class="section-tag mb-3">How it works</span>
+          <h2 class="fw-bold lh-1 mb-3 text-white" style="font-size:clamp(2rem,4vw,3rem);letter-spacing:-1.5px;">
+            Five signals. <span class="serif-accent gradient-text">One number</span><br>you can trust.
+          </h2>
+          <p style="color:rgba(255,255,255,0.4);font-size:1.05rem;max-width:560px;margin:0 auto;">Each factor is weighted, transparent, and configurable per school.</p>
+        </div>
+        <div class="row g-3">
+          {% set features = [
+            {'icon':'speedometer2','color':'#4f7cff','bg':'rgba(79,124,255,0.08)','title':'Δt Consistency','weight':'25%','stat':'±2h','stat_label':'avg variance','desc':'Submission velocity relative to deadlines. Students submitting 24h early get full marks.'},
+            {'icon':'activity','color':'#a78bfa','bg':'rgba(167,139,250,0.08)','title':'Variance Stability','weight':'10%','stat':'<5h','stat_label':'target σ','desc':'Rolling variance flags erratic patterns — even when grades are still passing.'},
+            {'icon':'check-circle','color':'#2dd4bf','bg':'rgba(45,212,191,0.08)','title':'Completion Rate','weight':'10%','stat':'≥3','stat_label':'streak req.','desc':'Hysteresis filter — 3 consecutive declines required before triggering an alert.'},
+            {'icon':'calendar-check','color':'#fbbf24','bg':'rgba(251,191,36,0.08)','title':'Attendance','weight':'25%','stat':'75%','stat_label':'min. threshold','desc':'Below 75% triggers automatic flag regardless of other scores.'},
+            {'icon':'journal-check','color':'#fb7185','bg':'rgba(251,113,133,0.08)','title':'Exam Performance','weight':'30%','stat':'best 2','stat_label':'of 3 mid-terms','desc':'Best 2 of 3 mid-terms averaged and scaled to 0–100. Ensures academic mastery.'},
+          ] %}
+          {% for f in features %}
+          <div class="col-lg-4 col-md-6 reveal reveal-d{{ loop.index }}">
+            <div class="feature-card" style="background:linear-gradient(180deg,{{ f.bg }} 0%, rgba(15,20,32,0.4) 100%);">
+              <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="feature-icon" style="background:{{ f.bg }};color:{{ f.color }};">
+                  <i class="bi bi-{{ f.icon }}"></i>
+                </div>
+                <span style="font-size:0.7rem;color:rgba(255,255,255,0.4);padding:0.2rem 0.6rem;border-radius:100px;background:rgba(255,255,255,0.04);">Weight {{ f.weight }}</span>
+              </div>
+              <h6 class="fw-bold mb-1" style="color:#fff;font-size:0.95rem;">{{ f.title }}</h6>
+              <div class="d-flex align-items-baseline gap-2 my-2">
+                <span class="feature-stat" style="color:{{ f.color }};">{{ f.stat }}</span>
+                <span style="color:rgba(255,255,255,0.35);font-size:0.75rem;">{{ f.stat_label }}</span>
+              </div>
+              <p class="mb-0" style="color:rgba(255,255,255,0.4);font-size:0.8rem;line-height:1.5;">{{ f.desc }}</p>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════
+         IMPACT (new section — replaces "Try Live Demo")
+         Real outcome scenarios with data
+         ════════════════════════════════════════════════ -->
+    <section class="position-relative" style="padding:7rem 0;background:rgba(255,255,255,0.01);border-top:1px solid var(--pass-border);border-bottom:1px solid var(--pass-border);">
+      <div class="container">
+        <div class="text-center mb-5 reveal">
+          <span class="section-tag mb-3">Real outcomes</span>
+          <h2 class="fw-bold lh-1 mb-3 text-white" style="font-size:clamp(2rem,4vw,3rem);letter-spacing:-1.5px;">
+            From <span class="serif-accent gradient-text">reactive</span> to proactive.
+          </h2>
+          <p style="color:rgba(255,255,255,0.4);font-size:1.05rem;max-width:520px;margin:0 auto;">What changes when schools deploy PASS.</p>
+        </div>
+        <div class="row g-3">
+
+          <!-- Card 1: Early detection -->
+          <div class="col-lg-4 reveal reveal-d1">
+            <div class="impact-card" style="--card-glow:rgba(79,124,255,0.15);">
+              <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="d-flex align-items-center justify-content-center rounded-3" style="width:40px;height:40px;background:rgba(79,124,255,0.1);">
+                  <i class="bi bi-eye" style="color:#4f7cff;font-size:1.1rem;"></i>
+                </div>
+                <span style="font-size:0.7rem;color:rgba(255,255,255,0.4);letter-spacing:1px;text-transform:uppercase;">Early detection</span>
+              </div>
+              <div class="impact-num" style="background:linear-gradient(135deg,#4f7cff,#2dd4bf);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">4–6 weeks</div>
+              <p style="color:rgba(255,255,255,0.5);font-size:0.85rem;line-height:1.5;margin:0.75rem 0;">
+                Average lead time before exam scores confirm the drop — giving counselors a full intervention window.
+              </p>
+              <div class="impact-bar-track">
+                <div class="impact-bar-fill" style="width:90%;--c-bar:#4f7cff;--c-bar2:#2dd4bf;"></div>
+              </div>
+              <p class="mb-0 mt-2" style="color:rgba(255,255,255,0.3);font-size:0.7rem;">vs. reactive detection at exam week</p>
+            </div>
+          </div>
+
+          <!-- Card 2: False alert reduction -->
+          <div class="col-lg-4 reveal reveal-d2">
+            <div class="impact-card" style="--card-glow:rgba(167,139,250,0.15);">
+              <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="d-flex align-items-center justify-content-center rounded-3" style="width:40px;height:40px;background:rgba(167,139,250,0.1);">
+                  <i class="bi bi-shield-check" style="color:#a78bfa;font-size:1.1rem;"></i>
+                </div>
+                <span style="font-size:0.7rem;color:rgba(255,255,255,0.4);letter-spacing:1px;text-transform:uppercase;">Alert quality</span>
+              </div>
+              <div class="impact-num" style="background:linear-gradient(135deg,#a78bfa,#fb7185);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">−60%</div>
+              <p style="color:rgba(255,255,255,0.5);font-size:0.85rem;line-height:1.5;margin:0.75rem 0;">
+                Fewer false alerts thanks to hysteresis filtering — 3 consecutive declines required before triggering.
+              </p>
+              <div class="impact-bar-track">
+                <div class="impact-bar-fill" style="width:60%;--c-bar:#a78bfa;--c-bar2:#fb7185;"></div>
+              </div>
+              <p class="mb-0 mt-2" style="color:rgba(255,255,255,0.3);font-size:0.7rem;">vs. rule-based systems triggering daily</p>
+            </div>
+          </div>
+
+          <!-- Card 3: Data unification -->
+          <div class="col-lg-4 reveal reveal-d3">
+            <div class="impact-card" style="--card-glow:rgba(45,212,191,0.15);">
+              <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="d-flex align-items-center justify-content-center rounded-3" style="width:40px;height:40px;background:rgba(45,212,191,0.1);">
+                  <i class="bi bi-diagram-3" style="color:#2dd4bf;font-size:1.1rem;"></i>
+                </div>
+                <span style="font-size:0.7rem;color:rgba(255,255,255,0.4);letter-spacing:1px;text-transform:uppercase;">One source of truth</span>
+              </div>
+              <div class="impact-num" style="background:linear-gradient(135deg,#2dd4bf,#fbbf24);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">1 of 1</div>
+              <p style="color:rgba(255,255,255,0.5);font-size:0.85rem;line-height:1.5;margin:0.75rem 0;">
+                Attendance, submissions, and exam scores fused into a single credibility score — no more siloed dashboards.
+              </p>
+              <div class="impact-bar-track">
+                <div class="impact-bar-fill" style="width:100%;--c-bar:#2dd4bf;--c-bar2:#fbbf24;"></div>
+              </div>
+              <p class="mb-0 mt-2" style="color:rgba(255,255,255,0.3);font-size:0.7rem;">vs. juggling 3–4 separate school systems</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════
+         STATS
+         ════════════════════════════════════════════════ -->
+    <section class="position-relative" style="padding:7rem 0;">
+      <div class="container">
+        <div class="row g-4 text-center">
+          {% for stat in [
+            {'value':95,'suffix':'','label':'Avg Credibility Score','sub':'across 30 demo students'},
+            {'value':60,'suffix':'%','label':'Fewer False Alerts','sub':'vs. threshold-only systems'},
+            {'value':6,'suffix':'x','label':'Earlier Detection','sub':'weeks before exam failure'},
+            {'value':100,'suffix':'%','label':'Explainable','sub':'every alert, every factor'},
+          ] %}
+          <div class="col-6 col-lg-3 reveal reveal-d{{ loop.index }}">
+            <div class="counter-num mb-2">
+              <span class="stat-counter" data-target="{{ stat.value }}">0</span>{{ stat.suffix }}
+            </div>
+            <div style="color:rgba(255,255,255,0.7);font-size:0.8rem;letter-spacing:0.3px;font-weight:500;">{{ stat.label }}</div>
+            <div style="color:rgba(255,255,255,0.3);font-size:0.7rem;margin-top:0.25rem;">{{ stat.sub }}</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════
+         CTA (with what's-included list)
+         ════════════════════════════════════════════════ -->
+    <section class="cta-wrap position-relative" style="padding:8rem 0;">
+      <div class="container position-relative" style="z-index:1;">
+        <div class="text-center reveal" style="max-width:680px;margin:0 auto;">
+          <h2 class="fw-bold lh-1 mb-3 text-white" style="font-size:clamp(2.2rem,5vw,3.5rem);letter-spacing:-1.5px;">
+            See it <span class="serif-accent gradient-text">in motion</span>
+          </h2>
+          <p style="color:rgba(255,255,255,0.4);font-size:1.1rem;margin-bottom:2.5rem;">30 seconds. No signup. No installation.</p>
+          <a href="{{ url_for('auth.register') }}" class="btn btn-lg rounded-pill px-5 fw-semibold btn-magnetic btn-shimmer cta-glow-btn" style="font-size:1rem;">
+            Start Free Demo
+            <i class="bi bi-arrow-right ms-2"></i>
+          </a>
+
+          <!-- What's included -->
+          <div class="cta-includes">
+            <div class="cta-include-item"><i class="bi bi-check2" style="color:#2dd4bf;"></i> Pre-seeded demo data</div>
+            <div class="cta-include-item"><i class="bi bi-check2" style="color:#2dd4bf;"></i> 4 role dashboards</div>
+            <div class="cta-include-item"><i class="bi bi-check2" style="color:#2dd4bf;"></i> AI assistant chat</div>
+            <div class="cta-include-item"><i class="bi bi-check2" style="color:#2dd4bf;"></i> CSV export</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ═══ Footer ═══ -->
+  <footer class="py-4" style="background:var(--pass-dark);border-top:1px solid var(--pass-border);">
+    <div class="container">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div class="d-flex align-items-center gap-2">
+          <span class="logo-wrap-static">
+            <div class="logo-glow" style="inset:-2px;filter:blur(4px);"></div>
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="PASS" width="20" height="20" style="border-radius:5px;">
+          </span>
+          <span class="fw-semibold" style="color:rgba(255,255,255,0.5);font-size:0.8rem;">PASS</span>
+          <span class="ms-2" style="color:rgba(255,255,255,0.15);font-size:0.7rem;">&copy; 2026</span>
+        </div>
+        <div style="color:rgba(255,255,255,0.15);font-size:0.7rem;">PASS &mdash; Proactive Academic Support System</div>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<script>
+// ═══ Magnetic Buttons ═══
+document.querySelectorAll('.btn-magnetic').forEach(btn => {
+  btn.addEventListener('mousemove', e => {
+    const rect = btn.getBoundingClientRect();
+    const x = (e.clientX - rect.left - rect.width / 2) * 0.2;
+    const y = (e.clientY - rect.top - rect.height / 2) * 0.2;
+    btn.style.transform = `translate(${x}px, ${y}px)`;
+  });
+  btn.addEventListener('mouseleave', () => { btn.style.transform = ''; });
+});
+
+// ═══ Scroll Reveal ═══
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) entry.target.classList.add('visible');
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ═══ Navbar hide/show ═══
+let lastScroll = 0;
+const navbar = document.querySelector('.pass-navbar');
+window.addEventListener('scroll', () => {
+  const current = window.scrollY;
+  if (current > lastScroll && current > 100) {
+    navbar.style.transform = 'translateY(-100%)';
+  } else {
+    navbar.style.transform = 'translateY(0)';
+  }
+  lastScroll = current;
+});
+
+// ═══ Counters ═══
+(function() {
+  const counters = document.querySelectorAll('.stat-counter');
+  if (!counters.length) return;
+  const counterObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const el = entry.target;
+        const target = parseInt(el.dataset.target);
+        let current = 0;
+        const step = Math.max(1, Math.ceil(target / 50));
+        const timer = setInterval(() => {
+          current += step;
+          if (current >= target) { current = target; clearInterval(timer); }
+          el.textContent = current;
+        }, 16);
+        counterObserver.unobserve(el);
+      }
+    });
+  }, { threshold: 0.5 });
+  counters.forEach(c => counterObserver.observe(c));
+})();
+</script>
+{% endblock %}

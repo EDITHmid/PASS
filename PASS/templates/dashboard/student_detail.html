@@ -1,0 +1,434 @@
+{% extends "base.html" %}
+
+{% block title %}{{ student.name }} — PASS{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a href="{{ url_for('dashboard.instructor_dashboard') }}" class="text-decoration-none">Dashboard</a></li>
+        <li class="breadcrumb-item active">{{ student.name }}</li>
+    </ol>
+</nav>
+
+<!-- Student Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-start mb-4 reveal">
+        <div class="mb-2">
+            <span class="section-tag mb-2"><i class="bi bi-person-circle"></i> Student detail</span>
+            <h3 class="fw-bold mb-1 mt-2">{{ student.name }}</h3>
+            <p class="text-muted small mb-0">
+                <i class="bi bi-person-badge me-1"></i>Roll No: {{ student.student_id }}
+                {% if student.course %}
+                &nbsp;&middot;&nbsp; <i class="bi bi-book me-1"></i>{{ student.course.name }}
+                {% endif %}
+            </p>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            <a href="{{ url_for('dashboard.student_report', student_id=student.student_id) }}"
+               target="_blank" class="btn btn-outline-primary btn-sm btn-magnetic">
+                <i class="bi bi-file-pdf me-1"></i>Report
+            </a>
+            <div class="text-end">
+        {% set score = student.credibility_score or 0 %}
+        <div class="d-flex align-items-center gap-3">
+            <div>
+                <div class="small text-muted">Credibility Score</div>
+                <div class="fs-3 fw-bold" style="color:{{ '#fb7185' if score < 30 else ('#fbbf24' if score < 50 else ('#4f7cff' if score < 85 else '#2dd4bf')) }};">
+                    {{ "%.1f"|format(score) }}
+                </div>
+            </div>
+            <div class="rounded-circle d-flex align-items-center justify-content-center"
+                 style="width:64px;height:64px;background:{{ 'rgba(251,113,133,0.12)' if score < 30 else ('rgba(251,191,36,0.12)' if score < 50 else ('rgba(79,124,255,0.12)' if score < 85 else 'rgba(45,212,191,0.12)')) }};">
+                <i class="bi bi-speedometer2 fs-3" style="color:{{ '#fb7185' if score < 30 else ('#fbbf24' if score < 50 else ('#4f7cff' if score < 85 else '#2dd4bf')) }};"></i>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- Quick Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-label">Total Submissions</div>
+            <div class="stat-value">{{ student.total_submissions }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-label">On-Time Rate</div>
+            <div class="stat-value">{{ "%.0f"|format(student.on_time_rate) }}%</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-label">Active Alerts</div>
+            <div class="stat-value text-danger">{{ student.active_alerts_count }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-label">Tier</div>
+            <div class="stat-value">
+                {% if score >= 85 %}
+                <span class="badge bg-success fs-6">High</span>
+                {% elif score >= 50 %}
+                <span class="badge bg-primary fs-6">Medium</span>
+                {% elif score >= 30 %}
+                <span class="badge bg-warning text-dark fs-6">Low</span>
+                {% else %}
+                <span class="badge bg-danger fs-6">Critical</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-3 mb-4">
+    <!-- Δt Time-Series Chart -->
+    <div class="col-lg-8">
+        <div class="chart-container position-relative">
+            <h6 class="fw-bold mb-3"><i class="bi bi-graph-up me-2"></i>Submission Δt Over Time</h6>
+            <div class="chart-spinner-overlay" id="spinnerDt">
+                <div class="spinner-border text-primary" role="status"></div>
+            </div>
+            <div style="position:relative; height:280px;"><canvas id="studentDeltaTChart"></canvas></div>
+        </div>
+    </div>
+    <!-- Credibility Breakdown -->
+    <div class="col-lg-4">
+        <div class="chart-container position-relative">
+            <h6 class="fw-bold mb-3"><i class="bi bi-pie-chart me-2"></i>Credibility Breakdown</h6>
+            <div class="chart-spinner-overlay" id="spinnerCredBreakdown">
+                <div class="spinner-border text-primary" role="status"></div>
+            </div>
+            <div style="position:relative; height:200px;"><canvas id="credBreakdownChart"></canvas></div>
+            <div class="mt-3">
+                <div class="d-flex justify-content-between small mb-1">
+                    <span>Δt Consistency (25%)</span>
+                    <span class="fw-semibold">{{ "%.1f"|format(breakdown.delta_t_score) }}</span>
+                </div>
+                <div class="progress mb-2" style="height:6px;">
+                    <div class="progress-bar bg-primary" style="width:{{ breakdown.delta_t_score }}%"></div>
+                </div>
+                <div class="d-flex justify-content-between small mb-1">
+                    <span>Variance Stability (10%)</span>
+                    <span class="fw-semibold">{{ "%.1f"|format(breakdown.variance_score) }}</span>
+                </div>
+                <div class="progress mb-2" style="height:6px;">
+                    <div class="progress-bar bg-info" style="width:{{ breakdown.variance_score }}%"></div>
+                </div>
+                <div class="d-flex justify-content-between small mb-1">
+                    <span>Completion Rate (10%)</span>
+                    <span class="fw-semibold">{{ "%.1f"|format(breakdown.completion_score) }}</span>
+                </div>
+                <div class="progress mb-2" style="height:6px;">
+                    <div class="progress-bar bg-success" style="width:{{ breakdown.completion_score }}%"></div>
+                </div>
+                <div class="d-flex justify-content-between small mb-1">
+                    <span>Attendance (25%)</span>
+                    <span class="fw-semibold">{{ "%.1f"|format(breakdown.attendance_score) }}</span>
+                </div>
+                <div class="progress mb-2" style="height:6px;">
+                    <div class="progress-bar bg-warning" style="width:{{ breakdown.attendance_score }}%"></div>
+                </div>
+                <div class="d-flex justify-content-between small mb-1">
+                    <span>Exam Performance (30%)</span>
+                    <span class="fw-semibold">{{ "%.1f"|format(breakdown.exam_score) }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Variance Chart -->
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="chart-container position-relative">
+            <h6 class="fw-bold mb-3"><i class="bi bi-bar-chart me-2"></i>Variance Stability (Rolling σ)</h6>
+            <div class="chart-spinner-overlay" id="spinnerVariance">
+                <div class="spinner-border text-primary" role="status"></div>
+            </div>
+            <div style="position:relative; height:180px;"><canvas id="varianceChart"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<!-- Active Alerts & Policy Events -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 py-3">
+                <h6 class="fw-bold mb-0"><i class="bi bi-bell-fill me-2 text-danger"></i>Alert History</h6>
+            </div>
+            <div class="card-body p-0" style="max-height:350px;overflow-y:auto;">
+                {% for alert in alerts %}
+                <div class="alert-card mx-3 mb-2 {{ 'severity-critical' if alert.severity == 'critical' else ('severity-warning' if alert.severity == 'warning' else 'severity-info') }}">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="fw-semibold small">{{ alert.metric }}</div>
+                            <div class="text-muted small">{{ alert.description }}</div>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge {{ 'bg-danger' if alert.severity == 'critical' else ('bg-warning text-dark' if alert.severity == 'warning' else 'bg-info') }}">
+                                {{ alert.severity }}
+                            </span>
+                            <div class="small text-muted mt-1">
+                                {% if alert.resolved %}
+                                <i class="bi bi-check-circle text-success"></i> Resolved
+                                {% else %}
+                                <i class="bi bi-exclamation-circle text-danger"></i> Active
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-muted small mt-1">
+                        <i class="bi bi-clock me-1"></i>{{ alert.created_at.strftime('%b %d, %Y %H:%M') }}
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-check-circle fs-3 text-success"></i>
+                    <p class="small mt-2">No alerts recorded</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 py-3">
+                <h6 class="fw-bold mb-0"><i class="bi bi-shield-check me-2 text-primary"></i>Policy Events</h6>
+            </div>
+            <div class="card-body p-0" style="max-height:350px;overflow-y:auto;">
+                {% for event in policy_events %}
+                <div class="p-3 border-bottom">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <span class="badge {{ 'bg-success' if event.policy_type == 'recognition' else ('bg-info' if event.policy_type == 'attendance_waiver' else 'bg-danger') }} me-2">
+                                {{ event.policy_type|replace('_', ' ')|title }}
+                            </span>
+                            <span class="small text-muted">{{ event.triggered_at.strftime('%b %d, %Y') }}</span>
+                        </div>
+                        <span class="badge {{ 'bg-success' if event.is_active else 'bg-secondary' }}">
+                            {{ 'Active' if event.is_active else 'Expired' }}
+                        </span>
+                    </div>
+                    <div class="small text-muted mt-1">{{ event.description }}</div>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-clipboard-check fs-3"></i>
+                    <p class="small mt-2">No policy events triggered</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Submissions Table -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white border-0 py-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-file-earmark-text me-2"></i>Submission History</h6>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="small fw-semibold ps-3">Assignment</th>
+                        <th class="small fw-semibold">Submitted</th>
+                        <th class="small fw-semibold">Deadline</th>
+                        <th class="small fw-semibold text-center">Δt (hours)</th>
+                        <th class="small fw-semibold text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in submissions %}
+                    <tr>
+                        <td class="ps-3 fw-semibold small">{{ sub.assignment_id }}</td>
+                        <td class="small text-muted">{{ sub.submitted_at.strftime('%b %d, %Y %H:%M') }}</td>
+                        <td class="small text-muted">{{ sub.deadline.strftime('%b %d, %Y %H:%M') if sub.deadline else '—' }}</td>
+                        <td class="text-center">
+                            {% set dt_hours = sub.delta_t_hours %}
+                            <span class="{{ 'text-success' if dt_hours >= 0 else 'text-danger' }} fw-semibold small">
+                                {{ "%.1f"|format(dt_hours) }}h
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge {{ 'bg-success' if sub.submission_status == 'on-time' else ('bg-warning text-dark' if sub.submission_status == 'late' else 'bg-secondary') }}">
+                                {{ sub.submission_status|replace('_', ' ')|title }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const submissions = {{ submissions_json|safe }};
+
+    // ── Δt Time-Series ─────────────────────────────────────────
+    const dtCtx = document.getElementById('studentDeltaTChart');
+    if (dtCtx) {
+        const labels = submissions.map(s => s.assignment_id);
+        const data = submissions.map(s => s.delta_t_hours);
+
+        new Chart(dtCtx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Δt (hours)',
+                    data: data,
+                    borderColor: '#4f7cff',
+                    backgroundColor: data.map(d => d >= 0 ? 'rgba(45,212,191,0.7)' : 'rgba(251,113,133,0.7)'),
+                    pointBackgroundColor: data.map(d => d >= 0 ? '#2dd4bf' : '#fb7185'),
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    tension: 0.3,
+                    borderWidth: 2,
+                    fill: false
+                }, {
+                    label: 'Deadline',
+                    data: labels.map(() => 0),
+                    borderColor: '#fb7185',
+                    borderDash: [6, 4],
+                    pointRadius: 0,
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { usePointStyle: true, color: 'rgba(255,255,255,0.6)' } },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => {
+                                const val = ctx.parsed.y;
+                                return ctx.dataset.label + ': ' + val.toFixed(1) + 'h ' +
+                                       (val >= 0 ? '(early)' : '(late)');
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        title: { display: true, text: 'Hours (+ early, − late)', color: 'rgba(255,255,255,0.5)' },
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { color: 'rgba(255,255,255,0.5)' }
+                    },
+                    x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.5)' } }
+                }
+            }
+        });
+    }
+
+    document.getElementById('spinnerDt')?.classList.add('d-none');
+
+    // ── Credibility Breakdown Radar ────────────────────────────
+    const credCtx = document.getElementById('credBreakdownChart');
+    if (credCtx) {
+        new Chart(credCtx, {
+            type: 'radar',
+            data: {
+                labels: ['Δt Score', 'Variance', 'Completion', 'Attendance', 'Exam'],
+                datasets: [{
+                    label: 'Scores',
+                    data: [
+                        {{ breakdown.delta_t_score }},
+                        {{ breakdown.variance_score }},
+                        {{ breakdown.completion_score }},
+                        {{ breakdown.attendance_score }},
+                        {{ breakdown.exam_score }}
+                    ],
+                    backgroundColor: 'rgba(79,124,255,0.15)',
+                    borderColor: '#4f7cff',
+                    pointBackgroundColor: '#4f7cff',
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        min: 0, max: 100,
+                        ticks: { stepSize: 25, display: false, color: 'rgba(255,255,255,0.5)' },
+                        grid: { color: 'rgba(255,255,255,0.08)' },
+                        angleLines: { color: 'rgba(255,255,255,0.08)' },
+                        pointLabels: { color: 'rgba(255,255,255,0.6)', font: { size: 11 } }
+                    }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+
+    document.getElementById('spinnerCredBreakdown')?.classList.add('d-none');
+
+    // ── Variance Rolling Chart ─────────────────────────────────
+    const varCtx = document.getElementById('varianceChart');
+    if (varCtx) {
+        const varLabels = submissions.map(s => s.assignment_id);
+        const dtHours = submissions.map(s => s.delta_t_hours);
+        // Compute rolling std dev (window=3)
+        const window = 3;
+        const rollingStd = [];
+        for (let i = 0; i < dtHours.length; i++) {
+            if (i < window - 1) {
+                rollingStd.push(null);
+            } else {
+                const slice = dtHours.slice(i - window + 1, i + 1);
+                const mean = slice.reduce((a,b) => a+b, 0) / slice.length;
+                const variance = slice.reduce((a,b) => a + Math.pow(b - mean, 2), 0) / slice.length;
+                rollingStd.push(Math.sqrt(variance).toFixed(2));
+            }
+        }
+
+        new Chart(varCtx, {
+            type: 'bar',
+            data: {
+                labels: varLabels,
+                datasets: [{
+                    label: 'Rolling σ (window=3)',
+                    data: rollingStd,
+                    backgroundColor: rollingStd.map(v =>
+                        v === null ? 'transparent' :
+                        v > 20 ? 'rgba(251,113,133,0.6)' :
+                        v > 10 ? 'rgba(251,191,36,0.6)' :
+                        'rgba(45,212,191,0.6)'
+                    ),
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { usePointStyle: true } }
+                },
+                scales: {
+                    y: {
+                        title: { display: true, text: 'Std Deviation (hours)' },
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
+    document.getElementById('spinnerVariance')?.classList.add('d-none');
+});
+</script>
+{% endblock %}

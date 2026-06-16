@@ -1,0 +1,22 @@
+# render.yaml — Render Blueprint (Free Tier)
+# One-click deploy: https://render.com/deploy
+# Uses SQLite on free tier — data resets on each deploy.
+# Demo accounts are auto-seeded on first deploy.
+
+services:
+  - type: web
+    name: pass-academic-support
+    runtime: python
+    buildCommand: chmod +x build.sh && ./build.sh
+    startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: PYTHON_VERSION
+        value: "3.12.10"
+      - key: FLASK_ENV
+        value: production
+      - key: SCHOOL_NAME
+        value: "Your School Name"
+      - key: SCHOOL_ADDRESS
+        value: ""

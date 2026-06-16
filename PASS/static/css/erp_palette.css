@@ -1,0 +1,15 @@
+/* ERP colour palette – professional yet vibrant */
+:root {
+  --primary: #0A3D62;      /* deep indigo */
+  --accent-1: #F39C12;    /* amber – call‑to‑action */
+  --accent-2: #27AE60;    /* emerald – success */
+  --accent-3: #E74C3C;    /* crimson – error */
+  --neutral-dark: #2C3E50;
+  --neutral-light: #ECF0F1;
+}
+
+.bg-primary   { background-color: var(--primary);   color: #fff; }
+.bg-accent-1 { background-color: var(--accent-1); color: #fff; }
+.bg-accent-2 { background-color: var(--accent-2); color: #fff; }
+.bg-accent-3 { background-color: var(--accent-3); color: #fff; }
+.text-primary { color: var(--primary); }

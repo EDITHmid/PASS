@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+
+{% block body %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap');
+* { font-family: 'Inter', sans-serif; }
+:root {
+  --pass-dark: #06080f;
+  --pass-card: #0e1320;
+  --pass-border: rgba(255,255,255,0.06);
+  --c-blue: #4f7cff;
+  --c-violet: #a78bfa;
+  --c-rose: #fb7185;
+  --c-amber: #fbbf24;
+  --c-teal: #2dd4bf;
+}
+
+html, body { background: var(--pass-dark); color: #e5e7eb; }
+
+/* ═══ Keyframes ═══ */
+@keyframes fadeUp { from{opacity:0;transform:translateY(40px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+@keyframes pulse-soft { 0%,100%{opacity:0.4;transform:scale(1)} 50%{opacity:0.7;transform:scale(1.05)} }
+@keyframes aurora-1 { 0%,100%{transform:translate(0,0) rotate(0deg) scale(1)} 33%{transform:translate(60px,-40px) rotate(120deg) scale(1.1)} 66%{transform:translate(-40px,30px) rotate(240deg) scale(0.95)} }
+@keyframes aurora-2 { 0%,100%{transform:translate(0,0) rotate(0deg) scale(1)} 33%{transform:translate(-50px,40px) rotate(-100deg) scale(0.9)} 66%{transform:translate(40px,-30px) rotate(-200deg) scale(1.1)} }
+@keyframes shimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
+@keyframes letter-in { 0%{opacity:0;transform:translateY(40px)rotateX(-30deg);filter:blur(6px)} 100%{opacity:1;transform:translateY(0)rotateX(0);filter:blur(0)} }
+@keyframes gradient-flow { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+
+.anim-fade   { animation: fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) both; }
+.anim-fade-1 { animation: fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.1s both; }
+.anim-fade-2 { animation: fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.2s both; }
+.anim-fade-3 { animation: fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.3s both; }
+.anim-fade-4 { animation: fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.4s both; }
+.anim-fade-5 { animation: fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.5s both; }
+
+.hero-letter { display: inline-block; animation: letter-in 0.6s cubic-bezier(0.16,1,0.3,1) both; }
+.serif-accent { font-family: 'Instrument Serif', serif; font-style: italic; font-weight: 400; }
+.gradient-text {
+  background: linear-gradient(135deg, #fbbf24 0%, #fb7185 35%, #a78bfa 70%, #4f7cff 100%);
+  background-size: 200% 200%;
+  animation: gradient-flow 8s ease infinite;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ═══ Aurora background blobs ═══ */
+.aurora {
+  position: absolute; pointer-events: none; border-radius: 50%;
+  filter: blur(110px); opacity: 0.4;
+}
+.aurora-1 {
+  top: -10%; left: 30%; width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(167,139,250,0.55) 0%, transparent 70%);
+  animation: aurora-1 22s ease-in-out infinite;
+}
+.aurora-2 {
+  top: 50%; right: -10%; width: 450px; height: 450px;
+  background: radial-gradient(circle, rgba(251,113,133,0.45) 0%, transparent 70%);
+  animation: aurora-2 26s ease-in-out infinite;
+}
+.aurora-3 {
+  bottom: -10%; left: 10%; width: 600px; height: 450px;
+  background: radial-gradient(circle, rgba(45,212,191,0.35) 0%, transparent 70%);
+  animation: aurora-1 30s ease-in-out infinite reverse;
+}
+
+/* ═══ Cursor glow ═══ */
+#cursorGlow {
+  position:fixed; pointer-events:none; z-index:9998; width:600px; height:600px; border-radius:50%;
+  background: radial-gradient(circle, rgba(79,124,255,0.06) 0%, transparent 60%);
+  transform: translate(-50%,-50%);
+}
+
+/* ═══ Form inputs ═══ */
+.form-input {
+  background: rgba(255,255,255,0.03) !important;
+  border: 1px solid rgba(255,255,255,0.07) !important;
+  color: #e5e7eb !important;
+  border-radius: 12px !important;
+  padding: 0.85rem 1rem !important;
+  font-size: 0.95rem;
+  transition: all 0.3s;
+  width: 100%;
+}
+.form-input:focus {
+  background: rgba(255,255,255,0.05) !important;
+  border-color: rgba(79,124,255,0.4) !important;
+  box-shadow: 0 0 0 4px rgba(79,124,255,0.08) !important;
+  outline: none;
+}
+.form-input::placeholder { color: rgba(255,255,255,0.2); }
+.input-icon {
+  position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);
+  color: rgba(255,255,255,0.25); font-size: 0.95rem; pointer-events: none;
+}
+.input-with-icon { padding-left: 2.6rem !important; }
+
+/* ═══ Auth card ═══ */
+.auth-card {
+  background: rgba(15,20,32,0.7);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 20px;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+  overflow: hidden;
+  position: relative;
+  transform-style: preserve-3d;
+}
+.auth-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, #4f7cff 0%, #a78bfa 35%, #fb7185 70%, #fbbf24 100%);
+  background-size: 200% 100%;
+  animation: gradient-flow 6s ease infinite;
+}
+.btn-shimmer { position: relative; overflow: hidden; }
+.btn-shimmer::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  background-size: 200% 100%; animation: shimmer 3.5s infinite; pointer-events: none;
+}
+.btn-magnetic { position: relative; display: inline-flex; align-items: center; justify-content: center; transition: transform 0.25s ease-out; }
+
+.gradient-btn {
+  background: linear-gradient(135deg, #4f7cff 0%, #a78bfa 50%, #fb7185 100%);
+  background-size: 200% 200%;
+  animation: gradient-flow 6s ease infinite;
+  color: #fff;
+  border: none;
+  box-shadow: 0 8px 32px rgba(79,124,255,0.25), 0 0 0 1px rgba(255,255,255,0.08) inset;
+}
+
+.cred-pill {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 10px;
+  padding: 0.5rem 0.8rem;
+  transition: all 0.3s;
+  cursor: default;
+}
+.cred-pill:hover {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.1);
+  transform: translateY(-1px);
+}
+
+.role-pill {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 0.7rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: block;
+  color: rgba(255,255,255,0.5);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+.role-pill:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); color: #fff; }
+.role-pill.active { background: rgba(79,124,255,0.08); border-color: rgba(79,124,255,0.4); color: #fff; }
+.role-pill input { display: none; }
+</style>
+
+<div id="cursorGlow"></div>
+
+<div class="min-vh-100 d-flex align-items-center position-relative overflow-hidden" style="background:var(--pass-dark);">
+
+  <!-- Background layer -->
+  <div class="position-absolute top-0 start-0 w-100 h-100" style="pointer-events:none;">
+    <div class="aurora aurora-1"></div>
+    <div class="aurora aurora-2"></div>
+    <div class="aurora aurora-3"></div>
+    <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.012) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse at center,black 40%,transparent 70%);-webkit-mask-image:radial-gradient(ellipse at center,black 40%,transparent 70%);"></div>
+    <canvas id="particles" style="position:absolute;inset:0;"></canvas>
+  </div>
+
+  <div class="container position-relative" style="z-index:1;">
+    <div class="row justify-content-center">
+      <div class="col-md-6 col-lg-5 col-xl-4">
+
+        <!-- Logo -->
+        <div class="text-center mb-4 anim-fade">
+          <a href="{{ url_for('auth.index') }}" class="text-decoration-none">
+            <h2 class="fw-bold d-flex align-items-center justify-content-center gap-2 mb-0" style="color:#fff;letter-spacing:0.5px;">
+              <span class="logo-wrap-static">
+                <div class="logo-glow"></div>
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="PASS" width="38" height="38" style="border-radius:10px;">
+              </span>
+              <span style="font-size:1.4rem;letter-spacing:-0.5px;">PASS</span>
+            </h2>
+          </a>
+          <p style="color:rgba(255,255,255,0.2);font-size:0.6rem;letter-spacing:2.5px;text-transform:uppercase;margin-top:0.5rem;font-weight:500;">Proactive Academic Support</p>
+        </div>
+
+        <!-- Card -->
+        <div class="anim-fade-1" style="perspective:1000px;">
+          <div class="auth-card" id="authCard">
+            <div class="card-body p-4 p-lg-5">
+
+              <div class="text-center mb-4 anim-fade-2">
+                <h3 class="fw-bold mb-1" style="color:#fff;font-size:1.7rem;letter-spacing:-0.8px;">
+                  <span class="hero-letter text-white" style="animation-delay:0.05s">Welcome</span>
+                  <span class="hero-letter text-white" style="animation-delay:0.12s">back.</span>
+                </h3>
+                <p class="mb-0" style="color:rgba(255,255,255,0.35);font-size:0.9rem;">Sign in to your <span class="serif-accent" style="color:rgba(255,255,255,0.55);">workspace</span></p>
+              </div>
+
+              <form method="POST" action="{{ url_for('auth.login') }}" class="anim-fade-3">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="mb-3 position-relative">
+                  <i class="bi bi-person input-icon"></i>
+                  <input type="text" class="form-control form-input input-with-icon" name="username"
+                         placeholder="Username" required autofocus>
+                </div>
+
+                <div class="mb-3 position-relative">
+                  <i class="bi bi-lock input-icon"></i>
+                  <input type="password" class="form-control form-input input-with-icon" name="password"
+                         placeholder="Password" required>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                  <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="remember" name="remember"
+                           style="background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.12);">
+                    <label class="form-check-label small" for="remember" style="color:rgba(255,255,255,0.4);">Remember me</label>
+                  </div>
+                  <a href="{{ url_for('auth.forgot_password') }}" class="small text-decoration-none" style="color:rgba(255,255,255,0.3);transition:color 0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.3)'">Forgot?</a>
+                </div>
+
+                <button type="submit" class="btn w-100 py-3 fw-semibold text-white border-0 gradient-btn btn-shimmer btn-magnetic"
+                        style="border-radius:12px;font-size:0.95rem;">
+                  Sign In <i class="bi bi-arrow-right ms-1"></i>
+                </button>
+              </form>
+
+              <div class="text-center mt-4 anim-fade-4" style="color:rgba(255,255,255,0.3);font-size:0.85rem;">
+                New here? <a href="{{ url_for('auth.register') }}" class="text-decoration-none" style="color:#2dd4bf;font-weight:500;transition:opacity 0.3s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">Create an account</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Demo creds (compact, premium style) -->
+        <div class="mt-4 anim-fade-5">
+          <p class="text-center mb-2" style="color:rgba(255,255,255,0.15);font-size:0.65rem;letter-spacing:1.8px;text-transform:uppercase;font-weight:500;">Demo access</p>
+          <div class="d-flex justify-content-center flex-wrap gap-2">
+            {% for acct in [
+              {'role':'Principal','cred':'principal','color':'#a78bfa'},
+              {'role':'Instructor','cred':'instructor','color':'#4f7cff'},
+              {'role':'Student','cred':'arjun','color':'#2dd4bf'},
+            ] %}
+            <div class="cred-pill">
+              <div style="color:{{ acct.color }};font-size:0.7rem;font-weight:600;letter-spacing:0.3px;">{{ acct.role }}</div>
+              <div style="color:rgba(255,255,255,0.3);font-size:0.65rem;font-family:'SF Mono','Monaco','Consolas',monospace;margin-top:0.1rem;">{{ acct.cred }} / password123</div>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="text-center mt-3">
+            <a href="{{ url_for('auth.index') }}" class="btn-magnetic text-decoration-none" style="color:rgba(255,255,255,0.25);font-size:0.8rem;transition:color 0.3s;display:inline-flex;align-items:center;gap:0.3rem;" onmouseover="this.style.color='rgba(255,255,255,0.5)'" onmouseout="this.style.color='rgba(255,255,255,0.25)'">
+              <i class="bi bi-arrow-left"></i> Back to home
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══ Particles ═══
+(function() {
+  const canvas = document.getElementById('particles');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let particles = [], w, h;
+
+  function resize() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  }
+
+  class Particle {
+    constructor() { this.reset(); }
+    reset() {
+      this.x = Math.random() * w;
+      this.y = Math.random() * h;
+      this.size = Math.random() * 1.5 + 0.3;
+      this.speedX = (Math.random() - 0.5) * 0.25;
+      this.speedY = (Math.random() - 0.5) * 0.25;
+      this.opacity = Math.random() * 0.3 + 0.05;
+    }
+    update() {
+      this.x += this.speedX;
+      this.y += this.speedY;
+      if (this.x < 0 || this.x > w) this.speedX *= -1;
+      if (this.y < 0 || this.y > h) this.speedY *= -1;
+    }
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${this.opacity})`;
+      ctx.fill();
+    }
+  }
+
+  function init() {
+    resize();
+    particles = Array.from({ length: Math.min(Math.floor(w * h / 15000), 80) }, () => new Particle());
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, w, h);
+    particles.forEach(p => { p.update(); p.draw(); });
+    requestAnimationFrame(animate);
+  }
+
+  init(); animate();
+  window.addEventListener('resize', init);
+})();
+
+// ═══ Cursor Glow ═══
+const glow = document.getElementById('cursorGlow');
+document.addEventListener('mousemove', e => {
+  glow.style.left = e.clientX + 'px';
+  glow.style.top = e.clientY + 'px';
+});
+
+// ═══ 3D Tilt on Auth Card ═══
+(function() {
+  const card = document.getElementById('authCard');
+  if (!card) return;
+  card.addEventListener('mousemove', e => {
+    const rect = card.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    card.style.transform = `rotateY(${x*5}deg) rotateX(${-y*5}deg) translateZ(10px)`;
+    card.style.transition = 'transform 0.1s ease-out';
+  });
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = '';
+    card.style.transition = 'transform 0.6s cubic-bezier(0.16,1,0.3,1)';
+  });
+})();
+
+// ═══ Magnetic Buttons ═══
+document.querySelectorAll('.btn-magnetic').forEach(btn => {
+  btn.addEventListener('mousemove', e => {
+    const rect = btn.getBoundingClientRect();
+    const x = (e.clientX - rect.left - rect.width / 2) * 0.2;
+    const y = (e.clientY - rect.top - rect.height / 2) * 0.2;
+    btn.style.transform = `translate(${x}px, ${y}px)`;
+  });
+  btn.addEventListener('mouseleave', () => { btn.style.transform = ''; });
+});
+</script>
+{% endblock %}

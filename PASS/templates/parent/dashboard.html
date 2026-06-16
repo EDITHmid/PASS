@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}My Children — PASS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 reveal">
+    <div>
+        <span class="section-tag mb-2"><i class="bi bi-people-fill"></i> Family</span>
+        <h3 class="fw-bold mb-1 mt-2">My Children's <span class="serif-accent gradient-text">Progress</span></h3>
+        <p class="text-muted small mb-0">Track your child's academic engagement and credibility</p>
+    </div>
+</div>
+
+{% if not children %}
+<div class="text-center py-5">
+    <i class="bi bi-emoji-frown fs-1 text-muted d-block mb-3"></i>
+    <h5>No Children Linked</h5>
+    <p class="text-muted">Your account is not yet linked to any student profiles.<br>Please contact the school to link your children.</p>
+</div>
+{% endif %}
+
+{% for item in children %}
+{% set s = item.student %}
+{% set cred = item.credibility %}
+{% set score = cred.overall_score %}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+        <!-- Student Header -->
+        <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+                <h5 class="fw-bold mb-1">{{ s.name }}</h5>
+                <p class="text-muted small mb-0">
+                    <i class="bi bi-person-badge me-1"></i>Roll: {{ s.student_id }}
+                    {% if s.course %}
+                    &middot; <i class="bi bi-book me-1"></i>{{ s.course.course_name }}
+                    {% endif %}
+                </p>
+            </div>
+            <div class="text-end">
+                <div class="fs-2 fw-bold {{ 'text-success' if score >= 85 else ('text-primary' if score >= 50 else ('text-warning' if score >= 30 else 'text-danger')) }}">
+                    {{ "%.0f"|format(score) }}
+                </div>
+                <div class="small text-muted">Credibility Score</div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="row g-2 mb-3">
+            <div class="col-3 col-md-3">
+                <div class="p-2 bg-light rounded-3 text-center">
+                    <div class="fw-bold small">{{ item.summary.total_submissions }}</div>
+                    <div class="text-muted" style="font-size:0.65rem;">Submissions</div>
+                </div>
+            </div>
+            <div class="col-3 col-md-3">
+                <div class="p-2 bg-light rounded-3 text-center">
+                    <div class="fw-bold small {{ 'text-success' if s.on_time_rate >= 80 else 'text-danger' }}">{{ "%.0f"|format(s.on_time_rate) }}%</div>
+                    <div class="text-muted" style="font-size:0.65rem;">On-Time</div>
+                </div>
+            </div>
+            <div class="col-3 col-md-3">
+                <div class="p-2 bg-light rounded-3 text-center">
+                    <div class="fw-bold small {{ 'text-danger' if item.active_alerts > 0 else 'text-success' }}">{{ item.active_alerts }}</div>
+                    <div class="text-muted" style="font-size:0.65rem;">Alerts</div>
+                </div>
+            </div>
+            <div class="col-3 col-md-3">
+                <div class="p-2 bg-light rounded-3 text-center">
+                    <div class="fw-bold small">{{ cred.tier_label }}</div>
+                    <div class="text-muted" style="font-size:0.65rem;">Status</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Credibility Breakdown -->
+        <div class="row g-2 mb-3">
+            <div class="col-12">
+                <div class="d-flex justify-content-between small mb-1">
+                    <span>Submission Timeliness (25%)</span>
+                    <span class="fw-bold">{{ "%.0f"|format(cred.components.delta_t_consistency.score) }}</span>
+                </div>
+                <div class="progress mb-2" style="height:5px;">
+                    <div class="progress-bar bg-primary" style="width:{{ cred.components.delta_t_consistency.score }}%"></div>
+                </div>
+                <div class="d-flex justify-content-between small mb-1">
+                    <span>Attendance (25%)</span>
+                    <span class="fw-bold">{{ "%.0f"|format(cred.components.attendance.score) }}</span>
+                </div>
+                <div class="progress mb-2" style="height:5px;">
+                    <div class="progress-bar bg-warning" style="width:{{ cred.components.attendance.score }}%"></div>
+                </div>
+                <div class="d-flex justify-content-between small mb-1">
+                    <span>Exam Performance (30%)</span>
+                    <span class="fw-bold">{{ "%.0f"|format(cred.components.exam_performance.score) }}</span>
+                </div>
+                <div class="progress" style="height:5px;">
+                    <div class="progress-bar bg-danger" style="width:{{ cred.components.exam_performance.score }}%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendations -->
+        {% if cred.tier in ("warning", "critical") %}
+        <div class="p-3 bg-danger bg-opacity-10 rounded-3">
+            <p class="small mb-0 text-danger fw-semibold">
+                <i class="bi bi-exclamation-triangle me-1"></i>
+                {{ s.name }} needs attention. Credibility score is {{ "%.0f"|format(score) }}.
+                Please encourage regular assignment submissions and class attendance.
+            </p>
+        </div>
+        {% elif cred.tier == "excellent" %}
+        <div class="p-3 bg-success bg-opacity-10 rounded-3">
+            <p class="small mb-0 text-success fw-semibold">
+                <i class="bi bi-trophy me-1"></i>
+                {{ s.name }} is doing excellent! Keep up the great work.
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endfor %}
+
+<!-- Quick Tips -->
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+        <h6 class="fw-bold mb-3"><i class="bi bi-lightbulb text-warning me-2"></i>How You Can Help</h6>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="d-flex gap-2">
+                    <i class="bi bi-check-circle text-success mt-1"></i>
+                    <div>
+                        <div class="fw-semibold small">Encourage Regular Submissions</div>
+                        <p class="text-muted small mb-0">Remind your child to submit assignments before deadlines. Consistency matters more than perfection.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex gap-2">
+                    <i class="bi bi-check-circle text-success mt-1"></i>
+                    <div>
+                        <div class="fw-semibold small">Monitor Attendance</div>
+                        <p class="text-muted small mb-0">Regular class attendance is one of the strongest predictors of academic success.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex gap-2">
+                    <i class="bi bi-check-circle text-success mt-1"></i>
+                    <div>
+                        <div class="fw-semibold small">Discuss Alerts Together</div>
+                        <p class="text-muted small mb-0">If the system flags an issue, talk to your child about what might be going wrong.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex gap-2">
+                    <i class="bi bi-check-circle text-success mt-1"></i>
+                    <div>
+                        <div class="fw-semibold small">Celebrate Improvements</div>
+                        <p class="text-muted small mb-0">Positive reinforcement when their credibility score improves builds motivation.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
