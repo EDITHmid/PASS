@@ -69,23 +69,14 @@ def create_app(config_name=None):
     from routes.auth import auth_bp
     from routes.dashboard import dashboard_bp
     from routes.api import api_bp
-    from routes.student import student_bp
-    from routes.billing import billing_bp
     from routes.parent import parent_bp
     from routes.admin import admin_bp
-    from routes.attendance import attendance_bp
-    from routes.grade import grade_bp
-    from routes.classroom import class_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(api_bp, url_prefix="/api")
-    app.register_blueprint(student_bp, url_prefix="/student")
     app.register_blueprint(parent_bp, url_prefix="/parent")
-    app.register_blueprint(billing_bp, url_prefix="/billing")
-    app.register_blueprint(attendance_bp, url_prefix="/attendance")
-    app.register_blueprint(grade_bp, url_prefix="/grade")
-    app.register_blueprint(class_bp, url_prefix="/class")
+    app.register_blueprint(admin_bp, url_prefix="/admin")
 
     # Exempt API routes from CSRF for REST clients
     csrf.exempt(api_bp)

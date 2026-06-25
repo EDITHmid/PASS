@@ -1,9 +1,0 @@
-Flask>=2.2
-Flask-Login
-Flask-WTF
-Flask-Cors
-Flask-SQLAlchemy
-Werkzeug
-gunicorn
-numpy
-pandas
